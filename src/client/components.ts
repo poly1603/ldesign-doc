@@ -2,10 +2,11 @@
  * 客户端内置组件
  */
 
-import { defineComponent, h, ref, onMounted, type PropType } from 'vue'
+import { defineComponent, h, ref, onMounted, type PropType, type Component } from 'vue'
+import { useRoute } from 'vue-router'
 
 /**
- * 内容渲染组件
+ * 内容渲染组件 - 渲染当前路由的 markdown 组件
  */
 export const Content = defineComponent({
   name: 'Content',
@@ -15,8 +16,22 @@ export const Content = defineComponent({
       default: 'div'
     }
   },
-  setup(props, { slots }) {
-    return () => h(props.as, { class: 'ldoc-content' }, slots.default?.())
+  setup(props) {
+    const route = useRoute()
+
+    return () => {
+      // 获取当前路由匹配的组件
+      const matched = route.matched[0]
+      const matchedComponent = matched?.components?.default as Component | undefined
+
+      if (matchedComponent) {
+        return h(props.as, { class: 'ldoc-content' }, [
+          h(matchedComponent)
+        ])
+      }
+
+      return h(props.as, { class: 'ldoc-content' })
+    }
   }
 })
 
