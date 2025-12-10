@@ -1,0 +1,142 @@
+{
+  "name": "@ldesign/doc",
+  "version": "1.0.0",
+  "description": "LDesign 文档系统 - 支持 Vue/React 组件渲染、主题系统、插件系统的现代化文档框架",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/es/index.js",
+      "require": "./dist/lib/index.cjs"
+    },
+    "./theme": {
+      "types": "./dist/types/theme/index.d.ts",
+      "import": "./dist/es/theme/index.js"
+    },
+    "./client": {
+      "types": "./dist/types/client/index.d.ts",
+      "import": "./dist/es/client/index.js"
+    },
+    "./theme-default": {
+      "types": "./dist/types/theme-default/index.d.ts",
+      "import": "./dist/es/theme-default/index.js"
+    },
+    "./plugin-vue": {
+      "types": "./dist/types/plugins/vue/index.d.ts",
+      "import": "./dist/es/plugins/vue/index.js"
+    },
+    "./plugin-react": {
+      "types": "./dist/types/plugins/react/index.d.ts",
+      "import": "./dist/es/plugins/react/index.js"
+    },
+    "./plugins/auth": {
+      "types": "./dist/types/plugins/auth/index.d.ts",
+      "import": "./dist/es/plugins/auth/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/types/plugins/index.d.ts",
+      "import": "./dist/es/plugins/index.js"
+    },
+    "./node": {
+      "types": "./dist/types/node/index.d.ts",
+      "import": "./dist/es/node/index.js"
+    },
+    "./markdown": {
+      "types": "./dist/types/markdown/index.d.ts",
+      "import": "./dist/es/markdown/index.js"
+    }
+  },
+  "main": "./dist/lib/index.cjs",
+  "module": "./dist/es/index.js",
+  "types": "./dist/types/index.d.ts",
+  "bin": {
+    "ldoc": "./bin/ldoc.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "dev": "node bin/ldoc.js dev",
+    "build": "node scripts/build.cjs",
+    "build:types": "tsc --emitDeclarationOnly",
+    "preview": "node bin/ldoc.js preview",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.tsx,.vue"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "@vue/compiler-sfc": "^3.4.0",
+    "@shikijs/core": "^1.0.0",
+    "@shikijs/transformers": "^1.0.0",
+    "shiki": "^1.0.0",
+    "vite": "^5.0.0",
+    "vue-router": "^4.2.0",
+    "markdown-it": "^14.0.0",
+    "markdown-it-anchor": "^8.6.0",
+    "markdown-it-container": "^4.0.0",
+    "markdown-it-emoji": "^3.0.0",
+    "markdown-it-front-matter": "^0.2.3",
+    "markdown-it-table-of-contents": "^0.6.0",
+    "gray-matter": "^4.0.3",
+    "globby": "^14.0.0",
+    "fast-glob": "^3.3.0",
+    "chokidar": "^3.5.0",
+    "cac": "^6.7.0",
+    "picocolors": "^1.0.0",
+    "sirv": "^2.0.0",
+    "compression": "^1.7.0",
+    "polka": "^0.5.0",
+    "nanoid": "^5.0.0",
+    "ora": "^8.0.0",
+    "debug": "^4.3.0",
+    "defu": "^6.1.0",
+    "ufo": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.0",
+    "@types/debug": "^4.1.0",
+    "@types/markdown-it": "^13.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "vue": "^3.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "keywords": [
+    "documentation",
+    "vitepress",
+    "vue",
+    "react",
+    "markdown",
+    "static-site-generator",
+    "theme",
+    "plugin"
+  ],
+  "author": "LDesign Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ldesign/doc"
+  }
+}

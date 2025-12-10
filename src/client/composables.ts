@@ -1,0 +1,212 @@
+/**
+ * 客户端组合式函数
+ */
+
+import { ref, computed, inject, type Ref, type ComputedRef, type InjectionKey } from 'vue'
+import { useRoute as useVueRoute, useRouter as useVueRouter } from 'vue-router'
+import type { PageData, SiteData, Header } from '../shared/types'
+
+// Injection keys - 使用全局 Symbol 以确保跨模块共享
+export const pageDataSymbol: InjectionKey<Ref<PageData>> = Symbol.for('ldoc:pageData')
+export const siteDataSymbol: InjectionKey<Ref<SiteData>> = Symbol.for('ldoc:siteData')
+
+/**
+ * 页面数据接口
+ */
+export interface Data {
+  page: ComputedRef<PageData>
+  site: ComputedRef<SiteData>
+  theme: ComputedRef<unknown>
+  frontmatter: ComputedRef<Record<string, unknown>>
+  title: ComputedRef<string>
+  description: ComputedRef<string>
+  headers: ComputedRef<Header[]>
+  lang: ComputedRef<string>
+  isDark: Ref<boolean>
+}
+
+/**
+ * 获取页面和站点数据
+ */
+export function useData(): Data {
+  const pageData = inject(pageDataSymbol)
+  const siteData = inject(siteDataSymbol)
+  const isDark = ref(false)
+
+  // 检测暗色模式
+  if (typeof window !== 'undefined') {
+    isDark.value = document.documentElement.classList.contains('dark')
+
+    // 监听变化
+    const observer = new MutationObserver(() => {
+      isDark.value = document.documentElement.classList.contains('dark')
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+  }
+
+  return {
+    page: computed(() => pageData?.value || {} as PageData),
+    site: computed(() => siteData?.value || {} as SiteData),
+    theme: computed(() => siteData?.value?.themeConfig || {}),
+    frontmatter: computed(() => pageData?.value?.frontmatter || {}),
+    title: computed(() => pageData?.value?.title || ''),
+    description: computed(() => pageData?.value?.description || ''),
+    headers: computed(() => pageData?.value?.headers || []),
+    lang: computed(() => siteData?.value?.lang || 'zh-CN'),
+    isDark
+  }
+}
+
+/**
+ * 获取当前路由
+ */
+export function useRoute() {
+  return useVueRoute()
+}
+
+/**
+ * 获取路由实例
+ */
+export function useRouter() {
+  return useVueRouter()
+}
+
+/**
+ * 获取站点数据
+ */
+export function useSiteData(): ComputedRef<SiteData> {
+  const siteData = inject(siteDataSymbol)
+  return computed(() => siteData?.value || {} as SiteData)
+}
+
+/**
+ * 获取页面数据
+ */
+export function usePageData(): ComputedRef<PageData> {
+  const pageData = inject(pageDataSymbol)
+  return computed(() => pageData?.value || {} as PageData)
+}
+
+/**
+ * 滚动到锚点
+ */
+export function useScrollToAnchor() {
+  const route = useVueRoute()
+
+  const scrollToAnchor = (hash?: string) => {
+    const targetHash = hash || route.hash
+    if (!targetHash) return
+
+    const target = document.querySelector(decodeURIComponent(targetHash))
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  return { scrollToAnchor }
+}
+
+/**
+ * 页面加载状态
+ */
+export function usePageLoading() {
+  const isLoading = ref(false)
+  const router = useVueRouter()
+
+  router.beforeEach(() => {
+    isLoading.value = true
+  })
+
+  router.afterEach(() => {
+    isLoading.value = false
+  })
+
+  return { isLoading }
+}
+
+/**
+ * 暗色模式切换
+ */
+export function useDark() {
+  const isDark = ref(false)
+
+  if (typeof window !== 'undefined') {
+    // 从 localStorage 或系统偏好读取
+    const stored = localStorage.getItem('ldoc-theme')
+    if (stored) {
+      isDark.value = stored === 'dark'
+    } else {
+      isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+
+    // 应用主题
+    updateTheme(isDark.value)
+  }
+
+  const toggle = () => {
+    isDark.value = !isDark.value
+    updateTheme(isDark.value)
+    localStorage.setItem('ldoc-theme', isDark.value ? 'dark' : 'light')
+  }
+
+  return { isDark, toggle }
+}
+
+function updateTheme(dark: boolean) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.toggle('dark', dark)
+  }
+}
+
+/**
+ * 侧边栏状态
+ */
+export function useSidebar() {
+  const isOpen = ref(false)
+
+  const open = () => { isOpen.value = true }
+  const close = () => { isOpen.value = false }
+  const toggle = () => { isOpen.value = !isOpen.value }
+
+  return { isOpen, open, close, toggle }
+}
+
+/**
+ * 主题色切换
+ */
+export function useThemeColor() {
+  const colors = [
+    { name: 'blue', hue: 231, label: '蓝色' },
+    { name: 'purple', hue: 270, label: '紫色' },
+    { name: 'pink', hue: 330, label: '粉色' },
+    { name: 'red', hue: 0, label: '红色' },
+    { name: 'orange', hue: 30, label: '橙色' },
+    { name: 'green', hue: 150, label: '绿色' },
+    { name: 'teal', hue: 180, label: '青色' }
+  ]
+
+  const currentColor = ref('blue')
+
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('ldoc-theme-color')
+    if (stored && colors.find(c => c.name === stored)) {
+      currentColor.value = stored
+      document.documentElement.setAttribute('data-theme', stored)
+    }
+  }
+
+  const setColor = (colorName: string) => {
+    const color = colors.find(c => c.name === colorName)
+    if (color) {
+      currentColor.value = colorName
+      document.documentElement.setAttribute('data-theme', colorName)
+      localStorage.setItem('ldoc-theme-color', colorName)
+    }
+  }
+
+  return { colors, currentColor, setColor }
+}

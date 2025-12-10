@@ -1,0 +1,538 @@
+/**
+ * LDoc 默认主题样式
+ */
+
+/* CSS 变量 */
+:root {
+  /* 颜色 - 浅色模式 */
+  --ldoc-c-white: #ffffff;
+  --ldoc-c-black: #000000;
+
+  --ldoc-c-gray-1: #dddde3;
+  --ldoc-c-gray-2: #e4e4e9;
+  --ldoc-c-gray-3: #ebebef;
+  --ldoc-c-gray-soft: rgba(142, 150, 170, 0.14);
+
+  /* 主题色 - 默认蓝色 */
+  --ldoc-c-brand-hue: 231;
+  --ldoc-c-brand: hsl(var(--ldoc-c-brand-hue), 100%, 70%);
+  --ldoc-c-brand-light: hsl(var(--ldoc-c-brand-hue), 100%, 76%);
+  --ldoc-c-brand-lighter: hsl(var(--ldoc-c-brand-hue), 100%, 82%);
+  --ldoc-c-brand-dark: hsl(var(--ldoc-c-brand-hue), 60%, 45%);
+  --ldoc-c-brand-darker: hsl(var(--ldoc-c-brand-hue), 50%, 36%);
+  --ldoc-c-brand-soft: hsla(var(--ldoc-c-brand-hue), 100%, 70%, 0.14);
+
+  --ldoc-c-green: #42b883;
+  --ldoc-c-green-light: #42d392;
+  --ldoc-c-green-dark: #33a06f;
+  --ldoc-c-green-soft: rgba(66, 184, 131, 0.14);
+
+  --ldoc-c-yellow: #e2c500;
+  --ldoc-c-yellow-light: #f4d800;
+  --ldoc-c-yellow-dark: #c5a600;
+  --ldoc-c-yellow-soft: rgba(226, 197, 0, 0.14);
+
+  --ldoc-c-red: #f44747;
+  --ldoc-c-red-light: #ff6060;
+  --ldoc-c-red-dark: #d93838;
+  --ldoc-c-red-soft: rgba(244, 71, 71, 0.14);
+
+  --ldoc-c-bg: var(--ldoc-c-white);
+  --ldoc-c-bg-soft: #f6f6f7;
+  --ldoc-c-bg-mute: #e4e4e9;
+  --ldoc-c-bg-alt: #f6f6f7;
+
+  --ldoc-c-divider: #e2e2e3;
+  --ldoc-c-divider-light: #f2f2f2;
+
+  --ldoc-c-text-1: rgba(60, 60, 67);
+  --ldoc-c-text-2: rgba(60, 60, 67, 0.78);
+  --ldoc-c-text-3: rgba(60, 60, 67, 0.56);
+
+  /* 阴影 */
+  --ldoc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --ldoc-shadow-2: 0 3px 12px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.07);
+  --ldoc-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --ldoc-shadow-4: 0 14px 44px rgba(0, 0, 0, 0.12), 0 3px 9px rgba(0, 0, 0, 0.12);
+  --ldoc-shadow-5: 0 18px 56px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.16);
+
+  /* 布局 */
+  --ldoc-layout-max-width: 1440px;
+  --ldoc-content-width: 740px;
+  --ldoc-sidebar-width: 272px;
+  --ldoc-nav-height: 64px;
+
+  /* 字体 */
+  --ldoc-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --ldoc-font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* 圆角 */
+  --ldoc-radius-sm: 4px;
+  --ldoc-radius-md: 8px;
+  --ldoc-radius-lg: 12px;
+  --ldoc-radius-xl: 16px;
+
+  /* 过渡 */
+  --ldoc-transition-fast: 0.15s ease;
+  --ldoc-transition-normal: 0.25s ease;
+  --ldoc-transition-slow: 0.35s ease;
+
+  /* z-index */
+  --ldoc-z-nav: 100;
+  --ldoc-z-sidebar: 50;
+  --ldoc-z-modal: 200;
+  --ldoc-z-tooltip: 300;
+}
+
+/* 暗色模式 */
+.dark {
+  --ldoc-c-bg: #1a1a1a;
+  --ldoc-c-bg-soft: #242424;
+  --ldoc-c-bg-mute: #2c2c2c;
+  --ldoc-c-bg-alt: #161616;
+
+  --ldoc-c-divider: #2e2e2e;
+  --ldoc-c-divider-light: #252525;
+
+  --ldoc-c-text-1: rgba(255, 255, 255, 0.87);
+  --ldoc-c-text-2: rgba(235, 235, 245, 0.6);
+  --ldoc-c-text-3: rgba(235, 235, 245, 0.38);
+
+  /* 暗色模式下的主题色 */
+  --ldoc-c-brand: hsl(var(--ldoc-c-brand-hue), 80%, 65%);
+  --ldoc-c-brand-light: hsl(var(--ldoc-c-brand-hue), 80%, 72%);
+  --ldoc-c-brand-soft: hsla(var(--ldoc-c-brand-hue), 80%, 65%, 0.16);
+}
+
+/* 主题色预设 */
+:root[data-theme="blue"] {
+  --ldoc-c-brand-hue: 231;
+}
+
+:root[data-theme="purple"] {
+  --ldoc-c-brand-hue: 270;
+}
+
+:root[data-theme="pink"] {
+  --ldoc-c-brand-hue: 330;
+}
+
+:root[data-theme="red"] {
+  --ldoc-c-brand-hue: 0;
+}
+
+:root[data-theme="orange"] {
+  --ldoc-c-brand-hue: 30;
+}
+
+:root[data-theme="green"] {
+  --ldoc-c-brand-hue: 150;
+}
+
+:root[data-theme="teal"] {
+  --ldoc-c-brand-hue: 180;
+}
+
+/* 平滑过渡 */
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
+}
+
+/* 重置样式 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-family: var(--ldoc-font-family-base);
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--ldoc-nav-height) + 24px);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--ldoc-c-bg);
+  color: var(--ldoc-c-text-1);
+  font-size: 16px;
+  line-height: 1.6;
+  transition: background-color var(--ldoc-transition-normal), color var(--ldoc-transition-normal);
+}
+
+/* 链接 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 代码 */
+code {
+  font-family: var(--ldoc-font-family-mono);
+}
+
+/* 图片 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 按钮 */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* 自定义块样式 */
+.custom-block {
+  margin: 16px 0;
+  padding: 16px 20px;
+  border-radius: var(--ldoc-radius-md);
+}
+
+.custom-block-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.custom-block.tip {
+  background: var(--ldoc-c-brand-soft);
+  border-left: 4px solid var(--ldoc-c-brand);
+}
+
+.custom-block.tip .custom-block-title {
+  color: var(--ldoc-c-brand);
+}
+
+.custom-block.warning {
+  background: var(--ldoc-c-yellow-soft);
+  border-left: 4px solid var(--ldoc-c-yellow);
+}
+
+.custom-block.warning .custom-block-title {
+  color: var(--ldoc-c-yellow-dark);
+}
+
+.custom-block.danger {
+  background: var(--ldoc-c-red-soft);
+  border-left: 4px solid var(--ldoc-c-red);
+}
+
+.custom-block.danger .custom-block-title {
+  color: var(--ldoc-c-red);
+}
+
+.custom-block.info {
+  background: var(--ldoc-c-gray-soft);
+  border-left: 4px solid var(--ldoc-c-gray-1);
+}
+
+.custom-block.details {
+  background: var(--ldoc-c-bg-soft);
+  border: 1px solid var(--ldoc-c-divider);
+}
+
+.custom-block.details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* 代码块样式 */
+.language-bash,
+.language-sh,
+.language-shell,
+.language-javascript,
+.language-typescript,
+.language-vue,
+.language-jsx,
+.language-tsx,
+.language-css,
+.language-scss,
+.language-less,
+.language-html,
+.language-json,
+.language-yaml,
+.language-markdown,
+.language-python,
+.language-java,
+.language-go,
+.language-rust,
+.language-c,
+.language-cpp,
+.language-sql,
+.language-diff {
+  position: relative;
+  margin: 16px 0;
+  border-radius: var(--ldoc-radius-md);
+  overflow: hidden;
+}
+
+.language-bash::before,
+.language-sh::before,
+.language-shell::before,
+.language-javascript::before,
+.language-typescript::before,
+.language-vue::before,
+.language-jsx::before,
+.language-tsx::before,
+.language-css::before,
+.language-scss::before,
+.language-less::before,
+.language-html::before,
+.language-json::before,
+.language-yaml::before,
+.language-markdown::before,
+.language-python::before,
+.language-java::before,
+.language-go::before,
+.language-rust::before,
+.language-c::before,
+.language-cpp::before,
+.language-sql::before,
+.language-diff::before {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 12px;
+  color: var(--ldoc-c-text-3);
+  z-index: 1;
+}
+
+.language-bash::before {
+  content: 'bash';
+}
+
+.language-sh::before {
+  content: 'sh';
+}
+
+.language-shell::before {
+  content: 'shell';
+}
+
+.language-javascript::before {
+  content: 'js';
+}
+
+.language-typescript::before {
+  content: 'ts';
+}
+
+.language-vue::before {
+  content: 'vue';
+}
+
+.language-jsx::before {
+  content: 'jsx';
+}
+
+.language-tsx::before {
+  content: 'tsx';
+}
+
+.language-css::before {
+  content: 'css';
+}
+
+.language-scss::before {
+  content: 'scss';
+}
+
+.language-less::before {
+  content: 'less';
+}
+
+.language-html::before {
+  content: 'html';
+}
+
+.language-json::before {
+  content: 'json';
+}
+
+.language-yaml::before {
+  content: 'yaml';
+}
+
+.language-markdown::before {
+  content: 'md';
+}
+
+.language-python::before {
+  content: 'python';
+}
+
+.language-java::before {
+  content: 'java';
+}
+
+.language-go::before {
+  content: 'go';
+}
+
+.language-rust::before {
+  content: 'rust';
+}
+
+.language-c::before {
+  content: 'c';
+}
+
+.language-cpp::before {
+  content: 'cpp';
+}
+
+.language-sql::before {
+  content: 'sql';
+}
+
+.language-diff::before {
+  content: 'diff';
+}
+
+/* 行号模式 */
+.line-numbers-mode {
+  position: relative;
+  padding-left: 48px;
+}
+
+.line-numbers-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  padding: 16px 0;
+  background: rgba(0, 0, 0, 0.05);
+  text-align: center;
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ldoc-c-text-3);
+  user-select: none;
+}
+
+.line-numbers-wrapper .line-number {
+  display: block;
+}
+
+/* 演示容器 */
+.demo-container {
+  margin: 16px 0;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-md);
+  overflow: hidden;
+}
+
+.demo-preview {
+  padding: 24px;
+  background: var(--ldoc-c-bg);
+}
+
+.demo-actions {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  background: var(--ldoc-c-bg-soft);
+  border-top: 1px solid var(--ldoc-c-divider);
+}
+
+.demo-toggle-code {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-sm);
+  font-size: 13px;
+  color: var(--ldoc-c-text-2);
+  cursor: pointer;
+  transition: all var(--ldoc-transition-fast);
+}
+
+.demo-toggle-code:hover {
+  border-color: var(--ldoc-c-brand);
+  color: var(--ldoc-c-brand);
+}
+
+.demo-code {
+  border-top: 1px solid var(--ldoc-c-divider);
+}
+
+.demo-code pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+/* 代码组 */
+.code-group {
+  margin: 16px 0;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-md);
+  overflow: hidden;
+}
+
+.code-group-tabs {
+  display: flex;
+  background: var(--ldoc-c-bg-soft);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+}
+
+.code-group-tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: var(--ldoc-c-text-2);
+  cursor: pointer;
+  transition: all var(--ldoc-transition-fast);
+}
+
+.code-group-tab:hover {
+  color: var(--ldoc-c-text-1);
+}
+
+.code-group-tab.active {
+  color: var(--ldoc-c-brand);
+  background: var(--ldoc-c-bg);
+  border-bottom: 2px solid var(--ldoc-c-brand);
+  margin-bottom: -1px;
+}
+
+.code-group-content pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ldoc-c-divider);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ldoc-c-text-3);
+}
+
+/* 响应式工具类 */
+@media (max-width: 768px) {
+  :root {
+    --ldoc-nav-height: 56px;
+  }
+}

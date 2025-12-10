@@ -1,0 +1,14 @@
+{
+  "name": "@ldesign/doc-playground",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ldoc dev",
+    "build": "ldoc build",
+    "preview": "ldoc preview"
+  },
+  "devDependencies": {
+    "@ldesign/doc": "workspace:*"
+  }
+}

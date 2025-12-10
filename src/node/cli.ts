@@ -1,0 +1,134 @@
+/**
+ * CLI 入口
+ */
+
+import { cac } from 'cac'
+import pc from 'picocolors'
+
+// 版本号 - 构建时会被替换或从包信息获取
+const version = '1.0.0'
+
+const cli = cac('ldoc')
+
+// 版本信息
+cli.version(version)
+
+// dev 命令
+cli
+  .command('[root]', 'Start development server')
+  .alias('dev')
+  .option('--port <port>', 'Server port', { default: 5173 })
+  .option('--host [host]', 'Server host')
+  .option('--open', 'Open browser on startup')
+  .option('--force', 'Force re-optimize dependencies')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { createLDoc } = await import('./createLDoc')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+      console.log(pc.gray('  Starting development server...\n'))
+
+      const ldoc = await createLDoc(root, {
+        command: 'serve',
+        mode: 'development'
+      })
+
+      await ldoc.serve()
+    } catch (error) {
+      console.error(pc.red('\n  Error starting dev server:\n'))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// build 命令
+cli
+  .command('build [root]', 'Build for production')
+  .option('--outDir <dir>', 'Output directory', { default: '.ldoc/dist' })
+  .option('--minify', 'Minify output', { default: true })
+  .option('--sourcemap', 'Generate source maps')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { build } = await import('./build')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+
+      await build(root)
+    } catch (error) {
+      console.error(pc.red('\n  Build failed:\n'))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// preview 命令
+cli
+  .command('preview [root]', 'Preview production build')
+  .option('--port <port>', 'Server port', { default: 4173 })
+  .option('--host [host]', 'Server host')
+  .option('--open', 'Open browser on startup')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { serve } = await import('./serve')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+      console.log(pc.gray('  Starting preview server...\n'))
+
+      await serve(root, {
+        port: options.port as number,
+        host: options.host as string | boolean,
+        open: options.open as boolean
+      })
+    } catch (error) {
+      console.error(pc.red('\n  Preview failed:\n'))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// init 命令
+cli
+  .command('init [root]', 'Initialize a new documentation site')
+  .option('--template <template>', 'Template to use', { default: 'default' })
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { initProject } = await import('./init')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+      console.log(pc.gray('  Initializing new documentation site...\n'))
+
+      await initProject(root, options.template as string)
+
+      console.log(pc.green('\n  ✓ Documentation site initialized successfully!'))
+      console.log(pc.gray('\n  Next steps:'))
+      console.log(pc.gray('    1. cd ' + root))
+      console.log(pc.gray('    2. pnpm install'))
+      console.log(pc.gray('    3. pnpm dev'))
+      console.log()
+    } catch (error) {
+      console.error(pc.red('\n  Initialization failed:\n'))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// 帮助信息
+cli.help()
+
+// 无效命令
+cli.on('command:*', () => {
+  console.error(pc.red('\n  Unknown command: ' + cli.args.join(' ')))
+  cli.outputHelp()
+  process.exit(1)
+})
+
+// 解析命令行参数
+export function run(): void {
+  cli.parse()
+}
+
+// 直接运行
+export { cli }
+
+// 作为入口点
+run()
