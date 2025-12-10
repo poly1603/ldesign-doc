@@ -1,6 +1,19 @@
+---
+title: 快速开始
+description: 从零开始搭建 LDoc 文档站点
+---
+
 # 快速开始
 
-本节将帮助你从零开始搭建一个 LDoc 文档站点。
+本节将帮助你从零开始搭建一个 LDoc 文档站点。如果你想快速体验 LDoc 的功能，可以先跳到 [在线演示](#在线演示) 部分。
+
+## 前置要求
+
+在开始之前，请确保你的开发环境满足以下要求：
+
+- **Node.js** - 版本 >= 18.0.0
+- **包管理器** - pnpm (推荐)、npm 或 yarn
+- **代码编辑器** - VS Code (推荐，有更好的 Markdown 支持)
 
 ## 安装
 
@@ -91,6 +104,86 @@ pnpm build
 
 # 预览构建结果
 pnpm preview
+```
+
+## 目录结构说明
+
+### docs 目录
+
+`docs/` 目录是存放所有文档内容的地方：
+
+| 文件/目录 | 说明 |
+|----------|------|
+| `index.md` | 首页，支持 hero 和 features 配置 |
+| `guide/` | 指南目录 |
+| `api/` | API 文档目录 |
+| `public/` | 静态资源，会被直接复制到输出目录 |
+
+### 配置文件
+
+`ldoc.config.ts` 是 LDoc 的核心配置文件，支持以下主要配置项：
+
+```ts
+interface UserConfig {
+  title: string           // 站点标题
+  description: string     // 站点描述
+  lang: string           // 语言
+  base: string           // 部署基础路径
+  srcDir: string         // 文档源目录
+  themeConfig: object    // 主题配置
+  markdown: object       // Markdown 配置
+  vite: object           // Vite 配置
+}
+```
+
+## 在线演示
+
+你可以在 [StackBlitz](https://stackblitz.com) 上在线体验 LDoc：
+
+> 即将推出在线演示链接
+
+## 常见问题
+
+### 如何自定义主题？
+
+LDoc 支持完全自定义主题，你可以：
+
+1. 使用 CSS 变量覆盖默认样式
+2. 创建自定义主题组件
+3. 使用第三方主题
+
+详见 [主题开发](/guide/theme) 章节。
+
+### 如何添加搜索功能？
+
+LDoc 内置了基于客户端的全文搜索功能，无需额外配置即可使用。如需更强大的搜索能力，可以集成 Algolia DocSearch。
+
+### 如何部署到 GitHub Pages？
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+      - run: pnpm install
+      - run: pnpm build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
 ```
 
 ## 下一步

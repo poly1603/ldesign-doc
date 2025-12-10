@@ -6,6 +6,7 @@ import { resolve, dirname } from 'path'
 import type { Plugin, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
+import yaml from 'js-yaml'
 import type { SiteConfig, MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
@@ -78,7 +79,7 @@ function createMarkdownPlugin(config: SiteConfig, md: MarkdownRenderer): Plugin 
 
       if (frontmatterMatch) {
         try {
-          frontmatter = parseYaml(frontmatterMatch[1])
+          frontmatter = yaml.load(frontmatterMatch[1]) as Record<string, unknown> || {}
           markdown = code.slice(frontmatterMatch[0].length)
         } catch { }
       }
@@ -108,7 +109,9 @@ function createMarkdownPlugin(config: SiteConfig, md: MarkdownRenderer): Plugin 
  * 生成 Vue 组件代码
  */
 function generateVueComponent(html: string, frontmatter: Record<string, unknown>): string {
-  const escapedHtml = html.replace(/`/g, '\\`').replace(/\$/g, '\\$')
+  // 使用 JSON.stringify 安全转义 HTML
+  const htmlJson = JSON.stringify(html)
+  const frontmatterJson = JSON.stringify(frontmatter)
 
   return `
 <template>
@@ -116,10 +119,8 @@ function generateVueComponent(html: string, frontmatter: Record<string, unknown>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const content = ref(\`${escapedHtml}\`)
-const frontmatter = ${JSON.stringify(frontmatter)}
+const content = ${htmlJson}
+const frontmatter = ${frontmatterJson}
 
 defineExpose({ frontmatter })
 </script>
@@ -153,34 +154,6 @@ function hasReactImport(code: string): boolean {
   return /import\s+.*\s+from\s+['"]react['"]/.test(code)
 }
 
-/**
- * 简单的 YAML 解析
- */
-function parseYaml(yaml: string): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-  const lines = yaml.split('\n')
-
-  for (const line of lines) {
-    const match = line.match(/^(\w+):\s*(.*)$/)
-    if (match) {
-      const [, key, value] = match
-      result[key] = parseYamlValue(value.trim())
-    }
-  }
-
-  return result
-}
-
-function parseYamlValue(value: string): unknown {
-  if (value === 'true') return true
-  if (value === 'false') return false
-  if (value === 'null' || value === '') return null
-  if (/^\d+$/.test(value)) return parseInt(value, 10)
-  if (/^\d+\.\d+$/.test(value)) return parseFloat(value)
-  if (value.startsWith('"') && value.endsWith('"')) return value.slice(1, -1)
-  if (value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1)
-  return value
-}
 
 /**
  * 虚拟模块插件

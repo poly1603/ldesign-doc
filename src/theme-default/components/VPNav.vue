@@ -204,10 +204,18 @@ const isExternalLink = (link: string) => {
 // 判断导航是否激活
 const isNavActive = (link: string) => {
   if (!link) return false
-  const currentPath = route.path
-  // 精确匹配或路径前缀匹配
-  if (currentPath === link) return true
-  if (link !== '/' && currentPath.startsWith(link)) return true
+  // 获取当前路径
+  const currentPath = route?.path || (typeof window !== 'undefined' ? window.location.pathname : '/')
+  // 标准化路径 - 移除结尾的斜杠
+  const normalizePath = (p: string) => p.replace(/\/$/, '') || '/'
+  const normalizedLink = normalizePath(link)
+  const normalizedCurrent = normalizePath(currentPath)
+  
+  // 精确匹配
+  if (normalizedCurrent === normalizedLink) return true
+  // 路径前缀匹配（不包括首页）
+  if (normalizedLink !== '/' && normalizedCurrent.startsWith(normalizedLink + '/')) return true
+  if (normalizedLink !== '/' && normalizedCurrent.startsWith(normalizedLink)) return true
   return false
 }
 
@@ -260,15 +268,25 @@ const openSearch = () => {
 }
 
 .vp-nav-link {
-  color: var(--ldoc-c-text-1);
+  display: flex;
+  align-items: center;
+  color: var(--ldoc-c-text-2);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: color 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .vp-nav-link:hover {
+  color: var(--ldoc-c-text-1);
+  background: var(--ldoc-c-bg-soft);
+}
+
+.vp-nav-link.active {
   color: var(--ldoc-c-brand);
+  background: var(--ldoc-c-brand-soft);
 }
 
 .vp-nav-dropdown {

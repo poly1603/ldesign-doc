@@ -5,6 +5,7 @@
 import { resolve } from 'path'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { createServer as createViteServer, type ViteDevServer } from 'vite'
+import yaml from 'js-yaml'
 import type { SiteConfig, MarkdownRenderer } from '../../shared/types'
 import type { PluginContainer } from '../../plugin/pluginContainer'
 import { createVitePlugins } from '../vitePlugin'
@@ -225,7 +226,10 @@ export const routes = [
 ${routes.map(r => `  {
     path: '${r.path}',
     component: () => import('${r.file}'),
-    meta: { title: '${r.title || ''}' }
+    meta: { 
+      title: '${r.title || ''}',
+      frontmatter: ${JSON.stringify(r.frontmatter || {})}
+    }
   }`).join(',\n')},
   {
     path: '/:pathMatch(.*)*',
@@ -237,22 +241,50 @@ ${routes.map(r => `  {
   writeFileSync(resolve(tempDir, 'routes.ts'), routesContent)
 }
 
+interface RouteInfo {
+  path: string
+  file: string
+  title?: string
+  frontmatter?: Record<string, unknown>
+}
+
+/**
+ * 解析 YAML frontmatter
+ */
+function parseYamlFrontmatter(content: string): Record<string, unknown> {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  if (!match) return {}
+
+  try {
+    return yaml.load(match[1]) as Record<string, unknown> || {}
+  } catch {
+    return {}
+  }
+}
+
 /**
  * 扫描目录生成路由
  */
-async function generateRoutes(srcDir: string): Promise<Array<{ path: string; file: string; title?: string }>> {
-  const routes: Array<{ path: string; file: string; title?: string }> = []
+async function generateRoutes(srcDir: string): Promise<RouteInfo[]> {
+  const routes: RouteInfo[] = []
+  const fs = await import('fs')
 
   const scanDir = async (dir: string, prefix: string = '') => {
-    const entries = await import('fs').then(fs => fs.promises.readdir(dir, { withFileTypes: true }))
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true })
 
     for (const entry of entries) {
       const fullPath = resolve(dir, entry.name)
 
       if (entry.isDirectory()) {
+        // 跳过 public 目录
+        if (entry.name === 'public') continue
         // 递归扫描子目录
         await scanDir(fullPath, `${prefix}/${entry.name}`)
       } else if (entry.name.endsWith('.md')) {
+        // 读取文件内容获取 frontmatter
+        const content = await fs.promises.readFile(fullPath, 'utf-8')
+        const frontmatter = parseYamlFrontmatter(content)
+
         // 转换路径
         let routePath = prefix
         const baseName = entry.name.replace(/\.md$/, '')
@@ -271,7 +303,8 @@ async function generateRoutes(srcDir: string): Promise<Array<{ path: string; fil
         routes.push({
           path: routePath,
           file: fullPath.replace(/\\/g, '/'),
-          title: baseName === 'index' ? '' : baseName
+          title: (frontmatter.title as string) || (baseName === 'index' ? '' : baseName),
+          frontmatter
         })
       }
     }
