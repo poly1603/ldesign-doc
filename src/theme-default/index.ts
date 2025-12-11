@@ -2,9 +2,25 @@
  * 默认主题入口
  */
 
-import { defineTheme } from '../theme/defineTheme'
 import Layout from './Layout.vue'
 import NotFound from './NotFound.vue'
+
+// Markdown 全局组件
+import Demo from './components/Demo.vue'
+import CodeGroup from './components/CodeGroup.vue'
+
+// 内联 defineTheme 以避免构建时的路径解析问题
+interface Theme {
+  Layout: unknown
+  NotFound?: unknown
+  enhanceApp?: (ctx: { app: unknown; router: unknown; siteData: unknown }) => void | Promise<void>
+  extends?: Theme
+  styles?: string[]
+}
+
+function defineTheme(theme: Theme): Theme {
+  return theme
+}
 
 // 导出组件
 export { default as Layout } from './Layout.vue'
@@ -15,6 +31,8 @@ export { default as VPContent } from './components/VPContent.vue'
 export { default as VPFooter } from './components/VPFooter.vue'
 export { default as VPHome } from './components/VPHome.vue'
 export { default as VPDoc } from './components/VPDoc.vue'
+export { default as Demo } from './components/Demo.vue'
+export { default as CodeGroup } from './components/CodeGroup.vue'
 
 // 导出组合式函数
 export * from './composables'
@@ -24,6 +42,9 @@ export default defineTheme({
   Layout,
   NotFound,
   enhanceApp({ app }) {
-    // 注册全局组件
+    // 注册全局 Markdown 组件
+    const vueApp = app as { component: (name: string, component: unknown) => void }
+    vueApp.component('Demo', Demo)
+    vueApp.component('CodeGroup', CodeGroup)
   }
 })

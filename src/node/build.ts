@@ -11,6 +11,7 @@ import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
 import { createVitePlugins } from './vitePlugin'
 import { scanPages } from './pages'
+import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate } from './core/siteData'
 import pc from 'picocolors'
 
 export interface BuildOptions {
@@ -137,7 +138,7 @@ export async function build(root: string = process.cwd()): Promise<void> {
 }
 
 /**
- * 生成临时文件
+ * 生成临时文件 - 使用统一的路由生成
  */
 async function generateTempFiles(config: SiteConfig, pages: PageData[]): Promise<void> {
   const tempDir = config.tempDir
@@ -147,69 +148,24 @@ async function generateTempFiles(config: SiteConfig, pages: PageData[]): Promise
     mkdirSync(tempDir, { recursive: true })
   }
 
-  // 生成路由文件
-  const routes = pages.map((page, index) => ({
-    path: '/' + page.relativePath.replace(/\.md$/, '.html').replace(/index\.html$/, ''),
-    component: `Page${index}`,
-    meta: {
-      frontmatter: page.frontmatter,
-      title: page.title
-    }
-  }))
+  // 使用统一的路由生成
+  const routes = await generateRoutes(config)
 
-  const routesContent = `
-// Auto-generated routes
-${pages.map((page, index) => `import Page${index} from '${normalizePath(page.filePath)}'`).join('\n')}
+  // 写入路由文件 - build 模式使用静态导入
+  const routesCode = generateRoutesCode(routes, 'build')
+  writeFileSync(resolve(tempDir, 'routes.js'), routesCode)
 
-export const routes = [
-${routes.map((route, index) => `  {
-    path: '${route.path || '/'}',
-    component: Page${index},
-    meta: ${JSON.stringify(route.meta)}
-  }`).join(',\n')}
-]
-`
+  // 写入站点数据文件
+  const siteDataCode = generateSiteDataCode(config)
+  writeFileSync(resolve(tempDir, 'siteData.js'), siteDataCode)
 
-  writeFileSync(resolve(tempDir, 'routes.js'), routesContent)
+  // 写入主入口文件
+  const mainCode = generateMainCode(config)
+  writeFileSync(resolve(tempDir, 'main.js'), mainCode)
 
-  // 生成入口文件
-  const entryContent = `
-import { createApp } from '@ldesign/doc/client'
-import { routes } from './routes.js'
-import Theme from '@theme'
-
-const app = createApp({
-  routes,
-  theme: Theme
-})
-
-app.mount('#app')
-`
-
-  writeFileSync(resolve(tempDir, 'main.js'), entryContent)
-
-  // 生成 HTML 模板
-  const htmlContent = `<!DOCTYPE html>
-<html lang="${config.lang}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${config.title}</title>
-  <meta name="description" content="${config.description}">
-  ${config.head.map(tag => {
-    const [tagName, attrs, content] = tag
-    const attrStr = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ')
-    return content ? `<${tagName} ${attrStr}>${content}</${tagName}>` : `<${tagName} ${attrStr}>`
-  }).join('\n  ')}
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module" src="./main.js"></script>
-</body>
-</html>
-`
-
-  writeFileSync(resolve(tempDir, 'index.html'), htmlContent)
+  // 写入 HTML 模板
+  const htmlTemplate = generateHtmlTemplate(config, './main.js')
+  writeFileSync(resolve(tempDir, 'index.html'), htmlTemplate)
 }
 
 /**
@@ -229,6 +185,12 @@ async function buildSSR(config: SiteConfig, vitePlugins: unknown[]): Promise<voi
         output: {
           format: 'esm'
         }
+      }
+    },
+    resolve: {
+      alias: {
+        '@theme': config.themeDir,
+        '@': config.srcDir
       }
     }
   }

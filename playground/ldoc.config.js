@@ -7,8 +7,8 @@ export default defineConfig({
   srcDir: 'docs',
 
   themeConfig: {
-    logo: '📚',
-    siteTitle: 'LDoc',
+    logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
+    siteTitle: 'LDesign',
 
     nav: [
       { text: '指南', link: '/guide/' },
@@ -34,10 +34,18 @@ export default defineConfig({
           ]
         },
         {
+          text: '编写文档',
+          items: [
+            { text: 'Markdown 语法', link: '/guide/markdown' },
+            { text: 'Frontmatter', link: '/guide/frontmatter' },
+            { text: '静态资源', link: '/guide/assets' }
+          ]
+        },
+        {
           text: '进阶',
           items: [
-            { text: '主题开发', link: '/guide/theme' },
-            { text: '插件开发', link: '/guide/plugin' }
+            { text: '主题定制', link: '/guide/theme' },
+            { text: '插件开发', link: '/guide/plugins' }
           ]
         }
       ],
@@ -68,7 +76,33 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright 2024 LDesign Team'
+      copyright: 'Copyright © 2024 LDesign Team. All rights reserved.',
+      links: [
+        {
+          title: '文档',
+          items: [
+            { text: '快速开始', link: '/guide/getting-started' },
+            { text: 'Markdown 语法', link: '/guide/markdown' },
+            { text: '配置参考', link: '/guide/configuration' }
+          ]
+        },
+        {
+          title: '社区',
+          items: [
+            { text: 'GitHub', link: 'https://github.com/ldesign/doc' },
+            { text: '问题反馈', link: 'https://github.com/ldesign/doc/issues' },
+            { text: '讨论区', link: 'https://github.com/ldesign/doc/discussions' }
+          ]
+        },
+        {
+          title: '更多',
+          items: [
+            { text: '更新日志', link: '/changelog' },
+            { text: '贡献指南', link: '/contributing' },
+            { text: '团队', link: '/team' }
+          ]
+        }
+      ]
     },
 
     editLink: {

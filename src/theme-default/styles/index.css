@@ -536,3 +536,298 @@ button {
     --ldoc-nav-height: 56px;
   }
 }
+
+/* ============== 增强 Markdown 功能 ============== */
+
+/* 图片样式 - 支持点击放大 */
+.ldoc-content img {
+  max-width: 100%;
+  border-radius: var(--ldoc-radius-md);
+  cursor: zoom-in;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ldoc-content img:hover {
+  box-shadow: var(--ldoc-shadow-3);
+}
+
+/* 图片放大蒙版 */
+.image-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+.image-viewer-overlay img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  cursor: default;
+  animation: scaleIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); }
+  to { transform: scale(1); }
+}
+
+/* 视频样式 */
+.ldoc-content video {
+  max-width: 100%;
+  border-radius: var(--ldoc-radius-md);
+  background: #000;
+}
+
+/* 音频样式 */
+.ldoc-content audio {
+  width: 100%;
+  margin: 16px 0;
+}
+
+/* 图片轮播 */
+.image-carousel {
+  position: relative;
+  margin: 24px 0;
+  border-radius: var(--ldoc-radius-lg);
+  overflow: hidden;
+  background: var(--ldoc-c-bg-soft);
+}
+
+.image-carousel-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.image-carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+.image-carousel-item {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+.image-carousel-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: var(--ldoc-shadow-2);
+}
+
+.image-carousel-nav:hover {
+  background: #fff;
+}
+
+.image-carousel-nav.prev {
+  left: 16px;
+}
+
+.image-carousel-nav.next {
+  right: 16px;
+}
+
+.image-carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.image-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-carousel-dot.active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+/* 徽章样式 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.badge.tip {
+  background: var(--ldoc-c-green-soft);
+  color: var(--ldoc-c-green);
+}
+
+.badge.warning {
+  background: var(--ldoc-c-yellow-soft);
+  color: var(--ldoc-c-yellow);
+}
+
+.badge.danger {
+  background: var(--ldoc-c-red-soft);
+  color: var(--ldoc-c-red);
+}
+
+.badge.info {
+  background: var(--ldoc-c-brand-soft);
+  color: var(--ldoc-c-brand);
+}
+
+/* 步骤列表 */
+.steps {
+  counter-reset: step;
+  padding-left: 0;
+  list-style: none;
+}
+
+.steps > li {
+  position: relative;
+  padding-left: 48px;
+  padding-bottom: 24px;
+  margin: 0;
+}
+
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--ldoc-c-brand);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.steps > li::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: var(--ldoc-c-divider);
+}
+
+.steps > li:last-child::after {
+  display: none;
+}
+
+/* 文件树样式 */
+.file-tree {
+  padding: 16px;
+  background: var(--ldoc-c-bg-soft);
+  border-radius: var(--ldoc-radius-md);
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+}
+
+.file-tree ul {
+  list-style: none;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.file-tree > ul {
+  padding-left: 0;
+}
+
+.file-tree li {
+  position: relative;
+  padding: 4px 0;
+}
+
+.file-tree li::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 0;
+  bottom: 50%;
+  width: 10px;
+  border-left: 1px solid var(--ldoc-c-divider);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+}
+
+.file-tree li:last-child::before {
+  border-left: 1px solid var(--ldoc-c-divider);
+}
+
+.file-tree .folder::before {
+  content: '📁 ';
+}
+
+.file-tree .file::before {
+  content: '📄 ';
+}
+
+/* 键盘按键样式 */
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-family: var(--ldoc-font-family-mono);
+  color: var(--ldoc-c-text-1);
+  background: var(--ldoc-c-bg-soft);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--ldoc-c-divider);
+}
+
+/* 标记文本 */
+mark {
+  background: var(--ldoc-c-yellow-soft);
+  color: inherit;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+/* 响应式工具类 */
+@media (max-width: 768px) {
+  :root {
+    --ldoc-nav-height: 56px;
+  }
+}

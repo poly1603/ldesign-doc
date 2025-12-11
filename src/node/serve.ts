@@ -2,11 +2,9 @@
  * 预览服务器
  */
 
-import { resolve } from 'path'
 import { existsSync } from 'fs'
 import polka from 'polka'
 import sirv from 'sirv'
-import compression from 'compression'
 import pc from 'picocolors'
 import type { SiteConfig } from '../shared/types'
 import { resolveConfig } from './config'
@@ -15,6 +13,62 @@ export interface ServeOptions {
   port?: number
   host?: string | boolean
   open?: boolean
+}
+
+/**
+ * 尝试在指定端口启动服务器，如果端口被占用则尝试下一个
+ */
+async function tryStartServer(
+  config: { outDir: string; base: string },
+  startPort: number,
+  maxAttempts: number = 10
+): Promise<{ server: any; port: number }> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const currentPort = startPort + attempt
+
+    try {
+      const result = await new Promise<{ server: any; port: number }>((resolve, reject) => {
+        const app = polka()
+
+        // 静态文件服务
+        app.use(
+          config.base,
+          sirv(config.outDir, {
+            maxAge: 31536000,
+            immutable: true,
+            single: true,
+            dev: false
+          }) as never
+        )
+
+        const polkaInstance = app.listen(currentPort)
+        const server = (polkaInstance as any).server
+
+        if (server) {
+          server.once('listening', () => {
+            resolve({ server: polkaInstance, port: currentPort })
+          })
+
+          server.once('error', (err: NodeJS.ErrnoException) => {
+            reject(err)
+          })
+        } else {
+          // 如果没有 server，假设成功
+          resolve({ server: polkaInstance, port: currentPort })
+        }
+      })
+
+      return result
+    } catch (err: any) {
+      if (err.code === 'EADDRINUSE') {
+        console.log(pc.yellow(`Port ${currentPort} is in use, trying another one...`))
+        continue
+      }
+      throw err
+    }
+  }
+
+  throw new Error(`Could not find available port after ${maxAttempts} attempts`)
 }
 
 /**
@@ -27,7 +81,7 @@ export async function serve(
   close: () => Promise<void>
   port: number
 }> {
-  const { port = 4173, host = 'localhost', open = false } = options
+  const { port: requestedPort = 4173, host = 'localhost', open = false } = options
 
   // 解析配置
   const config = await resolveConfig(root, 'build', 'production')
@@ -39,62 +93,43 @@ export async function serve(
     process.exit(1)
   }
 
-  // 创建服务器
-  const app = polka()
-
-  // 启用压缩
-  app.use(compression() as never)
-
-  // 静态文件服务
-  app.use(
-    config.base,
-    sirv(config.outDir, {
-      maxAge: 31536000, // 1 year
-      immutable: true,
-      single: true, // SPA fallback
-      gzip: true,
-      brotli: true
-    }) as never
+  // 启动服务器（自动尝试其他端口）
+  const { server: polkaInstance, port } = await tryStartServer(
+    { outDir: config.outDir, base: config.base },
+    requestedPort,
+    10
   )
 
-  // 启动服务器
-  return new Promise((resolve, reject) => {
-    const server = app.listen(port, () => {
-      const hostStr = host === true ? '0.0.0.0' : (host || 'localhost')
-      const url = `http://${hostStr}:${port}${config.base}`
+  const hostStr = host === true ? '0.0.0.0' : (host || 'localhost')
+  const url = `http://${hostStr}:${port}${config.base}`
 
-      console.log()
-      console.log(pc.green('  ✓ Production preview server running at:'))
-      console.log()
-      console.log(`    ${pc.cyan('Local:')}   ${pc.blue(url)}`)
+  console.log()
+  console.log(pc.green('  ✓ Production preview server running at:'))
+  console.log()
+  console.log(`    ${pc.cyan('Local:')}   ${pc.blue(url)}`)
 
-      if (host === true) {
-        console.log(`    ${pc.cyan('Network:')} ${pc.blue(`http://0.0.0.0:${port}${config.base}`)}`)
+  if (host === true) {
+    console.log(`    ${pc.cyan('Network:')} ${pc.blue(`http://0.0.0.0:${port}${config.base}`)}`)
+  }
+
+  console.log()
+  console.log(pc.gray('  press Ctrl+C to stop'))
+  console.log()
+
+  // 自动打开浏览器
+  if (open) {
+    import('open').then((m) => m.default(url)).catch(() => { })
+  }
+
+  return {
+    close: () => new Promise<void>((res) => {
+      const server = (polkaInstance as any).server
+      if (server) {
+        server.close(() => res())
+      } else {
+        res()
       }
-
-      console.log()
-      console.log(pc.gray('  press Ctrl+C to stop'))
-      console.log()
-
-      // 自动打开浏览器
-      if (open) {
-        import('open').then((m) => m.default(url)).catch(() => { })
-      }
-
-      resolve({
-        close: () => new Promise((res) => {
-          server.server?.close(() => res())
-        }),
-        port
-      })
-    })
-
-    server.server?.on('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE') {
-        console.error(pc.red(`Port ${port} is already in use.`))
-        console.log(pc.gray(`Try using a different port with --port <port>`))
-      }
-      reject(err)
-    })
-  })
+    }),
+    port
+  }
 }

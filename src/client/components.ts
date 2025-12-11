@@ -2,11 +2,11 @@
  * 客户端内置组件
  */
 
-import { defineComponent, h, ref, onMounted, type PropType, type Component } from 'vue'
+import { defineComponent, h, ref, onMounted, watch, shallowRef, type PropType, type Component } from 'vue'
 import { useRoute } from 'vue-router'
 
 /**
- * 内容渲染组件 - 渲染当前路由的 markdown 组件
+ * 内容渲染组件 - 动态加载并渲染当前路由对应的 markdown 组件
  */
 export const Content = defineComponent({
   name: 'Content',
@@ -18,19 +18,50 @@ export const Content = defineComponent({
   },
   setup(props) {
     const route = useRoute()
+    const PageComponent = shallowRef<Component | null>(null)
 
-    return () => {
-      // 获取当前路由匹配的组件
+    // 加载当前路由的组件
+    const loadComponent = async () => {
       const matched = route.matched[0]
-      const matchedComponent = matched?.components?.default as Component | undefined
-
-      if (matchedComponent) {
-        return h(props.as, { class: 'ldoc-content' }, [
-          h(matchedComponent)
-        ])
+      if (!matched) {
+        PageComponent.value = null
+        return
       }
 
-      return h(props.as, { class: 'ldoc-content' })
+      const componentDef = matched.components?.default
+      if (!componentDef) {
+        PageComponent.value = null
+        return
+      }
+
+      // 如果是异步组件（函数），则调用它
+      if (typeof componentDef === 'function') {
+        try {
+          const resolved = await (componentDef as () => Promise<{ default?: Component } | Component>)()
+          PageComponent.value = (resolved as { default?: Component }).default || (resolved as Component)
+        } catch (e) {
+          console.error('Failed to load page component:', e)
+          PageComponent.value = null
+        }
+      } else {
+        // 同步组件
+        PageComponent.value = componentDef as Component
+      }
+    }
+
+    // 初始加载
+    onMounted(loadComponent)
+
+    // 监听路由变化
+    watch(() => route.path, loadComponent)
+
+    return () => {
+      if (PageComponent.value) {
+        return h(props.as, { class: 'ldoc-content' }, [
+          h(PageComponent.value)
+        ])
+      }
+      return h(props.as, { class: 'ldoc-content ldoc-loading' })
     }
   }
 })
@@ -97,7 +128,7 @@ export const CodeGroup = defineComponent({
             class: ['code-group-tab', { active: activeTab.value === index }],
             onClick: () => { activeTab.value = index }
           },
-          label
+          String(label)
         )
       })
 

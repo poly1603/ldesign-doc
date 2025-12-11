@@ -2,29 +2,33 @@
   <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar }">
     <!-- 跳过导航 -->
     <a href="#main-content" class="skip-link">跳至主要内容</a>
-    
+
     <!-- 导航栏 -->
     <VPNav />
-    
+
     <!-- 主要内容区 -->
     <div class="ldoc-layout-content">
       <!-- 侧边栏 -->
-      <VPSidebar v-if="hasSidebar" />
-      
+      <Transition name="sidebar-slide">
+        <VPSidebar v-if="hasSidebar" :key="hasSidebar ? 'sidebar' : 'no-sidebar'" />
+      </Transition>
+
       <!-- 内容区 带过渡动画 -->
       <main id="main-content" class="ldoc-main">
         <Transition name="fade-slide" mode="out-in">
           <component :is="currentPage" :key="route.path" />
         </Transition>
       </main>
-      
+
       <!-- 右侧大纲 -->
       <VPOutline v-if="!isHome && showOutline" />
     </div>
-    
+
     <!-- 页脚 -->
-    <VPFooter v-if="showFooter" />
-    
+    <Transition name="footer-fade">
+      <VPFooter v-if="showFooter" />
+    </Transition>
+
     <!-- 回到顶部 -->
     <VPBackToTop />
   </div>
@@ -58,7 +62,7 @@ const currentPage = computed(() => {
 const hasSidebar = computed(() => {
   if (frontmatter.value.sidebar === false) return false
   if (isHome.value) return false
-  
+
   const sidebar = (theme.value as { sidebar?: unknown }).sidebar
   return !!sidebar
 })
@@ -125,6 +129,34 @@ const showFooter = computed(() => {
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* 侧边栏动画 */
+.sidebar-slide-enter-active,
+.sidebar-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.sidebar-slide-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.sidebar-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* 页脚动画 */
+.footer-fade-enter-active,
+.footer-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.footer-fade-enter-from,
+.footer-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 /* 响应式 */
