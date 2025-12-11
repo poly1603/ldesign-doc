@@ -201,17 +201,18 @@ export function useDark() {
       const clipStart = `circle(0px at ${x}px ${y}px)`
       const clipEnd = `circle(${maxRadius}px at ${x}px ${y}px)`
 
+      // 在 startViewTransition 之前注入完整的动画样式
       if (isCollapse) {
         // 收缩：旧视图（暗色）在上面执行收缩动画，新视图（亮色）在下面不动
         style.textContent = `
           *, *::before, *::after { transition: none !important; }
           ::view-transition-old(root) {
-            z-index: 2;
-            animation: theme-collapse ${duration} ${easing} forwards;
+            z-index: 2 !important;
+            animation: theme-collapse ${duration} ${easing} forwards !important;
           }
           ::view-transition-new(root) {
-            z-index: 1;
-            animation: none;
+            z-index: 1 !important;
+            animation: none !important;
           }
           @keyframes theme-collapse {
             from { clip-path: ${clipEnd}; }
@@ -223,12 +224,12 @@ export function useDark() {
         style.textContent = `
           *, *::before, *::after { transition: none !important; }
           ::view-transition-old(root) {
-            z-index: 1;
-            animation: none;
+            z-index: 1 !important;
+            animation: none !important;
           }
           ::view-transition-new(root) {
-            z-index: 2;
-            animation: theme-expand ${duration} ${easing} forwards;
+            z-index: 2 !important;
+            animation: theme-expand ${duration} ${easing} forwards !important;
           }
           @keyframes theme-expand {
             from { clip-path: ${clipStart}; }
