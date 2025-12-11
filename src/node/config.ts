@@ -30,6 +30,7 @@ const CONFIG_FILES = [
  */
 export const defaultConfig: UserConfig = {
   srcDir: 'docs',
+  extraDocs: [],
   outDir: '.ldesign/.doc-cache/dist',
   base: '/',
   title: 'LDoc',
@@ -96,8 +97,14 @@ export async function resolveConfig(
   // 合并默认配置
   const mergedConfig = deepMerge({} as UserConfig, defaultConfig, userConfig)
 
+  // 如果配置在 .ldesign 目录且未指定 srcDir，使用 .ldesign/docs
+  let srcDirPath = mergedConfig.srcDir!
+  if (configPath && configPath.includes('.ldesign') && !userConfig.srcDir) {
+    srcDirPath = '.ldesign/docs'
+  }
+
   // 解析路径
-  const srcDir = resolve(root, mergedConfig.srcDir!)
+  const srcDir = resolve(root, srcDirPath)
   const outDir = resolve(root, mergedConfig.outDir || mergedConfig.build?.outDir || '.ldesign/.doc-cache/dist')
   const tempDir = resolve(root, '.ldesign/.doc-cache/temp')
   const cacheDir = resolve(root, '.ldesign/.doc-cache')
@@ -109,6 +116,7 @@ export async function resolveConfig(
   const siteConfig: SiteConfig = {
     root: normalizePath(root),
     srcDir: normalizePath(srcDir),
+    extraDocs: mergedConfig.extraDocs || [],
     outDir: normalizePath(outDir),
     base: mergedConfig.base!,
     title: mergedConfig.title!,

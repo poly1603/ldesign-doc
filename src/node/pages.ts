@@ -13,17 +13,16 @@ import { normalizePath, slugify } from '../shared/utils'
  * 扫描所有 Markdown 页面
  */
 export async function scanPages(config: SiteConfig): Promise<PageData[]> {
-  const { srcDir } = config
+  const { srcDir, root, extraDocs } = config
+  const pages: PageData[] = []
 
-  // 使用 fast-glob 扫描 Markdown 文件
-  const files = await fg(['**/*.md'], {
+  // 扫描主文档目录
+  const mainFiles = await fg(['**/*.md'], {
     cwd: srcDir,
     ignore: ['**/node_modules/**', '**/.ldoc/**', '**/dist/**']
   })
 
-  const pages: PageData[] = []
-
-  for (const file of files) {
+  for (const file of mainFiles) {
     const filePath = resolve(srcDir, file)
     const pageData = await processPage(filePath, config)
     if (pageData) {
@@ -31,7 +30,77 @@ export async function scanPages(config: SiteConfig): Promise<PageData[]> {
     }
   }
 
+  // 扫描额外文档目录
+  if (extraDocs && extraDocs.length > 0) {
+    for (const extra of extraDocs) {
+      const extraDir = resolve(root, extra.dir)
+      const pattern = extra.pattern || '**/*.md'
+
+      const extraFiles = await fg([pattern], {
+        cwd: extraDir,
+        ignore: ['**/node_modules/**', '**/.ldoc/**', '**/dist/**']
+      })
+
+      for (const file of extraFiles) {
+        const filePath = resolve(extraDir, file)
+        const pageData = await processPageWithPrefix(filePath, extraDir, extra.prefix || '', config)
+        if (pageData) {
+          pages.push(pageData)
+        }
+      }
+    }
+  }
+
   return pages
+}
+
+/**
+ * 处理带前缀的页面（用于 extraDocs）
+ */
+async function processPageWithPrefix(
+  filePath: string,
+  baseDir: string,
+  prefix: string,
+  config: SiteConfig
+): Promise<PageData | null> {
+  try {
+    const content = readFileSync(filePath, 'utf-8')
+    const { data: frontmatter, content: markdown } = matter(content)
+
+    // 提取标题
+    const title = frontmatter.title || extractTitle(markdown) || 'Untitled'
+
+    // 提取描述
+    const description = frontmatter.description || extractDescription(markdown) || ''
+
+    // 提取标题层级
+    const headers = extractHeaders(markdown)
+
+    // 获取文件统计信息
+    const stat = statSync(filePath)
+
+    // 计算相对路径（带前缀）
+    let relativePath = normalizePath(relative(baseDir, filePath))
+
+    // 添加前缀
+    if (prefix) {
+      const cleanPrefix = prefix.replace(/^\/|\/$/g, '')
+      relativePath = `${cleanPrefix}/${relativePath}`
+    }
+
+    return {
+      title,
+      description,
+      frontmatter,
+      headers,
+      relativePath,
+      filePath: normalizePath(filePath),
+      lastUpdated: stat.mtimeMs
+    }
+  } catch (error) {
+    console.error(`Error processing page: ${filePath}`, error)
+    return null
+  }
 }
 
 /**

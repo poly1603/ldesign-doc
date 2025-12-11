@@ -88,22 +88,24 @@ cli
 
 // init 命令
 cli
-  .command('init [root]', 'Initialize a new documentation site')
+  .command('init [root]', 'Initialize documentation in an existing project')
   .option('--template <template>', 'Template to use', { default: 'default' })
   .action(async (root: string = '.', options: Record<string, unknown>) => {
     try {
       const { initProject } = await import('./init')
 
       console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
-      console.log(pc.gray('  Initializing new documentation site...\n'))
+      console.log(pc.gray('  Initializing documentation system...\n'))
 
       await initProject(root, options.template as string)
 
-      console.log(pc.green('\n  ✓ Documentation site initialized successfully!'))
+      console.log(pc.green('\n  ✓ Documentation system initialized successfully!'))
       console.log(pc.gray('\n  Next steps:'))
-      console.log(pc.gray('    1. cd ' + root))
-      console.log(pc.gray('    2. pnpm install'))
-      console.log(pc.gray('    3. pnpm dev'))
+      console.log(pc.white('    1. pnpm install'))
+      console.log(pc.white('    2. pnpm docs:dev'))
+      console.log()
+      console.log(pc.gray('  Edit your docs in .ldesign/docs/'))
+      console.log(pc.gray('  Configure in .ldesign/doc.config.ts'))
       console.log()
     } catch (error) {
       console.error(pc.red('\n  Initialization failed:\n'))

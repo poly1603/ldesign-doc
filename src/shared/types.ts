@@ -41,9 +41,23 @@ export type HeadConfig =
 
 // ============== 配置类型 ==============
 
+/**
+ * 额外文档源配置
+ */
+export interface ExtraDocsSource {
+  /** 目录路径（相对于项目根目录） */
+  dir: string
+  /** URL 前缀，如 '/components' */
+  prefix?: string
+  /** 文件匹配模式，默认 '**\/*.md' */
+  pattern?: string
+}
+
 export interface UserConfig {
   // 基础配置
   srcDir?: string
+  /** 额外的文档源目录，用于从 src 等目录加载组件文档 */
+  extraDocs?: ExtraDocsSource[]
   outDir?: string
   base?: string
   title?: string

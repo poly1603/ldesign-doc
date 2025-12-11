@@ -1,40 +1,56 @@
 /**
  * 项目初始化
+ * 在已有项目中初始化文档系统
  */
 
 import { resolve, join } from 'path'
-import { existsSync, mkdirSync, writeFileSync, copyFileSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs'
 import pc from 'picocolors'
 
 /**
- * 初始化新项目
+ * 初始化文档系统
+ * @param root 项目根目录
+ * @param template 模板类型
  */
 export async function initProject(root: string, template: string): Promise<void> {
   const targetDir = resolve(process.cwd(), root)
+  const ldesignDir = join(targetDir, '.ldesign')
 
-  // 检查目录是否存在
-  if (existsSync(targetDir)) {
-    const files = require('fs').readdirSync(targetDir)
-    if (files.length > 0) {
-      console.log(pc.yellow(`  Warning: Directory ${root} is not empty.`))
+  // 检查 .ldesign 目录是否已存在
+  if (existsSync(ldesignDir)) {
+    const configPath = join(ldesignDir, 'doc.config.ts')
+    if (existsSync(configPath)) {
+      console.log(pc.yellow(`  Warning: .ldesign/doc.config.ts already exists, skipping...`))
+      return
     }
-  } else {
-    mkdirSync(targetDir, { recursive: true })
   }
 
-  // 创建目录结构
+  // 创建 .ldesign 目录结构
   const dirs = [
-    'docs',
-    'docs/guide',
-    'docs/api',
-    'docs/public',
-    '.ldoc'
+    '.ldesign',
+    '.ldesign/docs',
+    '.ldesign/docs/guide',
+    '.ldesign/docs/api',
+    '.ldesign/docs/public'
   ]
 
   for (const dir of dirs) {
     const dirPath = join(targetDir, dir)
     if (!existsSync(dirPath)) {
       mkdirSync(dirPath, { recursive: true })
+      console.log(pc.gray(`  Created: ${dir}/`))
+    }
+  }
+
+  // 获取项目名称（从 package.json 或目录名）
+  let projectName = 'My Project'
+  const pkgPath = join(targetDir, 'package.json')
+  if (existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+      projectName = pkg.name || projectName
+    } catch {
+      // ignore
     }
   }
 
@@ -42,31 +58,31 @@ export async function initProject(root: string, template: string): Promise<void>
   const configContent = `import { defineConfig } from '@ldesign/doc'
 
 export default defineConfig({
-  title: 'My Documentation',
-  description: 'A documentation site powered by LDoc',
+  title: '${projectName} 文档',
+  description: '${projectName} 项目文档',
   
   themeConfig: {
     nav: [
-      { text: 'Guide', link: '/guide/' },
+      { text: '首页', link: '/' },
+      { text: '指南', link: '/guide/' },
       { text: 'API', link: '/api/' }
     ],
     
     sidebar: {
       '/guide/': [
         {
-          text: 'Getting Started',
+          text: '开始使用',
           items: [
-            { text: 'Introduction', link: '/guide/' },
-            { text: 'Quick Start', link: '/guide/quick-start' }
+            { text: '介绍', link: '/guide/' },
+            { text: '快速开始', link: '/guide/getting-started' }
           ]
         }
       ],
       '/api/': [
         {
-          text: 'API Reference',
+          text: 'API 参考',
           items: [
-            { text: 'Config', link: '/api/config' },
-            { text: 'Theme', link: '/api/theme' }
+            { text: '配置', link: '/api/config' }
           ]
         }
       ]
@@ -78,238 +94,243 @@ export default defineConfig({
     
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024'
+      copyright: \`Copyright © \${new Date().getFullYear()}\`
     }
   }
 })
 `
 
-  writeFileSync(join(targetDir, 'ldoc.config.ts'), configContent)
+  writeFileSync(join(ldesignDir, 'doc.config.ts'), configContent)
+  console.log(pc.gray(`  Created: .ldesign/doc.config.ts`))
+
+  // 文档目录路径
+  const docsDir = join(ldesignDir, 'docs')
 
   // 创建首页
   const indexContent = `---
 layout: home
-title: Home
+title: 首页
 hero:
-  name: My Project
-  text: Powerful Documentation System
-  tagline: Build beautiful documentation sites with ease
+  name: ${projectName}
+  text: 项目文档
+  tagline: 使用 LDoc 构建的文档系统
   actions:
-    - text: Get Started
+    - text: 快速开始
       link: /guide/
-    - text: View on GitHub
+    - text: GitHub
       link: https://github.com/your-repo
       theme: alt
 features:
-  - title: ⚡️ Lightning Fast
-    details: Powered by Vite, experience instant server start and HMR.
-  - title: 📝 Markdown First
-    details: Write documentation in Markdown with Vue/React component support.
-  - title: 🎨 Customizable
-    details: Fully customizable themes and powerful plugin system.
-  - title: 🔒 Auth Ready
-    details: Built-in authentication support for private documentation.
+  - title: ⚡️ 极速启动
+    details: 基于 Vite 构建，享受即时的开发服务器启动和热更新。
+  - title: 📝 Markdown 优先
+    details: 使用 Markdown 编写文档，支持 Vue 组件扩展。
+  - title: 🎨 高度可定制
+    details: 完全可定制的主题和强大的插件系统。
+  - title: 🔍 内置搜索
+    details: 开箱即用的全文搜索功能。
 ---
 `
 
-  writeFileSync(join(targetDir, 'docs/index.md'), indexContent)
+  writeFileSync(join(docsDir, 'index.md'), indexContent)
+  console.log(pc.gray(`  Created: .ldesign/docs/index.md`))
 
   // 创建指南页面
-  const guideIndexContent = `# Introduction
+  const guideIndexContent = `# 介绍
 
-Welcome to the documentation!
+欢迎使用 ${projectName} 文档！
 
-## What is LDoc?
+## 什么是 LDoc？
 
-LDoc is a powerful documentation framework that helps you build beautiful documentation sites.
+LDoc 是一个强大的文档框架，帮助你快速构建精美的文档站点。
 
-## Features
+## 特性
 
-- 📝 **Markdown Support** - Write documentation in Markdown
-- 🎨 **Theme System** - Fully customizable themes
-- 🔌 **Plugin System** - Extend functionality with plugins
-- ⚡ **Fast** - Powered by Vite
-- 🔒 **Auth Support** - Built-in authentication
+- 📝 **Markdown 支持** - 使用 Markdown 编写文档
+- 🎨 **主题系统** - 完全可定制的主题
+- 🔌 **插件系统** - 通过插件扩展功能
+- ⚡ **极速** - 基于 Vite 构建
+- 🔍 **内置搜索** - 开箱即用的搜索功能
 
-## Quick Links
+## 快速链接
 
-- [Quick Start](/guide/quick-start)
-- [Configuration](/api/config)
-- [Theme Development](/api/theme)
+- [快速开始](/guide/getting-started)
+- [配置参考](/api/config)
 `
 
-  writeFileSync(join(targetDir, 'docs/guide/index.md'), guideIndexContent)
+  writeFileSync(join(docsDir, 'guide/index.md'), guideIndexContent)
+  console.log(pc.gray(`  Created: .ldesign/docs/guide/index.md`))
 
   // 创建快速开始页面
-  const quickStartContent = `# Quick Start
+  const gettingStartedContent = `# 快速开始
 
-## Installation
+## 安装
 
 \`\`\`bash
-# npm
-npm install @ldesign/doc
-
 # pnpm
-pnpm add @ldesign/doc
+pnpm add -D @ldesign/doc
+
+# npm
+npm install -D @ldesign/doc
 
 # yarn
-yarn add @ldesign/doc
+yarn add -D @ldesign/doc
 \`\`\`
 
-## Configuration
+## 初始化
 
-Create a \`ldoc.config.ts\` file in your project root:
-
-\`\`\`ts
-import { defineConfig } from '@ldesign/doc'
-
-export default defineConfig({
-  title: 'My Documentation',
-  description: 'A documentation site powered by LDoc',
-  
-  themeConfig: {
-    nav: [
-      { text: 'Guide', link: '/guide/' }
-    ]
-  }
-})
-\`\`\`
-
-## Development
-
-Start the development server:
+在项目中运行初始化命令：
 
 \`\`\`bash
-npx ldoc dev
+npx ldoc init
 \`\`\`
 
-## Build
+这将创建 \`.ldesign\` 目录和必要的配置文件。
 
-Build for production:
+## 开发
+
+启动开发服务器：
 
 \`\`\`bash
-npx ldoc build
+pnpm docs:dev
 \`\`\`
 
-## Preview
+## 构建
 
-Preview the production build:
+构建生产版本：
 
 \`\`\`bash
-npx ldoc preview
+pnpm docs:build
+\`\`\`
+
+## 预览
+
+预览构建结果：
+
+\`\`\`bash
+pnpm docs:preview
 \`\`\`
 `
 
-  writeFileSync(join(targetDir, 'docs/guide/quick-start.md'), quickStartContent)
+  writeFileSync(join(docsDir, 'guide/getting-started.md'), gettingStartedContent)
+  console.log(pc.gray(`  Created: .ldesign/docs/guide/getting-started.md`))
 
   // 创建 API 文档
-  const apiConfigContent = `# Configuration
+  const apiConfigContent = `# 配置
 
-## Site Config
+## 站点配置
 
 ### title
 
-- Type: \`string\`
-- Default: \`'LDoc'\`
+- 类型: \`string\`
+- 默认值: \`'LDoc'\`
 
-The title of the site.
+站点标题。
 
 ### description
 
-- Type: \`string\`
-- Default: \`'A LDesign Documentation Site'\`
+- 类型: \`string\`
+- 默认值: \`'A LDesign Documentation Site'\`
 
-The description of the site.
+站点描述。
 
 ### base
 
-- Type: \`string\`
-- Default: \`'/'\`
+- 类型: \`string\`
+- 默认值: \`'/'\`
 
-The base URL of the site.
+站点基础路径。
 
-## Theme Config
-
-See [Theme](/api/theme) for theme configuration options.
-`
-
-  writeFileSync(join(targetDir, 'docs/api/config.md'), apiConfigContent)
-
-  const apiThemeContent = `# Theme
-
-## Built-in Theme
-
-LDoc comes with a beautiful default theme.
-
-### Configuration
+## 主题配置
 
 \`\`\`ts
 export default defineConfig({
   themeConfig: {
-    // Navigation
+    // 导航栏
     nav: [],
     
-    // Sidebar
+    // 侧边栏
     sidebar: {},
     
-    // Social Links
+    // 社交链接
     socialLinks: [],
     
-    // Footer
+    // 页脚
     footer: {}
   }
 })
 \`\`\`
-
-## Custom Theme
-
-You can create your own theme:
-
-\`\`\`ts
-import { defineTheme } from '@ldesign/doc'
-import Layout from './Layout.vue'
-
-export default defineTheme({
-  Layout,
-  enhanceApp({ app }) {
-    // Register global components
-  }
-})
-\`\`\`
 `
 
-  writeFileSync(join(targetDir, 'docs/api/theme.md'), apiThemeContent)
+  writeFileSync(join(docsDir, 'api/config.md'), apiConfigContent)
+  console.log(pc.gray(`  Created: .ldesign/docs/api/config.md`))
 
-  // 创建 package.json（如果不存在）
-  const pkgPath = join(targetDir, 'package.json')
-  if (!existsSync(pkgPath)) {
-    const pkgContent = {
+  // 更新或创建 package.json 脚本
+  if (existsSync(pkgPath)) {
+    // 已有 package.json，添加脚本
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+      pkg.scripts = pkg.scripts || {}
+
+      // 添加文档相关脚本
+      const scriptsToAdd = {
+        'docs:dev': 'ldoc dev',
+        'docs:build': 'ldoc build',
+        'docs:preview': 'ldoc preview'
+      }
+
+      let scriptsAdded = false
+      for (const [key, value] of Object.entries(scriptsToAdd)) {
+        if (!pkg.scripts[key]) {
+          pkg.scripts[key] = value
+          scriptsAdded = true
+        }
+      }
+
+      // 添加 @ldesign/doc 到 devDependencies
+      pkg.devDependencies = pkg.devDependencies || {}
+      if (!pkg.devDependencies['@ldesign/doc']) {
+        pkg.devDependencies['@ldesign/doc'] = '^1.0.0'
+      }
+
+      if (scriptsAdded) {
+        writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+        console.log(pc.gray(`  Updated: package.json (added docs:dev, docs:build, docs:preview scripts)`))
+      }
+    } catch {
+      console.log(pc.yellow(`  Warning: Could not update package.json`))
+    }
+  } else {
+    // 创建新的 package.json
+    const newPkg = {
       name: 'my-docs',
       version: '1.0.0',
       private: true,
       type: 'module',
       scripts: {
-        dev: 'ldoc dev docs',
-        build: 'ldoc build docs',
-        preview: 'ldoc preview docs'
+        'docs:dev': 'ldoc dev',
+        'docs:build': 'ldoc build',
+        'docs:preview': 'ldoc preview'
       },
       devDependencies: {
-        '@ldesign/doc': 'workspace:*'
+        '@ldesign/doc': '^1.0.0'
       }
     }
 
-    writeFileSync(pkgPath, JSON.stringify(pkgContent, null, 2))
+    writeFileSync(pkgPath, JSON.stringify(newPkg, null, 2) + '\n')
+    console.log(pc.gray(`  Created: package.json`))
   }
 
-  console.log(pc.green('  Created project structure:'))
-  console.log(pc.gray('    docs/'))
-  console.log(pc.gray('    ├── index.md'))
-  console.log(pc.gray('    ├── guide/'))
-  console.log(pc.gray('    │   ├── index.md'))
-  console.log(pc.gray('    │   └── quick-start.md'))
-  console.log(pc.gray('    └── api/'))
-  console.log(pc.gray('        ├── config.md'))
-  console.log(pc.gray('        └── theme.md'))
-  console.log(pc.gray('    ldoc.config.ts'))
-  console.log(pc.gray('    package.json'))
+  // 打印最终结构
+  console.log()
+  console.log(pc.green('  ✓ Created documentation structure:'))
+  console.log(pc.gray('    .ldesign/'))
+  console.log(pc.gray('    ├── doc.config.ts'))
+  console.log(pc.gray('    └── docs/'))
+  console.log(pc.gray('        ├── index.md'))
+  console.log(pc.gray('        ├── guide/'))
+  console.log(pc.gray('        │   ├── index.md'))
+  console.log(pc.gray('        │   └── getting-started.md'))
+  console.log(pc.gray('        └── api/'))
+  console.log(pc.gray('            └── config.md'))
 }
