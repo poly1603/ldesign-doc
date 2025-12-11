@@ -1,5 +1,8 @@
 <template>
   <div class="vp-home">
+    <!-- Hero 前插槽 -->
+    <PluginSlot name="home-hero-before" />
+
     <!-- Hero 区域 -->
     <section v-if="hero" class="vp-home-hero">
       <div class="vp-home-hero-bg">
@@ -13,6 +16,9 @@
             <span class="vp-home-hero-name-text">{{ hero.name }}</span>
           </h1>
           <p v-if="hero.text" class="vp-home-hero-text">{{ hero.text }}</p>
+
+          <!-- Hero 信息区插槽 -->
+          <PluginSlot name="home-hero-info" />
 
           <div v-if="hero.actions" class="vp-home-hero-actions">
             <template v-for="action in hero.actions" :key="action.text">
@@ -30,6 +36,9 @@
               </router-link>
             </template>
           </div>
+
+          <!-- Hero 按钮后插槽 -->
+          <PluginSlot name="home-hero-actions-after" />
         </div>
 
         <div v-if="hero.image" class="vp-home-hero-image">
@@ -41,8 +50,14 @@
       </div>
     </section>
 
+    <!-- Hero 后插槽 -->
+    <PluginSlot name="home-hero-after" />
+
     <!-- 内容区域 -->
     <div class="vp-home-inner">
+      <!-- 特性前插槽 -->
+      <PluginSlot name="home-features-before" />
+
       <!-- 特性区域 -->
       <section v-if="features && features.length" class="vp-home-features">
         <div class="vp-home-section-header" v-if="frontmatter.featuresTitle">
@@ -76,6 +91,9 @@
           </div>
         </div>
       </section>
+
+      <!-- 特性后插槽 -->
+      <PluginSlot name="home-features-after" />
 
       <!-- 统计数据区域 -->
       <section v-if="stats && stats.length" class="vp-home-stats">
@@ -165,6 +183,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useData } from '../composables'
+import { PluginSlot } from '@ldesign/doc/client'
 
 // Canvas 动画背景
 const canvasRef = ref<HTMLCanvasElement | null>(null)

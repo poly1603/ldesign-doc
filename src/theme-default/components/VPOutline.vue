@@ -2,6 +2,12 @@
   <Transition name="outline-fade">
     <aside v-if="tocHeaders.length && isReady" class="vp-outline">
       <div class="vp-outline-container">
+        <!-- 右侧栏顶部插槽 -->
+        <PluginSlot name="aside-top" />
+
+        <!-- 大纲前插槽 -->
+        <PluginSlot name="aside-outline-before" />
+
         <h2 class="vp-outline-title">{{ outlineTitle }}</h2>
         <nav class="vp-outline-nav">
           <!-- 独立的滑动指示器 -->
@@ -16,6 +22,12 @@
             </li>
           </ul>
         </nav>
+
+        <!-- 大纲后插槽 -->
+        <PluginSlot name="aside-outline-after" />
+
+        <!-- 右侧栏底部插槽 -->
+        <PluginSlot name="aside-bottom" />
       </div>
     </aside>
   </Transition>
@@ -24,6 +36,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch, nextTick, type CSSProperties } from 'vue'
 import { useData, useRoute } from '@ldesign/doc/client'
+import { PluginSlot } from '@ldesign/doc/client'
 
 interface Header {
   level: number

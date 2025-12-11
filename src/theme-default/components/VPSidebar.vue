@@ -2,6 +2,12 @@
   <Transition name="sidebar-content" mode="out-in">
     <aside class="vp-sidebar" :class="{ open: isOpen }" :key="sidebarKey">
       <div class="vp-sidebar-container">
+        <!-- 侧边栏顶部插槽 -->
+        <PluginSlot name="sidebar-top" />
+
+        <!-- 侧边栏导航前插槽 -->
+        <PluginSlot name="sidebar-nav-before" />
+
         <nav class="vp-sidebar-nav">
           <TransitionGroup name="sidebar-item" tag="div">
             <template v-for="group in sidebarItems" :key="group.text">
@@ -30,6 +36,12 @@
             </template>
           </TransitionGroup>
         </nav>
+
+        <!-- 侧边栏导航后插槽 -->
+        <PluginSlot name="sidebar-nav-after" />
+
+        <!-- 侧边栏底部插槽 -->
+        <PluginSlot name="sidebar-bottom" />
       </div>
 
       <!-- 遮罩 -->
@@ -41,6 +53,7 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
 import { useData, useRoute, useSidebar } from '../composables'
+import { PluginSlot } from '@ldesign/doc/client'
 
 interface SidebarItem {
   text: string

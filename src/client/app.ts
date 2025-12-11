@@ -4,13 +4,29 @@
 
 import { createApp as createVueApp, ref, provide, h, type App, type Component } from 'vue'
 import { createRouter, createWebHistory, type RouteRecordRaw, type Router } from 'vue-router'
-import type { Theme, SiteData, PageData, Route } from '../shared/types'
+import type { Theme, SiteData, PageData, Route, LDocPlugin } from '../shared/types'
 import { pageDataSymbol, siteDataSymbol } from './composables'
+import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from './composables/usePluginSlots'
+
+// 导入虚拟模块的插件配置（延迟加载）
+// 使用动态字符串避免构建时解析
+async function loadVirtualPlugins(): Promise<LDocPlugin[]> {
+  try {
+    // 使用变量阻止静态分析
+    const moduleId = 'virtual:ldoc/plugins'
+    // @ts-ignore - 虚拟模块，仅在运行时可用
+    const pluginModule = await import(/* @vite-ignore */ moduleId)
+    return pluginModule.plugins || []
+  } catch {
+    return []
+  }
+}
 
 export interface CreateAppOptions {
   routes: Route[]
   theme: Theme
   siteData?: SiteData
+  plugins?: LDocPlugin[]
   enhanceApp?: (ctx: { app: App; router: Router; siteData: SiteData }) => void | Promise<void>
 }
 
@@ -23,8 +39,20 @@ export interface AppInstance {
 /**
  * 创建客户端应用
  */
-export function createApp(options: CreateAppOptions): AppInstance {
-  const { routes, theme, siteData: initialSiteData, enhanceApp } = options
+export async function createApp(options: CreateAppOptions): Promise<AppInstance> {
+  const { routes, theme, siteData: initialSiteData, plugins = [], enhanceApp } = options
+
+  // 创建插件 Slots 上下文
+  const pluginSlotsContext = createPluginSlotsContext()
+
+  // 加载虚拟模块的插件配置
+  const virtualPlugins = await loadVirtualPlugins()
+  const allPlugins = [...plugins, ...virtualPlugins]
+
+  // 收集插件的 slots 和全局组件
+  collectPluginSlots(allPlugins, pluginSlotsContext)
+
+  console.log('[ldoc] Client plugins loaded:', allPlugins.map(p => p.name))
 
   // 站点数据
   const siteData = ref<SiteData>(initialSiteData || {
@@ -103,6 +131,9 @@ export function createApp(options: CreateAppOptions): AppInstance {
       // 提供数据
       provide(pageDataSymbol, pageData)
       provide(siteDataSymbol, siteData)
+
+      // 提供插件 Slots 上下文
+      providePluginSlots(pluginSlotsContext)
 
       return () => h(theme.Layout as Component)
     }

@@ -9,6 +9,8 @@
     "preview": "ldoc preview"
   },
   "devDependencies": {
-    "@ldesign/doc": "workspace:*"
+    "@ldesign/doc": "workspace:*",
+    "ldoc-plugin-reading-time": "workspace:*",
+    "ldoc-theme-minimal": "workspace:*"
   }
 }

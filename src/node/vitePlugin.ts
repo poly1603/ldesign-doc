@@ -38,11 +38,11 @@ export async function createVitePlugins(
     plugins.push(react())
   }
 
-  // Markdown 插件
-  plugins.push(createMarkdownPlugin(config, md))
+  // Markdown 插件（传入 pluginContainer 以支持 extendPageData）
+  plugins.push(createMarkdownPlugin(config, md, pluginContainer))
 
   // 虚拟模块插件
-  plugins.push(createVirtualModulesPlugin(config))
+  plugins.push(createVirtualModulesPlugin(config, pluginContainer))
 
   // 页面数据插件
   plugins.push(createPageDataPlugin(config, md))
@@ -63,12 +63,16 @@ export async function createVitePlugins(
 /**
  * Markdown 转换插件
  */
-function createMarkdownPlugin(config: SiteConfig, md: MarkdownRenderer): Plugin {
+function createMarkdownPlugin(
+  config: SiteConfig,
+  md: MarkdownRenderer,
+  pluginContainer: PluginContainer
+): Plugin {
   return {
     name: 'ldoc:markdown',
     enforce: 'pre',
 
-    transform(code, id) {
+    async transform(code, id) {
       if (!id.endsWith('.md')) return null
 
       const filePath = normalizePath(id)
@@ -85,17 +89,31 @@ function createMarkdownPlugin(config: SiteConfig, md: MarkdownRenderer): Plugin 
         } catch { }
       }
 
+      // 创建页面数据对象，供插件扩展
+      const pageData = {
+        title: frontmatter.title as string || '',
+        description: frontmatter.description as string || '',
+        frontmatter,
+        headers: [],
+        relativePath: filePath.replace(config.srcDir, '').replace(/^\//, ''),
+        filePath,
+        lastUpdated: Date.now()
+      }
+
+      // 调用 extendPageData 钩子，让插件扩展页面数据
+      await pluginContainer.callHook('extendPageData', pageData)
+
       // 渲染 Markdown
       const html = md.render(markdown, { path: filePath })
 
-      // 根据框架生成组件代码
+      // 根据框架生成组件代码（使用扩展后的 frontmatter）
       let result: string
       if (config.framework === 'react' ||
         (config.framework === 'auto' && hasReactImport(code))) {
-        result = generateReactComponent(html, frontmatter)
+        result = generateReactComponent(html, pageData.frontmatter)
       } else {
         // 默认生成 Vue 组件
-        result = generateVueComponent(html, frontmatter)
+        result = generateVueComponent(html, pageData.frontmatter)
       }
 
       return {
@@ -120,8 +138,22 @@ function generateVueComponent(html: string, frontmatter: Record<string, unknown>
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
+
 const content = ${htmlJson}
 const frontmatter = ${frontmatterJson}
+
+// 组件挂载时更新全局 pageData，使插件可以访问扩展后的 frontmatter
+onMounted(() => {
+  if (window.__LDOC_PAGE_DATA__) {
+    // 合并扩展的 frontmatter 到全局 pageData
+    const pageData = window.__LDOC_PAGE_DATA__
+    pageData.value = {
+      ...pageData.value,
+      frontmatter: { ...pageData.value.frontmatter, ...frontmatter }
+    }
+  }
+})
 
 defineExpose({ frontmatter })
 </script>
@@ -159,7 +191,29 @@ function hasReactImport(code: string): boolean {
 /**
  * 虚拟模块插件
  */
-function createVirtualModulesPlugin(config: SiteConfig): Plugin {
+function createVirtualModulesPlugin(config: SiteConfig, pluginContainer: PluginContainer): Plugin {
+  // 收集有客户端配置文件的插件
+  const clientPlugins = config.userPlugins
+    .filter(p => p.clientConfigFile)
+    .map((plugin, index) => ({
+      name: plugin.name,
+      path: normalizePath(plugin.clientConfigFile!),
+      varName: `clientPlugin${index}`
+    }))
+
+  // 生成导入语句
+  const imports = clientPlugins
+    .map(p => `import * as ${p.varName} from '${p.path}';`)
+    .join('\n')
+
+  // 生成插件数组
+  const pluginsPush = clientPlugins
+    .map(p => `plugins.push({ name: '${p.name}', ...${p.varName} });`)
+    .join('\n')
+
+  // 调试日志
+  console.log('[ldoc] Client plugins to load:', clientPlugins.map(p => ({ name: p.name, path: p.path })))
+
   const virtualModules: Record<string, string> = {
     'virtual:ldoc/site-data': `
 export const siteData = ${JSON.stringify({
@@ -173,6 +227,18 @@ export const siteData = ${JSON.stringify({
 `,
     'virtual:ldoc/theme-config': `
 export const themeConfig = ${JSON.stringify(config.themeConfig)}
+`,
+    'virtual:ldoc/plugins': `
+// 插件客户端配置 - 自动生成
+console.log('[ldoc] Loading virtual:ldoc/plugins module');
+${imports}
+
+const plugins = [];
+${pluginsPush}
+console.log('[ldoc] Client plugins loaded:', plugins.map(p => p.name));
+
+export { plugins };
+export default plugins;
 `,
     '@theme': `
 export { default } from '${normalizePath(config.themeDir)}/index'

@@ -6,7 +6,7 @@ import { resolve, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 import { createRequire } from 'module'
-import type { UserConfig, SiteConfig, ThemeConfig } from '../shared/types'
+import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin } from '../shared/types'
 import { deepMerge, normalizePath } from '../shared/utils'
 
 const require = createRequire(import.meta.url)
@@ -190,6 +190,12 @@ async function loadConfigFile(configPath: string): Promise<UserConfig> {
 
 /**
  * 解析主题目录
+ * 支持的格式：
+ * - 'ldoc-theme-xxx' - npm 包名
+ * - '@scope/ldoc-theme-xxx' - 带 scope 的 npm 包名
+ * - './path/to/theme' - 相对路径
+ * - '/absolute/path' - 绝对路径
+ * - 'xxx' - 简写，自动尝试 ldoc-theme-xxx
  */
 async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Promise<string> {
   // 获取当前模块所在目录
@@ -213,19 +219,96 @@ async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Prom
   }
 
   // 尝试解析为 npm 包
-  try {
-    const themePkg = require.resolve(`${theme}/package.json`, { paths: [root] })
-    return dirname(themePkg)
-  } catch {
-    // 尝试作为 @ldesign/doc-theme-xxx 解析
+  const packageNames = [
+    theme,                           // 完整包名: ldoc-theme-xxx 或 @scope/ldoc-theme-xxx
+    `ldoc-theme-${theme}`,          // 简写: xxx -> ldoc-theme-xxx
+    `@ldesign/doc-theme-${theme}`   // @ldesign scope
+  ]
+
+  for (const pkgName of packageNames) {
     try {
-      const themePkg = require.resolve(`@ldesign/doc-theme-${theme}/package.json`, { paths: [root] })
+      const themePkg = require.resolve(`${pkgName}/package.json`, { paths: [root] })
+      console.log(`[ldoc] Using theme: ${pkgName}`)
       return dirname(themePkg)
     } catch {
-      console.warn(`Theme "${theme}" not found, using default theme`)
-      return resolve(currentDir, '../theme-default')
+      // 继续尝试下一个包名
     }
   }
+
+  console.warn(`[ldoc] Theme "${theme}" not found, using default theme`)
+  return resolve(currentDir, '../theme-default')
+}
+
+/**
+ * 加载插件
+ * 支持的格式：
+ * - LDocPlugin 对象
+ * - 'ldoc-plugin-xxx' - npm 包名
+ * - '@scope/ldoc-plugin-xxx' - 带 scope 的 npm 包名
+ * - 'xxx' - 简写，自动尝试 ldoc-plugin-xxx
+ */
+export async function resolvePlugins(
+  root: string,
+  plugins: (LDocPlugin | string)[] = []
+): Promise<LDocPlugin[]> {
+  const resolved: LDocPlugin[] = []
+
+  for (const plugin of plugins) {
+    if (typeof plugin === 'string') {
+      // 字符串格式，需要从 npm 包加载
+      const loadedPlugin = await loadPluginFromPackage(root, plugin)
+      if (loadedPlugin) {
+        resolved.push(loadedPlugin)
+      }
+    } else {
+      // 已经是 LDocPlugin 对象
+      resolved.push(plugin)
+    }
+  }
+
+  return resolved
+}
+
+/**
+ * 从 npm 包加载插件
+ */
+async function loadPluginFromPackage(root: string, pluginName: string): Promise<LDocPlugin | null> {
+  const packageNames = [
+    pluginName,                        // 完整包名: ldoc-plugin-xxx
+    `ldoc-plugin-${pluginName}`,      // 简写: xxx -> ldoc-plugin-xxx
+    `@ldesign/doc-plugin-${pluginName}` // @ldesign scope
+  ]
+
+  for (const pkgName of packageNames) {
+    try {
+      // 尝试 require.resolve 找到包路径
+      const pkgPath = require.resolve(pkgName, { paths: [root] })
+
+      // 动态导入插件
+      const mod = await import(pkgPath)
+      const plugin = mod.default || mod
+
+      // 如果导出的是函数（工厂函数），调用它
+      if (typeof plugin === 'function') {
+        const result = plugin()
+        if (result && typeof result === 'object' && 'name' in result) {
+          console.log(`[ldoc] Loaded plugin: ${pkgName}`)
+          return result as LDocPlugin
+        }
+      }
+
+      // 如果直接是插件对象
+      if (plugin && typeof plugin === 'object' && 'name' in plugin) {
+        console.log(`[ldoc] Loaded plugin: ${pkgName}`)
+        return plugin as LDocPlugin
+      }
+    } catch {
+      // 继续尝试下一个包名
+    }
+  }
+
+  console.warn(`[ldoc] Plugin "${pluginName}" not found`)
+  return null
 }
 
 /**

@@ -7,6 +7,8 @@
           <img v-if="logo" :src="logo" :alt="siteTitle" class="vp-nav-logo-img" />
           <span class="vp-nav-logo-text">{{ siteTitle }}</span>
         </router-link>
+        <!-- Logo 后面插槽 -->
+        <PluginSlot name="nav-bar-logo-after" />
       </div>
 
       <!-- 中间区域：导航链接 -->
@@ -54,10 +56,14 @@
             </router-link>
           </template>
         </nav>
+        <!-- 导航菜单后面插槽 -->
+        <PluginSlot name="nav-bar-nav-after" />
       </div>
 
       <!-- 右侧区域 -->
       <div class="vp-nav-right">
+        <!-- 右侧内容左边插槽 -->
+        <PluginSlot name="nav-bar-content-before" />
         <!-- 搜索 -->
         <button class="vp-nav-search" @click="openSearch">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,6 +132,9 @@
           </a>
         </div>
 
+        <!-- 右侧内容右边插槽 -->
+        <PluginSlot name="nav-bar-content-after" />
+
         <!-- 移动端菜单按钮 -->
         <button class="vp-nav-hamburger" @click="toggleSidebar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -145,6 +154,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useData, useDark, useSidebar, useThemeColor, useRoute } from '@ldesign/doc/client'
+import { PluginSlot } from '@ldesign/doc/client'
 import VPSearch from './VPSearch.vue'
 
 const { site, theme } = useData()

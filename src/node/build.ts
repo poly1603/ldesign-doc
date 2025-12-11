@@ -42,6 +42,11 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       const pages = await scanPages(config)
       console.log(pc.gray(`  Found ${pages.length} pages`))
 
+      // 调用 extendPageData 钩子，让插件扩展页面数据
+      for (const page of pages) {
+        await pluginContainer.callHook('extendPageData', page)
+      }
+
       // 确保输出目录存在
       if (!existsSync(config.outDir)) {
         mkdirSync(config.outDir, { recursive: true })

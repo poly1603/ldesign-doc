@@ -1,0 +1,45 @@
+{
+  "name": "ldoc-plugin-reading-time",
+  "version": "0.1.0",
+  "description": "显示文章阅读时间的 LDoc 插件",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "ldoc",
+    "ldoc-plugin",
+    "reading-time",
+    "documentation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@ldesign/doc": ">=1.0.0",
+    "vue": ">=3.3.0"
+  },
+  "devDependencies": {
+    "@ldesign/doc": "workspace:*",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vue": "^3.4.0"
+  }
+}

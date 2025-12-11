@@ -114,6 +114,37 @@ cli
     }
   })
 
+// create 命令 - 创建插件或主题项目
+cli
+  .command('create <type> <name>', 'Create a new LDoc plugin or theme project')
+  .option('-d, --desc <description>', 'Project description')
+  .option('-a, --author <author>', 'Author name')
+  .action(async (type: string, name: string, options: Record<string, unknown>) => {
+    try {
+      if (type !== 'plugin' && type !== 'theme') {
+        console.error(pc.red(`\n  Invalid type: ${type}`))
+        console.error(pc.gray('  Valid types: plugin, theme'))
+        process.exit(1)
+      }
+
+      const { createProject } = await import('./create')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+      console.log(pc.gray(`  Creating ${type} project...\n`))
+
+      await createProject({
+        name,
+        type: type as 'plugin' | 'theme',
+        description: options.desc as string,
+        author: options.author as string
+      })
+    } catch (error) {
+      console.error(pc.red(`\n  Failed to create ${type}:\n`))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
 // 帮助信息
 cli.help()
 

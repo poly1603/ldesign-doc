@@ -1,6 +1,9 @@
 <template>
   <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome }"
     :style="layoutStyles">
+    <!-- 布局顶部插槽（导航栏上方，可用于公告栏） -->
+    <PluginSlot name="layout-top" />
+
     <!-- 阅读进度条 -->
     <VPReadingProgress v-if="!isHome" />
 
@@ -28,22 +31,38 @@
       <VPOutline v-if="!isHome && showOutline" />
     </div>
 
+    <!-- 页脚上方插槽 -->
+    <PluginSlot name="footer-before" />
+
     <!-- 页脚 -->
     <Transition name="footer-fade">
       <VPFooter v-if="showFooter" />
     </Transition>
 
+    <!-- 页脚下方插槽 -->
+    <PluginSlot name="footer-after" />
+
+    <!-- 返回顶部上方插槽 -->
+    <PluginSlot name="back-to-top-before" />
+
     <!-- 回到顶部 -->
     <VPBackToTop />
 
+    <!-- 返回顶部下方插槽 -->
+    <PluginSlot name="back-to-top-after" />
+
     <!-- 图片灯箱 -->
     <VPImageZoom />
+
+    <!-- 布局底部插槽 -->
+    <PluginSlot name="layout-bottom" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useData, useRoute } from '@ldesign/doc/client'
+import { PluginSlot } from '@ldesign/doc/client'
 import VPNav from './components/VPNav.vue'
 import VPSidebar from './components/VPSidebar.vue'
 import VPHome from './components/VPHome.vue'

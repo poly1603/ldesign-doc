@@ -1,5 +1,8 @@
 <template>
   <div class="vp-doc">
+    <!-- 文档内容前插槽 -->
+    <PluginSlot name="doc-before" />
+
     <!-- 面包屑 -->
     <nav v-if="showBreadcrumb" class="vp-doc-breadcrumb">
       <a href="/">首页</a>
@@ -13,9 +16,12 @@
         {{ page.title }}
       </h1>
 
-      <!-- 元信息 -->
-      <div v-if="showMeta" class="vp-doc-meta">
-        <span v-if="page.lastUpdated" class="vp-doc-meta-item">
+      <!-- 标题下方插槽（元信息区域，插件可注入阅读时间等） -->
+      <PluginSlot name="doc-top" />
+
+      <!-- 元信息（只保留最后更新时间，阅读时间由插件提供） -->
+      <div v-if="page.lastUpdated" class="vp-doc-meta">
+        <span class="vp-doc-meta-item">
           最后更新: {{ formatDate(page.lastUpdated) }}
         </span>
       </div>
@@ -24,6 +30,9 @@
       <div class="vp-doc-body">
         <Content />
       </div>
+
+      <!-- 文档内容底部插槽 -->
+      <PluginSlot name="doc-bottom" />
     </article>
 
     <!-- 编辑链接 -->
@@ -32,6 +41,9 @@
         {{ editLink.text }}
       </a>
     </div>
+
+    <!-- 文档页脚前插槽 -->
+    <PluginSlot name="doc-footer-before" />
 
     <!-- 上下页导航 -->
     <nav v-if="prevPage || nextPage" class="vp-doc-pagination">
@@ -54,12 +66,19 @@
         <span class="vp-doc-pagination-title">{{ nextPage.text }}</span>
       </router-link>
     </nav>
+
+    <!-- 文档页脚后插槽 -->
+    <PluginSlot name="doc-footer-after" />
+
+    <!-- 文档内容后插槽 -->
+    <PluginSlot name="doc-after" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, useRoute, Content } from '@ldesign/doc/client'
+import { PluginSlot } from '@ldesign/doc/client'
 
 const { page, theme, frontmatter } = useData()
 const route = useRoute()
@@ -77,6 +96,16 @@ const showTitle = computed(() => {
 // 是否显示元信息
 const showMeta = computed(() => {
   return frontmatter.value.meta !== false
+})
+
+// 阅读时间（由 reading-time 插件注入）
+interface ReadingTimeData {
+  minutes: number
+  words: number
+  text: string
+}
+const readingTime = computed<ReadingTimeData | null>(() => {
+  return frontmatter.value.readingTime as ReadingTimeData | null
 })
 
 // 编辑链接
@@ -160,6 +189,16 @@ const formatDate = (timestamp: number) => {
   margin-bottom: 24px;
   font-size: 14px;
   color: var(--ldoc-c-text-3);
+}
+
+.vp-doc-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vp-doc-reading-time svg {
+  opacity: 0.7;
 }
 
 .vp-doc-body {

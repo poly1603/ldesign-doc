@@ -257,6 +257,91 @@ export interface EnhanceAppContext {
 
 // ============== 插件系统类型 ==============
 
+/**
+ * 插件 Slot 位置
+ * 插件可以将 UI 组件注入到这些预定义位置
+ */
+export type PluginSlotName =
+  // ========== 导航栏区域 ==========
+  | 'nav-bar-logo-after'       // Logo 后面
+  | 'nav-bar-nav-after'        // 导航菜单后面
+  | 'nav-bar-content-before'   // 头部右边内容的左边
+  | 'nav-bar-content-after'    // 头部右边内容的右边
+  | 'nav-bar-title-before'     // 标题前
+  | 'nav-bar-title-after'      // 标题后
+
+  // ========== 侧边栏区域 ==========
+  | 'sidebar-top'              // 侧边菜单顶部
+  | 'sidebar-bottom'           // 侧边菜单底部
+  | 'sidebar-nav-before'       // 侧边栏导航前
+  | 'sidebar-nav-after'        // 侧边栏导航后
+
+  // ========== 右侧栏区域 ==========
+  | 'aside-top'                // 右侧栏顶部
+  | 'aside-bottom'             // 右侧栏底部
+  | 'aside-outline-before'     // 大纲前
+  | 'aside-outline-after'      // 大纲后
+
+  // ========== 文档内容区域 ==========
+  | 'doc-before'               // 文档内容前（整个文档区域上方）
+  | 'doc-after'                // 文档内容后（整个文档区域下方）
+  | 'doc-top'                  // 文档标题下方（元信息区域）
+  | 'doc-bottom'               // 文档内容底部
+  | 'doc-footer-before'        // 文档页脚前（上下页导航前）
+  | 'doc-footer-after'         // 文档页脚后
+
+  // ========== 页脚区域 ==========
+  | 'footer-before'            // 页脚上方
+  | 'footer-after'             // 页脚下方
+
+  // ========== 返回顶部 ==========
+  | 'back-to-top-before'       // 返回顶部按钮上方
+  | 'back-to-top-after'        // 返回顶部按钮下方
+
+  // ========== 布局级别 ==========
+  | 'layout-top'               // 布局顶部（导航栏上方，可用于公告栏）
+  | 'layout-bottom'            // 布局底部（页脚下方）
+
+  // ========== 首页区域 ==========
+  | 'home-hero-before'         // 首页 Hero 前
+  | 'home-hero-after'          // 首页 Hero 后
+  | 'home-hero-info'           // 首页 Hero 信息区（标题描述下方）
+  | 'home-hero-actions-after'  // 首页 Hero 按钮后
+  | 'home-features-before'     // 首页特性前
+  | 'home-features-after'      // 首页特性后
+
+  // ========== 其他 ==========
+  | 'not-found'                // 404 页面
+
+/**
+ * 插件 UI 组件定义
+ */
+export interface PluginSlotComponent {
+  /** 组件（Vue 组件或函数组件） */
+  component: unknown
+  /** 组件 props */
+  props?: Record<string, unknown>
+  /** 排序权重，数字越小越靠前 */
+  order?: number
+}
+
+/**
+ * 插件 Slots 配置
+ */
+export type PluginSlots = {
+  [K in PluginSlotName]?: PluginSlotComponent | PluginSlotComponent[]
+}
+
+/**
+ * 插件全局组件
+ */
+export interface PluginGlobalComponent {
+  /** 组件名称 */
+  name: string
+  /** 组件实现 */
+  component: unknown
+}
+
 export interface LDocPlugin {
   name: string
 
@@ -283,7 +368,21 @@ export interface LDocPlugin {
   // 生成钩子
   generateBundle?: (config: SiteConfig) => void | Promise<void>
 
-  // 客户端代码注入
+  // ============== UI 注入系统（新增）==============
+
+  /**
+   * 注入到预定义 Slot 位置的组件
+   * 无需主题支持，框架自动渲染
+   */
+  slots?: PluginSlots
+
+  /**
+   * 注册全局组件
+   * 用户可以在 Markdown 或 Vue 组件中直接使用
+   */
+  globalComponents?: PluginGlobalComponent[]
+
+  // 客户端代码注入（增强）
   clientConfigFile?: string
 
   // 热更新

@@ -14,8 +14,14 @@ export {
   usePageLoading,
   useThemeColor
 } from './composables'
+export {
+  usePluginSlots,
+  createPluginSlotsContext,
+  providePluginSlots,
+  collectPluginSlots
+} from './composables/usePluginSlots'
 export { createApp } from './app'
-export { Content } from './components'
+export { Content, PluginSlot } from './components'
 
 // Re-export types
 export type {

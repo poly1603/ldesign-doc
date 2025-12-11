@@ -8,21 +8,32 @@
 export type * from './shared/types'
 
 // 导出核心功能
-export { defineConfig, defineConfigWithTheme } from './node/config'
+export { defineConfig, defineConfigWithTheme, resolvePlugins } from './node/config'
 export { createLDoc } from './node/createLDoc'
 export { build } from './node/build'
 export { serve } from './node/serve'
 
 // 导出主题 API
-export { defineTheme } from './theme/defineTheme'
-export type { Theme } from './shared/types'
+export { defineTheme, defineThemeFactory } from './theme/defineTheme'
+export type { Theme, EnhanceAppContext } from './shared/types'
 
 // 导出插件 API
-export { definePlugin } from './plugin/definePlugin'
-export type { LDocPlugin } from './shared/types'
+export { definePlugin, definePluginFactory } from './plugin/definePlugin'
+export type {
+  LDocPlugin,
+  PluginContext,
+  ConfigEnv,
+  HotUpdateContext,
+  // 插件 Slot 系统类型
+  PluginSlotName,
+  PluginSlotComponent,
+  PluginSlots,
+  PluginGlobalComponent
+} from './shared/types'
 
 // 导出 Markdown API
 export { createMarkdownRenderer } from './markdown/createMarkdown'
+export type { MarkdownRenderer, MarkdownOptions } from './shared/types'
 
 // 导出工具函数
 export * from './shared/utils'

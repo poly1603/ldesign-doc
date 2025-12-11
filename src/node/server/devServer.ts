@@ -43,31 +43,41 @@ export async function createDevServer(
     command: 'serve'
   })
 
-  // 创建 Vite 开发服务器
+  // 获取用户的 vite 配置
+  const userViteConfig = config.vite || {}
+  const userServerConfig = userViteConfig.server || {}
+
+  // 创建 Vite 开发服务器（合并用户配置）
   const server = await createViteServer({
     root: config.tempDir,
     base: config.base,
     mode: 'development',
     plugins: vitePlugins,
     server: {
-      port: 5173,
-      strictPort: false,
-      host: true,
-      open: false,
+      port: userServerConfig.port || 5173,
+      strictPort: userServerConfig.strictPort ?? false,
+      host: userServerConfig.host ?? true,
+      open: userServerConfig.open ?? false,
       watch: {
         ignored: ['**/node_modules/**', '**/dist/**']
-      }
+      },
+      ...userServerConfig
     },
     resolve: {
       alias: {
         '@theme': config.themeDir,
         '@': config.srcDir,
-        '@ldesign/doc/client': resolve(config.root, 'node_modules/@ldesign/doc/dist/es/client/index.js')
+        '@ldesign/doc/client': resolve(config.root, 'node_modules/@ldesign/doc/dist/es/client/index.js'),
+        ...(userViteConfig.resolve?.alias || {})
       }
     },
     optimizeDeps: {
-      include: ['vue', 'vue-router']
-    }
+      include: ['vue', 'vue-router', ...(userViteConfig.optimizeDeps?.include || [])]
+    },
+    // 其他用户 vite 配置
+    css: userViteConfig.css,
+    define: userViteConfig.define,
+    esbuild: userViteConfig.esbuild
   })
 
   // 启动服务器

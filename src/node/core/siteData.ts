@@ -191,6 +191,12 @@ import Layout from '@theme/Layout.vue'
 // 导入主题样式
 import '@theme/styles/index.css'
 
+// 导入插件系统
+import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from '@ldesign/doc/client'
+
+// 导入插件客户端配置
+import clientPlugins from 'virtual:ldoc/plugins'
+
 // 创建响应式数据
 const siteDataRef = ref(siteData)
 const pageDataRef = ref({
@@ -207,6 +213,13 @@ const siteDataSymbol = Symbol.for('ldoc:siteData')
 // 全局变量
 window.__LDOC_PAGE_DATA__ = pageDataRef
 window.__LDOC_SITE_DATA__ = siteDataRef
+
+// 创建插件 Slot 上下文
+const pluginSlotsContext = createPluginSlotsContext()
+
+// 收集插件的 slots 和全局组件
+console.log('[ldoc] Client plugins:', clientPlugins)
+collectPluginSlots(clientPlugins, pluginSlotsContext)
 
 // 创建路由
 const router = createRouter({
@@ -234,6 +247,10 @@ const RootComponent = {
   setup() {
     provide(pageDataSymbol, pageDataRef)
     provide(siteDataSymbol, siteDataRef)
+    
+    // 提供插件 Slots 上下文
+    providePluginSlots(pluginSlotsContext)
+    
     return () => h(Layout)
   }
 }

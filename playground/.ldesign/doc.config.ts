@@ -1,10 +1,19 @@
 import { defineConfig } from '@ldesign/doc'
+import readingTimePlugin from 'ldoc-plugin-reading-time'
 
 export default defineConfig({
   title: 'LDoc 演示站点',
   description: '现代化文档系统演示',
   lang: 'zh-CN',
   // srcDir 已自动设置为 .ldesign/docs
+
+  // 使用阅读时间插件
+  plugins: [
+    readingTimePlugin({
+      wordsPerMinute: 300,
+      includeCode: true
+    })
+  ],
 
   themeConfig: {
     logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
@@ -108,6 +117,13 @@ export default defineConfig({
     theme: {
       light: 'github-light',
       dark: 'github-dark'
+    }
+  },
+  vite: {
+    server: {
+      port: 8878,
+      host: true,
+      open: true
     }
   }
 })
