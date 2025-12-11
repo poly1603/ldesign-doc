@@ -1,6 +1,9 @@
 <template>
   <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome }"
     :style="layoutStyles">
+    <!-- 阅读进度条 -->
+    <VPReadingProgress v-if="!isHome" />
+
     <!-- 跳过导航 -->
     <a href="#main-content" class="skip-link">跳至主要内容</a>
 
@@ -32,6 +35,9 @@
 
     <!-- 回到顶部 -->
     <VPBackToTop />
+
+    <!-- 图片灯箱 -->
+    <VPImageZoom />
   </div>
 </template>
 
@@ -45,6 +51,8 @@ import VPDoc from './components/VPDoc.vue'
 import VPOutline from './components/VPOutline.vue'
 import VPFooter from './components/VPFooter.vue'
 import VPBackToTop from './components/VPBackToTop.vue'
+import VPReadingProgress from './components/VPReadingProgress.vue'
+import VPImageZoom from './components/VPImageZoom.vue'
 
 const { frontmatter, theme } = useData()
 const route = useRoute()
@@ -131,29 +139,13 @@ const handleCopyClick = async (e: Event) => {
   }
 }
 
-// 图片点击放大功能
-const handleImageClick = (e: Event) => {
-  const target = e.target as HTMLElement
-  if (target.tagName !== 'IMG') return
-  if (!target.closest('.ldoc-content')) return
-
-  const img = target as HTMLImageElement
-  const overlay = document.createElement('div')
-  overlay.className = 'image-viewer-overlay'
-  overlay.innerHTML = `<img src="${img.src}" alt="${img.alt || ''}" />`
-  overlay.addEventListener('click', () => overlay.remove())
-  document.body.appendChild(overlay)
-}
-
 // 设置事件监听
 const setupEventListeners = () => {
   document.addEventListener('click', handleCopyClick)
-  document.addEventListener('click', handleImageClick)
 }
 
 const removeEventListeners = () => {
   document.removeEventListener('click', handleCopyClick)
-  document.removeEventListener('click', handleImageClick)
 }
 
 onMounted(() => {

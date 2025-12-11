@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'LDoc 演示站点',
   description: '现代化文档系统演示',
   lang: 'zh-CN',
-  srcDir: 'docs',
+  // srcDir 已自动设置为 .ldesign/docs
 
   themeConfig: {
     logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
