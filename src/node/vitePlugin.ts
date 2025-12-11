@@ -3,7 +3,7 @@
  */
 
 import { resolve, dirname } from 'path'
-import type { Plugin, ViteDevServer } from 'vite'
+import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
 import yaml from 'js-yaml'
@@ -25,7 +25,7 @@ export async function createVitePlugins(
   options: VitePluginOptions
 ): Promise<Plugin[]> {
   const { md, pluginContainer, command } = options
-  const plugins: Plugin[] = []
+  const plugins: PluginOption[] = []
 
   // 根据框架添加插件
   if (config.framework === 'vue' || config.framework === 'auto') {
@@ -56,7 +56,8 @@ export async function createVitePlugins(
   const userVitePlugins = await pluginContainer.getVitePlugins()
   plugins.push(...userVitePlugins)
 
-  return plugins
+  // 展开嵌套数组并过滤掉无效值
+  return plugins.flat().filter((p): p is Plugin => !!p)
 }
 
 /**

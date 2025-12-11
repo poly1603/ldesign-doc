@@ -6,39 +6,39 @@
       <span class="vp-doc-breadcrumb-separator">/</span>
       <span>{{ page.title }}</span>
     </nav>
-    
+
     <!-- 文档内容 -->
     <article class="vp-doc-content">
       <h1 v-if="page.title && showTitle" class="vp-doc-title">
         {{ page.title }}
       </h1>
-      
+
       <!-- 元信息 -->
       <div v-if="showMeta" class="vp-doc-meta">
         <span v-if="page.lastUpdated" class="vp-doc-meta-item">
           最后更新: {{ formatDate(page.lastUpdated) }}
         </span>
       </div>
-      
+
       <!-- 主要内容插槽 -->
       <div class="vp-doc-body">
         <Content />
       </div>
     </article>
-    
+
     <!-- 编辑链接 -->
     <div v-if="editLink" class="vp-doc-edit">
       <a :href="editLink.url" target="_blank" rel="noopener noreferrer">
         {{ editLink.text }}
       </a>
     </div>
-    
+
     <!-- 上下页导航 -->
     <nav v-if="prevPage || nextPage" class="vp-doc-pagination">
       <router-link v-if="prevPage" :to="prevPage.link" class="vp-doc-pagination-prev">
         <span class="vp-doc-pagination-label">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           上一页
         </span>
@@ -48,7 +48,7 @@
         <span class="vp-doc-pagination-label">
           下一页
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
+            <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </span>
         <span class="vp-doc-pagination-title">{{ nextPage.text }}</span>
@@ -83,7 +83,7 @@ const showMeta = computed(() => {
 const editLink = computed(() => {
   const config = theme.value as { editLink?: { pattern: string; text?: string } }
   if (!config.editLink || frontmatter.value.editLink === false) return null
-  
+
   const url = config.editLink.pattern.replace(':path', page.value.relativePath)
   return {
     url,
@@ -91,13 +91,18 @@ const editLink = computed(() => {
   }
 })
 
+interface NavLink {
+  text: string
+  link: string
+}
+
 // 上一页/下一页
-const prevPage = computed(() => {
+const prevPage = computed<NavLink | null>(() => {
   // TODO: 实现上下页导航
   return null
 })
 
-const nextPage = computed(() => {
+const nextPage = computed<NavLink | null>(() => {
   // TODO: 实现上下页导航
   return null
 })
@@ -114,9 +119,9 @@ const formatDate = (timestamp: number) => {
 
 <style scoped>
 .vp-doc {
-  max-width: var(--ldoc-content-width, 740px);
-  margin: 0 auto;
-  padding: 32px 24px;
+  width: 100%;
+  max-width: 100%;
+  padding: 24px 0;
 }
 
 .vp-doc-breadcrumb {

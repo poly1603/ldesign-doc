@@ -10,6 +10,15 @@ export default defineConfig({
     logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
     siteTitle: 'LDesign',
 
+    // 布局配置
+    layout: {
+      sidebarWidth: 260,
+      outlineWidth: 220,
+      contentGap: 32,
+      navHeight: 64,
+      maxWidth: 1400
+    },
+
     nav: [
       { text: '指南', link: '/guide/' },
       { text: 'API', link: '/api/' },
@@ -17,8 +26,9 @@ export default defineConfig({
       {
         text: '更多',
         items: [
-          { text: 'GitHub', link: 'https://github.com/ldesign/doc' },
-          { text: '更新日志', link: '/changelog' }
+          { text: '更新日志', link: '/changelog' },
+          { text: '贡献指南', link: '/contributing' },
+          { text: 'GitHub', link: 'https://github.com/nicepkg/ldesign' }
         ]
       }
     ],
@@ -53,65 +63,42 @@ export default defineConfig({
         {
           text: 'API 参考',
           items: [
-            { text: '配置 API', link: '/api/' },
-            { text: '客户端 API', link: '/api/client' },
-            { text: '主题 API', link: '/api/theme' }
+            { text: '配置选项', link: '/api/config' },
+            { text: '运行时 API', link: '/api/runtime' }
           ]
         }
       ],
       '/components/': [
         {
-          text: '组件演示',
+          text: '组件',
           items: [
-            { text: '概述', link: '/components/' },
-            { text: 'Button 按钮', link: '/components/button' }
+            { text: '按钮', link: '/components/button' },
+            { text: '输入框', link: '/components/input' }
           ]
         }
       ]
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/ldesign/doc' }
+      { icon: 'github', link: 'https://github.com/nicepkg/ldesign' }
     ],
 
     footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024 LDesign Team. All rights reserved.',
-      links: [
-        {
-          title: '文档',
-          items: [
-            { text: '快速开始', link: '/guide/getting-started' },
-            { text: 'Markdown 语法', link: '/guide/markdown' },
-            { text: '配置参考', link: '/guide/configuration' }
-          ]
-        },
-        {
-          title: '社区',
-          items: [
-            { text: 'GitHub', link: 'https://github.com/ldesign/doc' },
-            { text: '问题反馈', link: 'https://github.com/ldesign/doc/issues' },
-            { text: '讨论区', link: 'https://github.com/ldesign/doc/discussions' }
-          ]
-        },
-        {
-          title: '更多',
-          items: [
-            { text: '更新日志', link: '/changelog' },
-            { text: '贡献指南', link: '/contributing' },
-            { text: '团队', link: '/team' }
-          ]
-        }
-      ]
+      message: '基于 MIT 许可发布',
+      copyright: '版权所有 © 2024 LDesign'
     },
 
     editLink: {
-      pattern: 'https://github.com/ldesign/doc/edit/main/playground/docs/:path',
+      pattern: 'https://github.com/nicepkg/ldesign/edit/main/docs/:path',
       text: '在 GitHub 上编辑此页'
     },
 
+    lastUpdated: {
+      text: '最后更新'
+    },
+
     outline: {
-      level: [2, 3],
+      level: [1, 6],
       label: '本页目录'
     }
   },
@@ -121,13 +108,6 @@ export default defineConfig({
     theme: {
       light: 'github-light',
       dark: 'github-dark'
-    }
-  },
-
-  vite: {
-    server: {
-      port: 5173,
-      open: true
     }
   }
 })

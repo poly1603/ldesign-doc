@@ -1,5 +1,6 @@
 <template>
-  <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar }">
+  <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome }"
+    :style="layoutStyles">
     <!-- 跳过导航 -->
     <a href="#main-content" class="skip-link">跳至主要内容</a>
 
@@ -35,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useData, useRoute } from '@ldesign/doc/client'
 import VPNav from './components/VPNav.vue'
 import VPSidebar from './components/VPSidebar.vue'
@@ -47,6 +48,27 @@ import VPBackToTop from './components/VPBackToTop.vue'
 
 const { frontmatter, theme } = useData()
 const route = useRoute()
+
+// 布局配置
+const layoutConfig = computed(() => {
+  const config = (theme.value as { layout?: { sidebarWidth?: number; outlineWidth?: number; contentGap?: number; navHeight?: number; maxWidth?: number } }).layout || {}
+  return {
+    sidebarWidth: config.sidebarWidth || 260,
+    outlineWidth: config.outlineWidth || 220,
+    contentGap: config.contentGap || 32,
+    navHeight: config.navHeight || 64,
+    maxWidth: config.maxWidth || 1400
+  }
+})
+
+// 布局样式变量
+const layoutStyles = computed(() => ({
+  '--ldoc-sidebar-width': `${layoutConfig.value.sidebarWidth}px`,
+  '--ldoc-outline-width': `${layoutConfig.value.outlineWidth}px`,
+  '--ldoc-content-gap': `${layoutConfig.value.contentGap}px`,
+  '--ldoc-nav-height': `${layoutConfig.value.navHeight}px`,
+  '--ldoc-layout-max-width': `${layoutConfig.value.maxWidth}px`
+}))
 
 // 是否为首页
 const isHome = computed(() => {
@@ -67,8 +89,14 @@ const hasSidebar = computed(() => {
   return !!sidebar
 })
 
-// 是否显示大纲
+// 是否为404页面
+const is404 = computed(() => {
+  return frontmatter.value.layout === '404' || frontmatter.value.notFound === true
+})
+
+// 是否显示大纲（404页面不显示）
 const showOutline = computed(() => {
+  if (is404.value) return false
   return frontmatter.value.outline !== false
 })
 
@@ -76,6 +104,64 @@ const showOutline = computed(() => {
 const showFooter = computed(() => {
   const footer = (theme.value as { footer?: unknown }).footer
   return !!footer && frontmatter.value.footer !== false
+})
+
+// 代码块复制功能
+const handleCopyClick = async (e: Event) => {
+  const target = e.target as HTMLElement
+  const copyBtn = target.closest('.vp-code-copy') as HTMLButtonElement
+  if (!copyBtn) return
+
+  const code = copyBtn.dataset.code
+  if (!code) return
+
+  try {
+    // 解码 HTML 实体
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = code
+    const decodedCode = textarea.value
+
+    await navigator.clipboard.writeText(decodedCode)
+    copyBtn.classList.add('copied')
+    setTimeout(() => {
+      copyBtn.classList.remove('copied')
+    }, 2000)
+  } catch (err) {
+    console.error('复制失败:', err)
+  }
+}
+
+// 图片点击放大功能
+const handleImageClick = (e: Event) => {
+  const target = e.target as HTMLElement
+  if (target.tagName !== 'IMG') return
+  if (!target.closest('.ldoc-content')) return
+
+  const img = target as HTMLImageElement
+  const overlay = document.createElement('div')
+  overlay.className = 'image-viewer-overlay'
+  overlay.innerHTML = `<img src="${img.src}" alt="${img.alt || ''}" />`
+  overlay.addEventListener('click', () => overlay.remove())
+  document.body.appendChild(overlay)
+}
+
+// 设置事件监听
+const setupEventListeners = () => {
+  document.addEventListener('click', handleCopyClick)
+  document.addEventListener('click', handleImageClick)
+}
+
+const removeEventListeners = () => {
+  document.removeEventListener('click', handleCopyClick)
+  document.removeEventListener('click', handleImageClick)
+}
+
+onMounted(() => {
+  setupEventListeners()
+})
+
+onUnmounted(() => {
+  removeEventListeners()
 })
 </script>
 
@@ -96,6 +182,11 @@ const showFooter = computed(() => {
   flex: 1;
   min-width: 0;
   padding: 24px;
+}
+
+/* 首页无顶部padding */
+.ldoc-layout.is-home .ldoc-main {
+  padding-top: 0;
 }
 
 .skip-link {
@@ -159,10 +250,90 @@ const showFooter = computed(() => {
   transform: translateY(20px);
 }
 
-/* 响应式 */
+/* 响应式 - 手机设备 */
 @media (max-width: 768px) {
   .ldoc-layout-content {
     flex-direction: column;
+  }
+
+  .ldoc-main {
+    padding: 16px;
+  }
+}
+
+/* 响应式 - 平板设备 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ldoc-main {
+    padding: 20px;
+  }
+}
+
+/* 响应式 - 大屏设备 */
+@media (min-width: 1600px) {
+  .ldoc-layout-content {
+    max-width: var(--ldoc-layout-max-width, 1440px);
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* 有侧边栏时的布局 */
+.ldoc-layout.has-sidebar .ldoc-main {
+  margin-left: var(--ldoc-sidebar-width, 260px);
+  /* 右侧留出和TOC一样的空间 */
+  margin-right: var(--ldoc-outline-width, 220px);
+  /* 使用配置的间距 */
+  padding-left: var(--ldoc-content-gap, 32px);
+  padding-right: var(--ldoc-content-gap, 32px);
+}
+
+@media (max-width: 1280px) {
+
+  /* 当TOC隐藏时移除右侧margin */
+  .ldoc-layout.has-sidebar .ldoc-main {
+    margin-right: 0;
+    padding-left: var(--ldoc-content-gap, 32px);
+    padding-right: var(--ldoc-content-gap, 32px);
+  }
+}
+
+@media (max-width: 768px) {
+  .ldoc-layout.has-sidebar .ldoc-main {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 16px;
+  }
+}
+
+/* 404页面布局 - 居中显示 */
+.ldoc-layout.is-404 .ldoc-main {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ldoc-layout.is-404.has-sidebar .ldoc-main {
+  margin-left: var(--ldoc-sidebar-width, 260px) !important;
+  margin-right: 0 !important;
+}
+
+/* 打印样式 */
+@media print {
+  .ldoc-layout-content {
+    padding-top: 0;
+  }
+
+  .vp-sidebar,
+  .vp-outline,
+  .vp-nav,
+  .vp-back-to-top {
+    display: none !important;
+  }
+
+  .ldoc-main {
+    margin-left: 0 !important;
   }
 }
 </style>

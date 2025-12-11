@@ -55,7 +55,7 @@ export async function createCodeHighlighter(
 
   return (code: string, lang: string): string => {
     if (!highlighter) {
-      return escapeHtml(code)
+      return wrapLines(escapeHtml(code))
     }
 
     try {
@@ -73,13 +73,40 @@ export async function createCodeHighlighter(
         defaultColor: false
       })
 
-      // 提取 code 内容
+      // 提取 code 内容并包装每行
       const match = html.match(/<code[^>]*>([\s\S]*?)<\/code>/)
-      return match ? match[1] : escapeHtml(code)
+      if (match) {
+        return wrapLines(match[1])
+      }
+      return wrapLines(escapeHtml(code))
     } catch {
-      return escapeHtml(code)
+      return wrapLines(escapeHtml(code))
     }
   }
+}
+
+/**
+ * 将代码内容按行包装成 span.line
+ */
+function wrapLines(html: string): string {
+  // 检查是否已经被 shiki 包装了 line
+  if (html.includes('<span class="line">')) {
+    // Shiki 输出的 HTML 中，span.line 之间有换行符
+    // 这些换行符会被 white-space: pre 渲染成空白行
+    // 需要移除 span 之间的换行符，只保留 span 内部的内容
+    return html
+      .replace(/>\n<span class="line/g, '><span class="line')  // 移除 span 之间的换行
+      .replace(/\n$/, '')  // 移除末尾换行
+      .trim()
+  }
+
+  // 按换行符分割
+  const lines = html.split('\n')
+  // 移除最后一个空行（如果存在）
+  if (lines[lines.length - 1] === '') {
+    lines.pop()
+  }
+  return lines.map(line => `<span class="line">${line || '&nbsp;'}</span>`).join('')
 }
 
 /**

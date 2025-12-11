@@ -83,7 +83,7 @@ export interface UserConfig {
   buildEnd?: (siteConfig: SiteConfig) => Promise<void> | void
 }
 
-export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins'>> {
+export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins' | 'transformHead' | 'transformHtml' | 'transformPageData' | 'buildEnd'>> {
   root: string
   configPath: string | undefined
   configDeps: string[]
@@ -91,6 +91,12 @@ export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins
   tempDir: string
   cacheDir: string
   userPlugins: LDocPlugin[]
+
+  // 可选的扩展钩子
+  transformHead?: (ctx: TransformContext) => Promise<HeadConfig[]> | HeadConfig[]
+  transformHtml?: (code: string, id: string, ctx: TransformContext) => Promise<string> | string
+  transformPageData?: (pageData: PageData, ctx: TransformContext) => Promise<Partial<PageData> | void> | Partial<PageData> | void
+  buildEnd?: (siteConfig: SiteConfig) => Promise<void> | void
 }
 
 export interface LocaleConfig {
@@ -133,8 +139,24 @@ export interface ThemeConfig {
   // 大纲配置
   outline?: OutlineConfig
 
+  // 布局配置
+  layout?: LayoutConfig
+
   // 自定义扩展
   [key: string]: unknown
+}
+
+export interface LayoutConfig {
+  /** 侧边栏宽度，默认 260px */
+  sidebarWidth?: number
+  /** TOC 宽度，默认 220px */
+  outlineWidth?: number
+  /** 内容与侧边栏/TOC 的间距，默认 32px */
+  contentGap?: number
+  /** 导航栏高度，默认 64px */
+  navHeight?: number
+  /** 最大内容宽度，默认 1400px */
+  maxWidth?: number
 }
 
 export interface ThemeLogo {

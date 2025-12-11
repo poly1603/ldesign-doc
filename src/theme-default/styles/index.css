@@ -133,12 +133,10 @@
   --ldoc-c-brand-hue: 180;
 }
 
-/* 平滑过渡 */
-*,
-*::before,
-*::after {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
-}
+/* 
+ * 注意：不要在这里设置全局 transition，会覆盖其他组件的动画
+ * 各组件自行定义需要的过渡效果
+ */
 
 /* 重置样式 */
 *,
@@ -164,7 +162,7 @@ body {
   color: var(--ldoc-c-text-1);
   font-size: 16px;
   line-height: 1.6;
-  transition: background-color var(--ldoc-transition-normal), color var(--ldoc-transition-normal);
+  /* 不要在 body 上设置 transition，View Transition API 会处理主题切换动画 */
 }
 
 /* 链接 */
@@ -246,183 +244,194 @@ button {
   font-weight: 600;
 }
 
-/* 代码块样式 */
-.language-bash,
-.language-sh,
-.language-shell,
-.language-javascript,
-.language-typescript,
-.language-vue,
-.language-jsx,
-.language-tsx,
-.language-css,
-.language-scss,
-.language-less,
-.language-html,
-.language-json,
-.language-yaml,
-.language-markdown,
-.language-python,
-.language-java,
-.language-go,
-.language-rust,
-.language-c,
-.language-cpp,
-.language-sql,
-.language-diff {
+/* 新代码块容器 */
+.vp-code-block {
   position: relative;
   margin: 16px 0;
   border-radius: var(--ldoc-radius-md);
+  background: var(--ldoc-c-bg-soft);
+  border: 1px solid var(--ldoc-c-divider);
   overflow: hidden;
 }
 
-.language-bash::before,
-.language-sh::before,
-.language-shell::before,
-.language-javascript::before,
-.language-typescript::before,
-.language-vue::before,
-.language-jsx::before,
-.language-tsx::before,
-.language-css::before,
-.language-scss::before,
-.language-less::before,
-.language-html::before,
-.language-json::before,
-.language-yaml::before,
-.language-markdown::before,
-.language-python::before,
-.language-java::before,
-.language-go::before,
-.language-rust::before,
-.language-c::before,
-.language-cpp::before,
-.language-sql::before,
-.language-diff::before {
-  position: absolute;
-  top: 8px;
-  right: 12px;
+.dark .vp-code-block {
+  background: #1e1e1e;
+  border-color: #333;
+}
+
+/* 代码块头部 */
+.vp-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+}
+
+.dark .vp-code-header {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom-color: #333;
+}
+
+/* 语言标识 */
+.vp-code-lang {
   font-size: 12px;
+  font-weight: 500;
+  color: var(--ldoc-c-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 复制按钮 */
+.vp-code-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--ldoc-radius-sm);
   color: var(--ldoc-c-text-3);
-  z-index: 1;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.language-bash::before {
-  content: 'bash';
+.vp-code-copy:hover {
+  background: var(--ldoc-c-bg-mute);
+  color: var(--ldoc-c-text-1);
 }
 
-.language-sh::before {
-  content: 'sh';
+.vp-code-copy .check-icon {
+  display: none;
+  color: var(--ldoc-c-green);
 }
 
-.language-shell::before {
-  content: 'shell';
+.vp-code-copy.copied .copy-icon {
+  display: none;
 }
 
-.language-javascript::before {
-  content: 'js';
+.vp-code-copy.copied .check-icon {
+  display: block;
 }
 
-.language-typescript::before {
-  content: 'ts';
+/* 代码内容区域 */
+.vp-code-content {
+  display: flex;
+  overflow-x: auto;
 }
 
-.language-vue::before {
-  content: 'vue';
-}
-
-.language-jsx::before {
-  content: 'jsx';
-}
-
-.language-tsx::before {
-  content: 'tsx';
-}
-
-.language-css::before {
-  content: 'css';
-}
-
-.language-scss::before {
-  content: 'scss';
-}
-
-.language-less::before {
-  content: 'less';
-}
-
-.language-html::before {
-  content: 'html';
-}
-
-.language-json::before {
-  content: 'json';
-}
-
-.language-yaml::before {
-  content: 'yaml';
-}
-
-.language-markdown::before {
-  content: 'md';
-}
-
-.language-python::before {
-  content: 'python';
-}
-
-.language-java::before {
-  content: 'java';
-}
-
-.language-go::before {
-  content: 'go';
-}
-
-.language-rust::before {
-  content: 'rust';
-}
-
-.language-c::before {
-  content: 'c';
-}
-
-.language-cpp::before {
-  content: 'cpp';
-}
-
-.language-sql::before {
-  content: 'sql';
-}
-
-.language-diff::before {
-  content: 'diff';
-}
-
-/* 行号模式 */
-.line-numbers-mode {
-  position: relative;
-  padding-left: 48px;
-}
-
-.line-numbers-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 40px;
+/* 行号 */
+.vp-code-line-numbers {
+  flex-shrink: 0;
   padding: 16px 0;
-  background: rgba(0, 0, 0, 0.05);
-  text-align: center;
-  font-family: var(--ldoc-font-family-mono);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ldoc-c-text-3);
+  min-width: 48px;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.02);
+  border-right: 1px solid var(--ldoc-c-divider);
   user-select: none;
 }
 
-.line-numbers-wrapper .line-number {
+.dark .vp-code-line-numbers {
+  background: rgba(255, 255, 255, 0.02);
+  border-right-color: #333;
+}
+
+.vp-code-line-numbers .line-number {
   display: block;
+  padding-right: 16px;
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+  line-height: 21px;
+  height: 21px;
+  color: var(--ldoc-c-text-3);
+}
+
+/* 代码区域 */
+.vp-code-content pre {
+  flex: 1;
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  background: transparent !important;
+}
+
+.vp-code-content code {
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+  line-height: 21px;
+  tab-size: 2;
+  display: block;
+  white-space: pre;
+}
+
+/* Shiki 双主题支持 - 使用内联样式的 CSS 变量 */
+.vp-code-content code span[style] {
+  color: var(--shiki-light) !important;
+}
+
+.dark .vp-code-content code span[style] {
+  color: var(--shiki-dark) !important;
+}
+
+/* 代码行 */
+.vp-code-content code .line {
+  display: block;
+  min-height: 21px;
+  line-height: 21px;
+  white-space: pre;
+}
+
+/* 空行处理 */
+.vp-code-content code .line:empty::after,
+.vp-code-content code .line:blank::after {
+  content: ' ';
+  display: inline-block;
+}
+
+/* 高亮行 */
+.vp-code-content code .line.highlighted {
+  background: var(--ldoc-c-brand-soft);
+  margin: 0 -16px;
+  padding: 0 16px;
+  border-left: 3px solid var(--ldoc-c-brand);
+}
+
+/* 代码滚动条 */
+.vp-code-content::-webkit-scrollbar {
+  height: 6px;
+}
+
+.vp-code-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vp-code-content::-webkit-scrollbar-thumb {
+  background: var(--ldoc-c-divider);
+  border-radius: 3px;
+}
+
+.vp-code-content::-webkit-scrollbar-thumb:hover {
+  background: var(--ldoc-c-text-3);
+}
+
+/* 兼容旧版代码块样式 - 为旧的渲染结果提供基础样式 */
+[class^="language-"] pre,
+[class*=" language-"] pre {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: var(--ldoc-radius-md);
+  background: var(--ldoc-c-bg-soft);
+  overflow-x: auto;
+}
+
+[class^="language-"] code,
+[class*=" language-"] code {
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 /* 演示容器 */
@@ -573,13 +582,23 @@ button {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.9); }
-  to { transform: scale(1); }
+  from {
+    transform: scale(0.9);
+  }
+
+  to {
+    transform: scale(1);
+  }
 }
 
 /* 视频样式 */
@@ -718,14 +737,14 @@ button {
   list-style: none;
 }
 
-.steps > li {
+.steps>li {
   position: relative;
   padding-left: 48px;
   padding-bottom: 24px;
   margin: 0;
 }
 
-.steps > li::before {
+.steps>li::before {
   counter-increment: step;
   content: counter(step);
   position: absolute;
@@ -743,7 +762,7 @@ button {
   justify-content: center;
 }
 
-.steps > li::after {
+.steps>li::after {
   content: '';
   position: absolute;
   left: 15px;
@@ -753,7 +772,7 @@ button {
   background: var(--ldoc-c-divider);
 }
 
-.steps > li:last-child::after {
+.steps>li:last-child::after {
   display: none;
 }
 
@@ -772,7 +791,7 @@ button {
   margin: 0;
 }
 
-.file-tree > ul {
+.file-tree>ul {
   padding-left: 0;
 }
 
@@ -829,5 +848,317 @@ mark {
 @media (max-width: 768px) {
   :root {
     --ldoc-nav-height: 56px;
+  }
+}
+
+/* ==================== 扩展 Markdown 容器 ==================== */
+
+/* 步骤容器 */
+.steps-container {
+  margin: 24px 0;
+}
+
+.steps-container .steps {
+  margin: 0;
+}
+
+.steps-container .steps>li strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--ldoc-c-text-1);
+}
+
+.steps-container .steps>li p {
+  margin: 0;
+  color: var(--ldoc-c-text-2);
+}
+
+/* 卡片容器 */
+.card-container {
+  margin: 16px 0;
+  padding: 20px;
+  background: var(--ldoc-c-bg-soft);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-lg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card-container:hover {
+  border-color: var(--ldoc-c-brand);
+  box-shadow: var(--ldoc-shadow-2);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+  margin-bottom: 12px;
+}
+
+.card-content {
+  color: var(--ldoc-c-text-2);
+  line-height: 1.6;
+}
+
+.card-content>*:first-child {
+  margin-top: 0;
+}
+
+.card-content>*:last-child {
+  margin-bottom: 0;
+}
+
+/* 卡片网格 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.card-grid .card-container {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 标签页容器 */
+.tabs-container {
+  margin: 16px 0;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-md);
+  overflow: hidden;
+}
+
+.tabs-container>.tab-item {
+  display: none;
+  padding: 16px;
+}
+
+.tabs-container>.tab-item.active {
+  display: block;
+}
+
+/* 视频容器 */
+.video-container {
+  margin: 24px 0;
+  border-radius: var(--ldoc-radius-lg);
+  overflow: hidden;
+  background: #000;
+}
+
+.video-container video {
+  width: 100%;
+  display: block;
+}
+
+/* 音频容器 */
+.audio-container {
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--ldoc-c-bg-soft);
+  border-radius: var(--ldoc-radius-md);
+}
+
+.audio-container audio {
+  width: 100%;
+}
+
+/* 文件树增强 */
+.file-tree {
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: var(--ldoc-c-bg-soft);
+  border-radius: var(--ldoc-radius-md);
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.file-tree ul {
+  list-style: none;
+  padding-left: 24px;
+  margin: 0;
+}
+
+.file-tree>ul {
+  padding-left: 0;
+}
+
+.file-tree li {
+  position: relative;
+  color: var(--ldoc-c-text-2);
+}
+
+.file-tree li::before {
+  content: none;
+}
+
+/* 文件图标样式 */
+.file-tree li[data-type="folder"]::before {
+  content: '📁 ';
+}
+
+.file-tree li[data-type="file"]::before {
+  content: '📄 ';
+}
+
+.file-tree li[data-type="ts"]::before,
+.file-tree li[data-type="typescript"]::before {
+  content: '🔷 ';
+}
+
+.file-tree li[data-type="js"]::before,
+.file-tree li[data-type="javascript"]::before {
+  content: '🟨 ';
+}
+
+.file-tree li[data-type="vue"]::before {
+  content: '💚 ';
+}
+
+.file-tree li[data-type="css"]::before,
+.file-tree li[data-type="scss"]::before {
+  content: '🎨 ';
+}
+
+.file-tree li[data-type="json"]::before {
+  content: '📋 ';
+}
+
+.file-tree li[data-type="md"]::before,
+.file-tree li[data-type="markdown"]::before {
+  content: '📝 ';
+}
+
+/* 响应式工具类 */
+@media (max-width: 768px) {
+  :root {
+    --ldoc-nav-height: 56px;
+  }
+}
+
+/* ==================== View Transition 主题切换动画 ==================== */
+/* 
+ * 圆形动画（circle）由 JavaScript 动态注入样式控制
+ * 这里只定义其他动画类型的静态样式
+ */
+
+/* 基础 View Transition 设置 - 禁用默认动画和混合模式 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
+/* 淡入淡出动画 */
+[data-theme-transition="fade"]::view-transition-old(root) {
+  animation: fade-out var(--theme-transition-duration, 300ms) ease-out both;
+}
+
+[data-theme-transition="fade"]::view-transition-new(root) {
+  animation: fade-in var(--theme-transition-duration, 300ms) ease-in both;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 滑动动画 */
+[data-theme-transition="slide"]::view-transition-old(root) {
+  animation: slide-out-left var(--theme-transition-duration, 300ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+[data-theme-transition="slide"]::view-transition-new(root) {
+  animation: slide-in-right var(--theme-transition-duration, 300ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}
+
+/* 翻转动画 */
+[data-theme-transition="flip"]::view-transition-old(root) {
+  animation: flip-out var(--theme-transition-duration, 400ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+  transform-origin: center center;
+}
+
+[data-theme-transition="flip"]::view-transition-new(root) {
+  animation: flip-in var(--theme-transition-duration, 400ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+  transform-origin: center center;
+}
+
+@keyframes flip-out {
+  to {
+    transform: perspective(1000px) rotateY(90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flip-in {
+  from {
+    transform: perspective(1000px) rotateY(-90deg);
+    opacity: 0;
+  }
+}
+
+/* 溶解动画 */
+[data-theme-transition="dissolve"]::view-transition-old(root) {
+  animation: dissolve-out var(--theme-transition-duration, 300ms) ease-out both;
+}
+
+[data-theme-transition="dissolve"]::view-transition-new(root) {
+  animation: dissolve-in var(--theme-transition-duration, 300ms) ease-in both;
+}
+
+@keyframes dissolve-out {
+  0% {
+    filter: blur(0);
+    opacity: 1;
+  }
+
+  100% {
+    filter: blur(8px);
+    opacity: 0;
+  }
+}
+
+@keyframes dissolve-in {
+  0% {
+    filter: blur(8px);
+    opacity: 0;
+  }
+
+  100% {
+    filter: blur(0);
+    opacity: 1;
   }
 }

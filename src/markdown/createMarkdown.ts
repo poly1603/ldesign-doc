@@ -139,6 +139,138 @@ function setupContainers(md: MarkdownIt, options?: Record<string, string | undef
       return '</CodeGroup>\n'
     }
   })
+
+  // 步骤列表容器
+  md.use(containerPlugin, 'steps', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number }
+
+      if (token.nesting === 1) {
+        return '<div class="steps-container"><ol class="steps">\n'
+      }
+
+      return '</ol></div>\n'
+    }
+  })
+
+  // 文件树容器
+  md.use(containerPlugin, 'file-tree', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number }
+
+      if (token.nesting === 1) {
+        return '<div class="file-tree">\n'
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 卡片容器
+  md.use(containerPlugin, 'card', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const title = token.info.trim().slice('card'.length).trim()
+        return `<div class="card-container">${title ? `<div class="card-title">${title}</div>` : ''}\n<div class="card-content">\n`
+      }
+
+      return '</div></div>\n'
+    }
+  })
+
+  // 卡片网格容器
+  md.use(containerPlugin, 'card-grid', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const cols = token.info.trim().slice('card-grid'.length).trim() || '3'
+        return `<div class="card-grid" style="--grid-cols: ${cols}">\n`
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 标签页容器
+  md.use(containerPlugin, 'tabs', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number }
+
+      if (token.nesting === 1) {
+        return '<div class="tabs-container">\n'
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 单个标签
+  md.use(containerPlugin, 'tab', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const label = token.info.trim().slice('tab'.length).trim() || 'Tab'
+        return `<div class="tab-item" data-label="${label}">\n`
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 视频容器
+  md.use(containerPlugin, 'video', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const src = token.info.trim().slice('video'.length).trim()
+        if (src) {
+          return `<div class="video-container"><video controls preload="metadata"><source src="${src}" type="video/mp4"></video></div>\n`
+        }
+        return '<div class="video-container">\n'
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 音频容器
+  md.use(containerPlugin, 'audio', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const src = token.info.trim().slice('audio'.length).trim()
+        if (src) {
+          return `<div class="audio-container"><audio controls preload="metadata"><source src="${src}" type="audio/mpeg"></audio></div>\n`
+        }
+        return '<div class="audio-container">\n'
+      }
+
+      return '</div>\n'
+    }
+  })
+
+  // 徽章/标签
+  md.use(containerPlugin, 'badge', {
+    render(tokens: unknown[], idx: number) {
+      const token = tokens[idx] as { nesting: number; info: string }
+
+      if (token.nesting === 1) {
+        const info = token.info.trim().slice('badge'.length).trim()
+        const [type, text] = info.split(' ')
+        const badgeType = ['tip', 'warning', 'danger', 'info'].includes(type) ? type : 'tip'
+        const badgeText = text || type || ''
+        return `<span class="badge ${badgeType}">${badgeText}</span>`
+      }
+
+      return ''
+    }
+  })
 }
 
 /**
@@ -149,47 +281,109 @@ function setupCodeHighlight(
   highlighter: (code: string, lang: string) => string,
   options: MarkdownOptions
 ): void {
-  const defaultFence = md.renderer.rules.fence!
-
   md.renderer.rules.fence = (tokens, idx, opts, env, self) => {
     const token = tokens[idx]
-    const lang = token.info.trim().split(/\s+/)[0] || 'text'
+    const info = token.info.trim()
+    const lang = info.split(/\s+/)[0] || 'text'
     const code = token.content
 
+    // 解析高亮行信息，如 typescript{2,4-5}
+    const highlightLines = parseHighlightLines(info)
+
     // 使用代码高亮
-    const highlighted = highlighter(code, lang)
+    let highlighted = highlighter(code, lang)
+
+    // 处理高亮行
+    if (highlightLines.length > 0) {
+      highlighted = addLineHighlight(highlighted, highlightLines)
+    }
+
+    // 计算实际行数 - 基于高亮输出中的 .line 元素数量
+    const lineMatches = highlighted.match(/<span class="line/g)
+    const actualLineCount = lineMatches ? lineMatches.length : code.trimEnd().split('\n').length
+    const showLineNumbers = options.lineNumbers !== false && actualLineCount > 1
+
+    const lineNumbersHtml = showLineNumbers
+      ? `<div class="vp-code-line-numbers">${Array.from({ length: actualLineCount }, (_, i) => `<span class="line-number">${i + 1}</span>`).join('')}</div>`
+      : ''
+
+    // 转义代码用于复制
+    const escapedCode = escapeHtml(code.trim())
 
     // 包装代码块
-    const preClass = options.preWrapper !== false ? 'language-' + lang : ''
-
-    return `<div class="language-${lang}${options.lineNumbers ? ' line-numbers-mode' : ''}">
-<pre class="${preClass}"><code>${highlighted}</code></pre>
+    return `<div class="vp-code-block${showLineNumbers ? ' line-numbers' : ''}" data-lang="${lang}">
+  <div class="vp-code-header">
+    <span class="vp-code-lang">${lang}</span>
+    <button class="vp-code-copy" data-code="${escapedCode.replace(/"/g, '&quot;')}" title="复制代码">
+      <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="vp-code-content">
+    ${lineNumbersHtml}
+    <pre><code class="language-${lang}">${highlighted}</code></pre>
+  </div>
 </div>`
   }
 }
 
 /**
- * 设置行号
+ * 解析高亮行配置
+ */
+function parseHighlightLines(info: string): number[] {
+  const match = info.match(/\{([\d,-]+)\}/)
+  if (!match) return []
+
+  const lines: number[] = []
+  const parts = match[1].split(',')
+
+  for (const part of parts) {
+    if (part.includes('-')) {
+      const [start, end] = part.split('-').map(Number)
+      for (let i = start; i <= end; i++) {
+        lines.push(i)
+      }
+    } else {
+      lines.push(Number(part))
+    }
+  }
+
+  return lines
+}
+
+/**
+ * 添加行高亮 - 给已有的 .line 元素添加高亮类
+ */
+function addLineHighlight(html: string, highlightLines: number[]): string {
+  const lines = html.split('\n')
+  return lines.map((line, i) => {
+    const lineNum = i + 1
+    if (highlightLines.includes(lineNum)) {
+      // 替换 class="line" 为 class="line highlighted"
+      return line.replace('<span class="line">', '<span class="line highlighted">')
+    }
+    return line
+  }).join('\n')
+}
+
+/**
+ * HTML 转义
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+/**
+ * 设置行号 (保留兼容性，但主要逻辑已移到 setupCodeHighlight)
  */
 function setupLineNumbers(md: MarkdownIt): void {
-  const defaultFence = md.renderer.rules.fence!
-
-  md.renderer.rules.fence = (tokens, idx, opts, env, self) => {
-    const token = tokens[idx]
-    const code = token.content
-    const lines = code.split('\n')
-
-    // 生成行号
-    const lineNumbers = lines
-      .map((_, i) => `<span class="line-number">${i + 1}</span>`)
-      .join('')
-
-    const result = defaultFence(tokens, idx, opts, env, self)
-
-    // 在代码块后添加行号
-    return result.replace(
-      '</div>',
-      `<div class="line-numbers-wrapper">${lineNumbers}</div></div>`
-    )
-  }
+  // 行号逻辑已整合到 setupCodeHighlight
 }

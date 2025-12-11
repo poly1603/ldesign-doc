@@ -31,6 +31,8 @@ export { default as VPContent } from './components/VPContent.vue'
 export { default as VPFooter } from './components/VPFooter.vue'
 export { default as VPHome } from './components/VPHome.vue'
 export { default as VPDoc } from './components/VPDoc.vue'
+export { default as VPOutline } from './components/VPOutline.vue'
+export { default as VPBanner } from './components/VPBanner.vue'
 export { default as Demo } from './components/Demo.vue'
 export { default as CodeGroup } from './components/CodeGroup.vue'
 

@@ -85,7 +85,7 @@
         </div>
 
         <!-- 暗黑模式切换 -->
-        <button class="vp-nav-theme-toggle" @click="toggleDark" :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
+        <button class="vp-nav-theme-toggle" @click="toggleDark($event)" :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
           <Transition name="icon-fade" mode="out-in">
             <svg v-if="isDark" key="moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2">
@@ -137,11 +137,15 @@
       </div>
     </div>
   </header>
+
+  <!-- 搜索弹窗 -->
+  <VPSearch :is-open="isSearchOpen" @close="isSearchOpen = false" />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useData, useDark, useSidebar, useThemeColor, useRoute } from '@ldesign/doc/client'
+import VPSearch from './VPSearch.vue'
 
 const { site, theme } = useData()
 const { isDark, toggle: toggleDark } = useDark()
@@ -212,10 +216,27 @@ const isNavActive = (link: string) => {
 }
 
 // 搜索
+const isSearchOpen = ref(false)
+
 const openSearch = () => {
-  // TODO: 实现搜索
-  console.log('Open search')
+  isSearchOpen.value = true
 }
+
+// 全局快捷键 Ctrl+K 打开搜索
+const handleKeydown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault()
+    isSearchOpen.value = !isSearchOpen.value
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>
@@ -237,33 +258,36 @@ const openSearch = () => {
   height: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0 32px;
+  padding: 0;
 }
 
 /* Logo 区域与侧边栏对齐 */
 .vp-nav-left {
   display: flex;
   align-items: center;
-  width: var(--ldoc-sidebar-width, 272px);
+  width: var(--ldoc-sidebar-width, 260px);
   flex-shrink: 0;
+  padding-left: 24px;
+  box-sizing: border-box;
 }
 
-/* 中间导航区域 */
+/* 中间导航区域 - 与内容区左侧对齐 */
 .vp-nav-center {
   display: flex;
   align-items: center;
   flex: 1;
-  padding-left: 24px;
+  padding-left: var(--ldoc-content-gap, 32px);
 }
 
-/* 右侧区域 - 与左侧对称 */
+/* 右侧区域 */
 .vp-nav-right {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
-  width: var(--ldoc-sidebar-width, 272px);
+  gap: 8px;
   flex-shrink: 0;
+  padding-right: 24px;
+  box-sizing: border-box;
 }
 
 .vp-nav-logo {
@@ -309,18 +333,28 @@ const openSearch = () => {
 
 .vp-nav-dropdown {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .vp-nav-dropdown-trigger {
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 4px 8px;
   background: none;
   border: none;
-  color: var(--ldoc-c-text-1);
+  border-radius: 6px;
+  color: var(--ldoc-c-text-2);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vp-nav-dropdown-trigger:hover {
+  color: var(--ldoc-c-text-1);
+  background: var(--ldoc-c-bg-soft);
 }
 
 .vp-nav-dropdown-icon {
@@ -375,19 +409,44 @@ const openSearch = () => {
   border: 1px solid var(--ldoc-c-divider);
   border-radius: 8px;
   color: var(--ldoc-c-text-2);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .vp-nav-search:hover {
   border-color: var(--ldoc-c-brand);
+  background: var(--ldoc-c-bg-mute);
+}
+
+.vp-nav-search-text {
+  font-weight: 500;
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .vp-nav-search-text {
+    display: inline;
+  }
 }
 
 .vp-nav-search-shortcut {
+  display: none;
+  align-items: center;
   padding: 2px 6px;
-  background: var(--ldoc-c-bg-mute);
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ldoc-c-text-3);
+}
+
+@media (min-width: 960px) {
+  .vp-nav-search-shortcut {
+    display: flex;
+  }
 }
 
 /* 主题色选择器 */

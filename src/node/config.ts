@@ -12,15 +12,17 @@ import { deepMerge, normalizePath } from '../shared/utils'
 const require = createRequire(import.meta.url)
 
 /**
- * 支持的配置文件名
+ * 支持的配置文件名（按优先级排序）
  */
 const CONFIG_FILES = [
+  '.ldesign/doc.config.ts',
+  '.ldesign/doc.config.js',
+  '.ldesign/doc.config.mts',
+  '.ldesign/doc.config.mjs',
   'ldoc.config.ts',
   'ldoc.config.js',
   'ldoc.config.mts',
-  'ldoc.config.mjs',
-  '.ldoc/config.ts',
-  '.ldoc/config.js'
+  'ldoc.config.mjs'
 ]
 
 /**
@@ -28,7 +30,7 @@ const CONFIG_FILES = [
  */
 export const defaultConfig: UserConfig = {
   srcDir: 'docs',
-  outDir: '.ldoc/dist',
+  outDir: '.ldesign/.doc-cache/dist',
   base: '/',
   title: 'LDoc',
   description: 'A LDesign Documentation Site',
@@ -47,7 +49,7 @@ export const defaultConfig: UserConfig = {
   vite: {},
   plugins: [],
   build: {
-    outDir: '.ldoc/dist',
+    outDir: '.ldesign/.doc-cache/dist',
     assetsDir: 'assets',
     minify: true,
     sourcemap: false,
@@ -96,9 +98,9 @@ export async function resolveConfig(
 
   // 解析路径
   const srcDir = resolve(root, mergedConfig.srcDir!)
-  const outDir = resolve(root, mergedConfig.outDir || mergedConfig.build?.outDir || '.ldoc/dist')
-  const tempDir = resolve(root, '.ldoc/temp')
-  const cacheDir = resolve(root, '.ldoc/cache')
+  const outDir = resolve(root, mergedConfig.outDir || mergedConfig.build?.outDir || '.ldesign/.doc-cache/dist')
+  const tempDir = resolve(root, '.ldesign/.doc-cache/temp')
+  const cacheDir = resolve(root, '.ldesign/.doc-cache')
 
   // 解析主题目录
   const themeDir = await resolveThemeDir(root, mergedConfig.theme)
@@ -187,8 +189,8 @@ async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Prom
 
   // 如果没有指定主题或主题是对象配置，使用默认主题
   if (!theme || typeof theme === 'object') {
-    // 检查本地 .ldoc/theme 目录
-    const localThemeDir = resolve(root, '.ldoc/theme')
+    // 检查本地 .ldesign/doc-theme 目录
+    const localThemeDir = resolve(root, '.ldesign/doc-theme')
     if (existsSync(localThemeDir)) {
       return localThemeDir
     }

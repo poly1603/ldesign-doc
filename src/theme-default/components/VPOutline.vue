@@ -4,9 +4,11 @@
       <div class="vp-outline-container">
         <h2 class="vp-outline-title">{{ outlineTitle }}</h2>
         <nav class="vp-outline-nav">
-          <ul class="vp-outline-list">
-            <li v-for="header in tocHeaders" :key="header.slug" class="vp-outline-item"
-              :class="'level-' + header.level">
+          <!-- 独立的滑动指示器 -->
+          <div class="vp-outline-indicator" :style="indicatorStyle"></div>
+          <ul class="vp-outline-list" ref="listRef">
+            <li v-for="(header, index) in tocHeaders" :key="header.slug" class="vp-outline-item"
+              :class="'level-' + header.level" :ref="el => setItemRef(el, index)">
               <a :href="'#' + header.slug" class="vp-outline-link" :class="{ active: activeId === header.slug }"
                 @click.prevent="scrollToHeader(header.slug)">
                 {{ header.title }}
@@ -20,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick, type CSSProperties } from 'vue'
 import { useData, useRoute } from '@ldesign/doc/client'
 
 interface Header {
@@ -38,21 +40,45 @@ const tocHeaders = ref<Header[]>([])
 // 是否准备就绪（用于动画）
 const isReady = ref(false)
 
+// 列表容器引用
+const listRef = ref<HTMLElement | null>(null)
+
+// 存储每个列表项的引用
+const itemRefs = ref<(HTMLElement | null)[]>([])
+
+// 设置列表项引用
+const setItemRef = (el: unknown, index: number) => {
+  itemRefs.value[index] = el as HTMLElement | null
+}
+
+// 指示器位置和高度
+const indicatorTop = ref(0)
+const indicatorHeight = ref(0)
+
+// 计算指示器样式
+const indicatorStyle = computed<CSSProperties>(() => ({
+  transform: `translateY(${indicatorTop.value}px)`,
+  height: `${indicatorHeight.value}px`,
+  opacity: indicatorHeight.value > 0 ? 1 : 0
+}))
+
 // 大纲标题
 const outlineTitle = computed(() => {
   const config = theme.value as { outline?: { label?: string } }
   return config.outline?.label || '本页目录'
 })
 
-// 获取标题级别配置
+// 获取标题级别配置 - 默认获取所有标题(h1-h6)
 const getLevelConfig = () => {
   const config = theme.value as { outline?: { level?: number | [number, number] | 'deep' } }
   const levelConfig = config.outline?.level
 
+  // 默认显示 h2-h6 所有标题
   let minLevel = 2
-  let maxLevel = 3
+  let maxLevel = 6
 
   if (levelConfig === 'deep') {
+    minLevel = 1
     maxLevel = 6
   } else if (Array.isArray(levelConfig)) {
     [minLevel, maxLevel] = levelConfig
@@ -68,7 +94,8 @@ const extractHeaders = () => {
   const { minLevel, maxLevel } = getLevelConfig()
   const selectors = []
   for (let i = minLevel; i <= maxLevel; i++) {
-    selectors.push(`.ldoc-content h${i}`)
+    // 同时支持 .ldoc-content 和 .vp-doc-body 选择器
+    selectors.push(`.ldoc-content h${i}`, `.vp-doc-body h${i}`)
   }
 
   const headers: Header[] = []
@@ -93,6 +120,68 @@ const extractHeaders = () => {
 
 // 当前激活的标题
 const activeId = ref('')
+
+// 容器引用（用于滚动）
+const containerRef = ref<HTMLElement | null>(null)
+
+// 更新指示器位置并滚动到可视区
+const updateIndicator = () => {
+  const activeIndex = tocHeaders.value.findIndex(h => h.slug === activeId.value)
+  if (activeIndex === -1) {
+    indicatorHeight.value = 0
+    return
+  }
+
+  const activeItem = itemRefs.value[activeIndex]
+  if (activeItem && listRef.value) {
+    const listRect = listRef.value.getBoundingClientRect()
+    const itemRect = activeItem.getBoundingClientRect()
+    indicatorTop.value = itemRect.top - listRect.top
+    indicatorHeight.value = itemRect.height
+
+    // 滚动到可视区
+    scrollActiveItemIntoView(activeItem)
+  }
+}
+
+// 滚动选中项到可视区
+const scrollActiveItemIntoView = (activeItem: HTMLElement) => {
+  const outline = document.querySelector('.vp-outline') as HTMLElement
+  if (!outline) return
+
+  const outlineRect = outline.getBoundingClientRect()
+  const itemRect = activeItem.getBoundingClientRect()
+
+  // 计算项相对于容器的位置
+  const itemTop = itemRect.top - outlineRect.top + outline.scrollTop
+  const itemBottom = itemTop + itemRect.height
+  const visibleTop = outline.scrollTop
+  const visibleBottom = visibleTop + outline.clientHeight - 80 // 减去标题高度
+
+  // 如果项在可视区外，滚动到可视区
+  if (itemTop < visibleTop + 40) {
+    outline.scrollTo({
+      top: Math.max(0, itemTop - 60),
+      behavior: 'smooth'
+    })
+  } else if (itemBottom > visibleBottom) {
+    outline.scrollTo({
+      top: itemBottom - outline.clientHeight + 100,
+      behavior: 'smooth'
+    })
+  }
+}
+
+// 监听激活项变化，更新指示器
+watch(activeId, () => {
+  nextTick(updateIndicator)
+})
+
+// 监听标题列表变化，重置指示器
+watch(tocHeaders, () => {
+  itemRefs.value = []
+  nextTick(updateIndicator)
+}, { deep: true })
 
 // 滚动监听
 let observer: IntersectionObserver | null = null
@@ -150,6 +239,10 @@ onMounted(() => {
   setTimeout(() => {
     extractHeaders()
     setupObserver()
+    // 页面加载时选中第一个标题
+    if (tocHeaders.value.length > 0 && !activeId.value) {
+      activeId.value = tocHeaders.value[0].slug
+    }
     isReady.value = true
   }, 400)
 })
@@ -173,12 +266,14 @@ const scrollToHeader = (slug: string) => {
 .vp-outline {
   position: fixed;
   top: calc(var(--ldoc-nav-height, 64px) + 24px);
-  right: 32px;
+  right: 0;
   width: var(--ldoc-outline-width, 220px);
   max-height: calc(100vh - var(--ldoc-nav-height, 64px) - 48px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--ldoc-c-divider) transparent;
+  padding-right: 24px;
+  box-sizing: border-box;
 }
 
 .vp-outline::-webkit-scrollbar {
@@ -196,6 +291,7 @@ const scrollToHeader = (slug: string) => {
 
 .vp-outline-container {
   padding: 16px 0;
+  padding-left: var(--ldoc-content-gap, 32px);
   border-left: 1px solid var(--ldoc-c-divider);
 }
 
@@ -207,6 +303,24 @@ const scrollToHeader = (slug: string) => {
   padding-left: 16px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.vp-outline-nav {
+  position: relative;
+}
+
+/* 独立的滑动指示器 */
+.vp-outline-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  background: var(--ldoc-c-brand);
+  border-radius: 0 2px 2px 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s ease;
+  z-index: 1;
 }
 
 .vp-outline-list {
@@ -248,21 +362,8 @@ const scrollToHeader = (slug: string) => {
   text-decoration: none;
   font-size: 13px;
   line-height: 1.4;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease;
   position: relative;
-}
-
-.vp-outline-link::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 0;
-  background: var(--ldoc-c-brand);
-  border-radius: 0 2px 2px 0;
-  transition: height 0.15s ease;
 }
 
 .vp-outline-link:hover {
@@ -272,10 +373,6 @@ const scrollToHeader = (slug: string) => {
 .vp-outline-link.active {
   color: var(--ldoc-c-brand);
   font-weight: 500;
-}
-
-.vp-outline-link.active::before {
-  height: 16px;
 }
 
 /* 过渡动画 */

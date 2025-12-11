@@ -129,6 +129,31 @@ export function usePageLoading() {
 }
 
 /**
+ * View Transition 动画类型
+ */
+export type ThemeTransitionType = 'none' | 'fade' | 'circle' | 'slide' | 'flip' | 'dissolve'
+
+/**
+ * 暗色模式切换配置
+ */
+export interface DarkModeOptions {
+  transition?: ThemeTransitionType
+  duration?: number
+}
+
+// 全局配置
+let themeTransitionType: ThemeTransitionType = 'circle'
+let themeTransitionDuration = 300
+
+/**
+ * 设置主题切换动画配置
+ */
+export function setThemeTransition(type: ThemeTransitionType, duration?: number) {
+  themeTransitionType = type
+  if (duration) themeTransitionDuration = duration
+}
+
+/**
  * 暗色模式切换
  */
 export function useDark() {
@@ -147,13 +172,97 @@ export function useDark() {
     updateTheme(isDark.value)
   }
 
-  const toggle = () => {
-    isDark.value = !isDark.value
-    updateTheme(isDark.value)
-    localStorage.setItem('ldoc-theme', isDark.value ? 'dark' : 'light')
+  const toggle = (event?: MouseEvent) => {
+    // 使用 View Transition API 实现炫酷切换动画
+    if (themeTransitionType !== 'none' && 'startViewTransition' in document) {
+      const x = event?.clientX ?? window.innerWidth / 2
+      const y = event?.clientY ?? window.innerHeight / 2
+
+      // 计算最大半径
+      const maxRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      )
+
+      // 判断方向：当前是暗色模式则收缩，当前是亮色模式则扩散
+      const isCollapse = isDark.value
+
+      // 创建动态样式表，直接注入动画规则
+      const styleId = 'theme-transition-style'
+      let style = document.getElementById(styleId) as HTMLStyleElement
+      if (!style) {
+        style = document.createElement('style')
+        style.id = styleId
+        document.head.appendChild(style)
+      }
+
+      const duration = `${themeTransitionDuration}ms`
+      const easing = 'cubic-bezier(0.4, 0, 0.2, 1)'
+      const clipStart = `circle(0px at ${x}px ${y}px)`
+      const clipEnd = `circle(${maxRadius}px at ${x}px ${y}px)`
+
+      if (isCollapse) {
+        // 收缩：旧视图（暗色）在上面执行收缩动画，新视图（亮色）在下面不动
+        style.textContent = `
+          *, *::before, *::after { transition: none !important; }
+          ::view-transition-old(root) {
+            z-index: 2;
+            animation: theme-collapse ${duration} ${easing} forwards;
+          }
+          ::view-transition-new(root) {
+            z-index: 1;
+            animation: none;
+          }
+          @keyframes theme-collapse {
+            from { clip-path: ${clipEnd}; }
+            to { clip-path: ${clipStart}; }
+          }
+        `
+      } else {
+        // 扩散：新视图（暗色）在上面执行扩散动画，旧视图（亮色）在下面不动
+        style.textContent = `
+          *, *::before, *::after { transition: none !important; }
+          ::view-transition-old(root) {
+            z-index: 1;
+            animation: none;
+          }
+          ::view-transition-new(root) {
+            z-index: 2;
+            animation: theme-expand ${duration} ${easing} forwards;
+          }
+          @keyframes theme-expand {
+            from { clip-path: ${clipStart}; }
+            to { clip-path: ${clipEnd}; }
+          }
+        `
+      }
+
+      const transition = (document as any).startViewTransition(() => {
+        isDark.value = !isDark.value
+        updateTheme(isDark.value)
+        localStorage.setItem('ldoc-theme', isDark.value ? 'dark' : 'light')
+      })
+
+      // 动画完成后清理
+      const cleanup = () => {
+        // 延迟移除样式，确保动画完成
+        setTimeout(() => {
+          if (style && style.parentNode) {
+            style.textContent = ''
+          }
+        }, 50)
+      }
+
+      transition.finished.then(cleanup).catch(cleanup)
+    } else {
+      // 降级到普通切换
+      isDark.value = !isDark.value
+      updateTheme(isDark.value)
+      localStorage.setItem('ldoc-theme', isDark.value ? 'dark' : 'light')
+    }
   }
 
-  return { isDark, toggle }
+  return { isDark, toggle, setTransition: setThemeTransition }
 }
 
 function updateTheme(dark: boolean) {

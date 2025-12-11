@@ -20,30 +20,30 @@ featuresTitle: 核心特性
 featuresDescription: 为现代化文档而生，提供极致的开发体验
 
 features:
-  - icon: ⚡️
+  - icon: zap
     title: 极速启动
     details: 基于 Vite 构建，毫秒级冷启动，即时热更新，文档修改实时可见
     link: /guide/getting-started
     linkText: 快速开始
-  - icon: 📝
+  - icon: code
     title: Markdown 增强
     details: 丰富的 Markdown 扩展语法，支持自定义容器、代码高亮、组件演示等
     link: /guide/markdown
     linkText: 查看语法
-  - icon: 🎨
+  - icon: palette
     title: 主题定制
     details: 完全可定制的主题系统，支持暗色模式切换，CSS 变量轻松修改样式
     link: /guide/theme
     linkText: 主题配置
-  - icon: 🔌
+  - icon: puzzle
     title: 插件扩展
     details: 强大的插件架构，支持自定义 Markdown 语法、页面数据、构建流程
     link: /guide/plugins
     linkText: 插件开发
-  - icon: 📱
+  - icon: layout
     title: 响应式布局
     details: 完美适配各种设备尺寸，从桌面到移动端都能获得最佳阅读体验
-  - icon: 🔍
+  - icon: search
     title: 全文搜索
     details: 内置全文搜索支持，快速定位文档内容，提升查阅效率
 
@@ -69,7 +69,7 @@ codeExample:
       code: npm run docs:dev
 
 banner:
-  icon: 🚀
+  icon: rocket
   title: 开始使用 LDoc
   description: 查看完整的使用指南，了解如何配置和自定义你的文档站点
   link: /guide/getting-started

@@ -340,39 +340,105 @@ macOS：<kbd>⌘</kbd> + <kbd>C</kbd> 复制，<kbd>⌘</kbd> + <kbd>V</kbd> 粘
 
 ## 步骤列表
 
-使用 `steps` 类创建带序号的步骤列表：
+使用 `::: steps` 容器创建带序号的步骤列表（纯 Markdown 语法）：
 
-```html
-<ol class="steps">
-  <li>
-    <strong>安装依赖</strong>
-    <p>运行 npm install @ldesign/doc</p>
-  </li>
-  <li>
-    <strong>初始化配置</strong>
-    <p>运行 npx ldoc init</p>
-  </li>
-  <li>
-    <strong>启动开发</strong>
-    <p>运行 npm run docs:dev</p>
-  </li>
-</ol>
+```markdown
+::: steps
+
+1. **安装依赖**
+   
+   运行 `npm install @ldesign/doc`
+
+2. **初始化配置**
+   
+   运行 `npx ldoc init`
+
+3. **启动开发**
+   
+   运行 `npm run docs:dev`
+
+:::
 ```
 
-<ol class="steps">
-  <li>
-    <strong>安装依赖</strong>
-    <p>运行 <code>npm install @ldesign/doc</code></p>
-  </li>
-  <li>
-    <strong>初始化配置</strong>
-    <p>运行 <code>npx ldoc init</code></p>
-  </li>
-  <li>
-    <strong>启动开发</strong>
-    <p>运行 <code>npm run docs:dev</code></p>
-  </li>
-</ol>
+::: steps
+
+1. **安装依赖**
+   
+   运行 `npm install @ldesign/doc`
+
+2. **初始化配置**
+   
+   运行 `npx ldoc init`
+
+3. **启动开发**
+   
+   运行 `npm run docs:dev`
+
+:::
+
+## 卡片容器
+
+使用 `::: card` 创建卡片容器：
+
+```markdown
+::: card 卡片标题
+这是卡片内容，支持 **Markdown** 语法。
+:::
+```
+
+::: card 功能特性
+- 🚀 快速启动
+- 📦 开箱即用
+- 🎨 主题定制
+:::
+
+## 卡片网格
+
+使用 `::: card-grid` 创建卡片网格布局：
+
+```markdown
+::: card-grid 3
+
+::: card 特性一
+描述内容...
+:::
+
+::: card 特性二
+描述内容...
+:::
+
+:::
+```
+
+## 文件树
+
+使用 `::: file-tree` 展示项目结构：
+
+```markdown
+::: file-tree
+- 📁 src
+  - 📁 components
+    - 📄 Button.vue
+    - 📄 Input.vue
+  - 📁 styles
+    - 🎨 index.css
+  - 📄 main.ts
+- 📄 package.json
+- 📝 README.md
+:::
+```
+
+::: file-tree
+- 📁 src
+  - 📁 components
+    - 💚 Button.vue
+    - 💚 Input.vue
+  - 📁 styles
+    - 🎨 index.css
+  - 🔷 main.ts
+- 📋 package.json
+- 📝 README.md
+:::
 
 ## 媒体支持
 
@@ -386,25 +452,37 @@ macOS：<kbd>⌘</kbd> + <kbd>C</kbd> 复制，<kbd>⌘</kbd> + <kbd>V</kbd> 粘
 
 图片支持**点击放大预览**功能，鼠标悬停有阴影效果。
 
-### 视频
+### 视频容器
 
-嵌入视频：
+使用 `::: video` 嵌入视频：
+
+```markdown
+::: video /path/to/video.mp4
+:::
+```
+
+或传统 HTML 方式：
 
 ```html
 <video controls width="100%">
   <source src="/video/demo.mp4" type="video/mp4">
-  您的浏览器不支持视频播放
 </video>
 ```
 
-### 音频
+### 音频容器
 
-嵌入音频：
+使用 `::: audio` 嵌入音频：
+
+```markdown
+::: audio /path/to/audio.mp3
+:::
+```
+
+或传统 HTML 方式：
 
 ```html
 <audio controls>
   <source src="/audio/demo.mp3" type="audio/mpeg">
-  您的浏览器不支持音频播放
 </audio>
 ```
 

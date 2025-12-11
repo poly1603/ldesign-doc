@@ -1,49 +1,45 @@
 <template>
-  <aside class="vp-sidebar" :class="{ open: isOpen }">
-    <div class="vp-sidebar-container">
-      <nav class="vp-sidebar-nav">
-        <template v-for="group in sidebarItems" :key="group.text">
-          <div class="vp-sidebar-group">
-            <p class="vp-sidebar-group-title">{{ group.text }}</p>
-            <ul class="vp-sidebar-items">
-              <li v-for="item in group.items" :key="item.text" class="vp-sidebar-item">
-                <router-link
-                  v-if="item.link"
-                  :to="item.link"
-                  class="vp-sidebar-link"
-                  :class="{ active: isActive(item.link) }"
-                  @click="close"
-                >
-                  {{ item.text }}
-                </router-link>
-                <span v-else class="vp-sidebar-link">{{ item.text }}</span>
-                <!-- 嵌套项 -->
-                <ul v-if="item.items && item.items.length" class="vp-sidebar-subitems">
-                  <li v-for="subItem in item.items" :key="subItem.text">
-                    <router-link
-                      :to="subItem.link"
-                      class="vp-sidebar-link vp-sidebar-sublink"
-                      :class="{ active: isActive(subItem.link) }"
-                      @click="close"
-                    >
-                      {{ subItem.text }}
+  <Transition name="sidebar-content" mode="out-in">
+    <aside class="vp-sidebar" :class="{ open: isOpen }" :key="sidebarKey">
+      <div class="vp-sidebar-container">
+        <nav class="vp-sidebar-nav">
+          <TransitionGroup name="sidebar-item" tag="div">
+            <template v-for="group in sidebarItems" :key="group.text">
+              <div class="vp-sidebar-group">
+                <p class="vp-sidebar-group-title">{{ group.text }}</p>
+                <ul class="vp-sidebar-items">
+                  <li v-for="item in group.items" :key="item.text" class="vp-sidebar-item">
+                    <router-link v-if="item.link" :to="item.link" class="vp-sidebar-link"
+                      :class="{ active: isActive(item.link) }" @click="close">
+                      {{ item.text }}
                     </router-link>
+                    <span v-else class="vp-sidebar-link">{{ item.text }}</span>
+                    <!-- 嵌套项 -->
+                    <ul v-if="item.items && item.items.length" class="vp-sidebar-subitems">
+                      <li v-for="subItem in item.items" :key="subItem.text">
+                        <router-link v-if="subItem.link" :to="subItem.link" class="vp-sidebar-link vp-sidebar-sublink"
+                          :class="{ active: isActive(subItem.link) }" @click="close">
+                          {{ subItem.text }}
+                        </router-link>
+                        <span v-else class="vp-sidebar-link vp-sidebar-sublink">{{ subItem.text }}</span>
+                      </li>
+                    </ul>
                   </li>
                 </ul>
-              </li>
-            </ul>
-          </div>
-        </template>
-      </nav>
-    </div>
-    
-    <!-- 遮罩 -->
-    <div class="vp-sidebar-mask" @click="close"></div>
-  </aside>
+              </div>
+            </template>
+          </TransitionGroup>
+        </nav>
+      </div>
+
+      <!-- 遮罩 -->
+      <div class="vp-sidebar-mask" @click="close"></div>
+    </aside>
+  </Transition>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { useData, useRoute, useSidebar } from '../composables'
 
 interface SidebarItem {
@@ -57,18 +53,21 @@ const { theme } = useData()
 const route = useRoute()
 const { isOpen, close } = useSidebar()
 
+// 用于触发侧边栏动画的key
+const sidebarKey = ref(0)
+
 // 获取侧边栏配置
 const sidebarItems = computed(() => {
   const config = theme.value as { sidebar?: Record<string, SidebarItem[]> | SidebarItem[] }
   const sidebar = config.sidebar
-  
+
   if (!sidebar) return []
-  
+
   // 数组形式
   if (Array.isArray(sidebar)) {
     return sidebar
   }
-  
+
   // 对象形式 - 根据路径匹配
   const path = route.path
   for (const [prefix, items] of Object.entries(sidebar)) {
@@ -76,9 +75,14 @@ const sidebarItems = computed(() => {
       return items
     }
   }
-  
+
   return []
 })
+
+// 监听侧边栏内容变化，触发动画
+watch(sidebarItems, () => {
+  sidebarKey.value++
+}, { deep: true })
 
 // 检查链接是否激活
 const isActive = (link?: string) => {
@@ -166,11 +170,11 @@ const isActive = (link?: string) => {
   .vp-sidebar {
     transform: translateX(-100%);
   }
-  
+
   .vp-sidebar.open {
     transform: translateX(0);
   }
-  
+
   .vp-sidebar.open .vp-sidebar-mask {
     display: block;
     position: fixed;
@@ -180,5 +184,37 @@ const isActive = (link?: string) => {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
   }
+}
+
+/* 侧边栏内容切换动画 */
+.sidebar-content-enter-active,
+.sidebar-content-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-content-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.sidebar-content-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* 侧边栏项目动画 */
+.sidebar-item-enter-active,
+.sidebar-item-leave-active {
+  transition: all 0.3s ease;
+}
+
+.sidebar-item-enter-from,
+.sidebar-item-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.sidebar-item-move {
+  transition: transform 0.3s ease;
 }
 </style>
