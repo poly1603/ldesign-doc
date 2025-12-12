@@ -3,6 +3,7 @@
  */
 
 import { resolve, dirname } from 'path'
+import { readFileSync } from 'fs'
 import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
@@ -128,32 +129,53 @@ function createMarkdownPlugin(
  * 生成 Vue 组件代码
  */
 function generateVueComponent(html: string, frontmatter: Record<string, unknown>): string {
-  // 使用 JSON.stringify 安全转义 HTML
   const htmlJson = JSON.stringify(html)
   const frontmatterJson = JSON.stringify(frontmatter)
+  // 生成唯一的组件 ID 用于 HMR
+  const componentId = `md_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
   return `
 <template>
-  <div class="ldoc-content" v-html="content"></div>
+  <div class="ldoc-content" v-html="contentHtml"></div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const content = ${htmlJson}
+const componentId = '${componentId}'
+const contentHtml = ref(${htmlJson})
 const frontmatter = ${frontmatterJson}
 
-// 组件挂载时更新全局 pageData，使插件可以访问扩展后的 frontmatter
-onMounted(() => {
-  if (window.__LDOC_PAGE_DATA__) {
-    // 合并扩展的 frontmatter 到全局 pageData
-    const pageData = window.__LDOC_PAGE_DATA__
-    pageData.value = {
-      ...pageData.value,
-      frontmatter: { ...pageData.value.frontmatter, ...frontmatter }
+// 更新全局 pageData
+const updatePageData = () => {
+  if (typeof window !== 'undefined' && window.__LDOC_PAGE_DATA__) {
+    console.log('[ldoc] Updating pageData, componentId:', componentId)
+    window.__LDOC_PAGE_DATA__.value = {
+      ...window.__LDOC_PAGE_DATA__.value,
+      frontmatter: { ...frontmatter },
+      _hmrId: componentId  // 添加 HMR ID 触发响应式更新
     }
+    // 触发自定义事件通知组件更新
+    window.dispatchEvent(new CustomEvent('ldoc:frontmatter-update', { 
+      detail: { frontmatter, componentId } 
+    }))
   }
+}
+
+// 立即更新
+updatePageData()
+
+onMounted(() => {
+  updatePageData()
 })
+
+// HMR 支持
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    console.log('[ldoc] HMR accepted, updating...')
+    updatePageData()
+  })
+}
 
 defineExpose({ frontmatter })
 </script>
@@ -325,12 +347,28 @@ function createHMRPlugin(config: SiteConfig, pluginContainer: PluginContainer): 
 
       // Markdown 文件变化
       if (file.endsWith('.md')) {
-        // 通知插件
-        pluginContainer.callHook('handleHotUpdate', {
-          file: normalizePath(file),
-          timestamp: Date.now(),
-          modules: ctx.modules
+        console.log('[ldoc] markdown changed:', file)
+
+        // 读取文件并解析 frontmatter
+        const content = readFileSync(file, 'utf-8')
+
+        // 解析 frontmatter
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+        let frontmatter: Record<string, unknown> = {}
+        if (frontmatterMatch) {
+          try {
+            frontmatter = yaml.load(frontmatterMatch[1]) as Record<string, unknown> || {}
+          } catch { }
+        }
+
+        // 发送自定义消息给客户端
+        server.ws.send({
+          type: 'custom',
+          event: 'ldoc:frontmatter-update',
+          data: { file, frontmatter }
         })
+
+        return undefined
       }
 
       return undefined

@@ -177,27 +177,285 @@
         <slot />
       </div>
     </div>
+    
+    <!-- 隐藏的 Content 组件，用于触发 markdown 组件挂载以更新 frontmatter -->
+    <div style="display: none;">
+      <Content />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useData } from '../composables'
-import { PluginSlot } from '@ldesign/doc/client'
+import { PluginSlot, Content } from '@ldesign/doc/client'
 
-// Canvas 动画背景
+// Canvas 动画背景 - 支持多种动画效果
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
-let particles: Particle[] = []
 
-interface Particle {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  radius: number
-  opacity: number
-  color: string
+// 动画类型: particles(粒子网络), waves(波浪), gradient(渐变), bubbles(气泡), constellation(星座), none(无)
+type CanvasAnimationType = 'particles' | 'waves' | 'gradient' | 'bubbles' | 'constellation' | 'none'
+
+interface CanvasConfig {
+  type?: CanvasAnimationType
+  color?: string  // 自定义颜色
+  speed?: number  // 动画速度 0.5-2
+  density?: number // 密度 0.5-2
+}
+
+const getCanvasConfig = (): CanvasConfig => {
+  const config = frontmatter.value.hero as { canvas?: CanvasConfig } | undefined
+  return config?.canvas || { type: 'particles' }
+}
+
+const getThemeColor = () => {
+  const style = getComputedStyle(document.documentElement)
+  const hue = style.getPropertyValue('--ldoc-c-brand-hue').trim() || '231'
+  return { hue: parseInt(hue) || 231, s: 70, l: 50 }
+}
+
+// ========== 粒子网络动画 ==========
+const initParticlesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
+  interface Particle { x: number; y: number; vx: number; vy: number; radius: number; opacity: number }
+  const particles: Particle[] = []
+  const speed = config.speed || 1
+  const density = config.density || 1
+  const count = Math.min(50, Math.floor((canvas.width * canvas.height) / 18000 * density))
+  
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.6 * speed,
+      vy: (Math.random() - 0.5) * 0.6 * speed,
+      radius: Math.random() * 2.5 + 1,
+      opacity: Math.random() * 0.3 + 0.15
+    })
+  }
+
+  let gradientOffset = 0
+  return () => {
+    const themeColor = getThemeColor()
+    gradientOffset += 0.002 * speed
+    
+    const gradient = ctx.createLinearGradient(
+      canvas.width * (0.3 + Math.sin(gradientOffset) * 0.2), 0,
+      canvas.width * (0.7 + Math.cos(gradientOffset) * 0.2), canvas.height
+    )
+    gradient.addColorStop(0, `hsla(${themeColor.hue}, 60%, 85%, 0.9)`)
+    gradient.addColorStop(0.5, `hsla(${themeColor.hue + 10}, 55%, 88%, 0.85)`)
+    gradient.addColorStop(1, `hsla(${themeColor.hue - 10}, 50%, 90%, 0.9)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    const color = `hsla(${themeColor.hue}, ${themeColor.s}%, ${themeColor.l}%`
+    particles.forEach((p, i) => {
+      p.x += p.vx; p.y += p.vy
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+      ctx.fillStyle = `${color}, ${p.opacity})`
+      ctx.fill()
+      particles.slice(i + 1).forEach(p2 => {
+        const dx = p.x - p2.x, dy = p.y - p2.y, dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 120) {
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y)
+          ctx.strokeStyle = `${color}, ${0.08 * (1 - dist / 120)})`
+          ctx.lineWidth = 0.5; ctx.stroke()
+        }
+      })
+    })
+  }
+}
+
+// ========== 波浪动画 ==========
+const initWavesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
+  let time = 0
+  const speed = config.speed || 1
+  
+  return () => {
+    const themeColor = getThemeColor()
+    time += 0.015 * speed
+    
+    // 背景渐变
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+    gradient.addColorStop(0, `hsla(${themeColor.hue}, 60%, 88%, 0.95)`)
+    gradient.addColorStop(1, `hsla(${themeColor.hue + 20}, 50%, 92%, 0.95)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // 绘制多层波浪
+    const waves = [
+      { amp: 30, freq: 0.008, phase: 0, opacity: 0.15, y: 0.7 },
+      { amp: 25, freq: 0.012, phase: 2, opacity: 0.12, y: 0.75 },
+      { amp: 20, freq: 0.015, phase: 4, opacity: 0.08, y: 0.8 },
+    ]
+    
+    waves.forEach(wave => {
+      ctx.beginPath()
+      ctx.moveTo(0, canvas.height)
+      for (let x = 0; x <= canvas.width; x += 5) {
+        const y = canvas.height * wave.y + Math.sin(x * wave.freq + time + wave.phase) * wave.amp
+        ctx.lineTo(x, y)
+      }
+      ctx.lineTo(canvas.width, canvas.height)
+      ctx.closePath()
+      ctx.fillStyle = `hsla(${themeColor.hue}, 70%, 60%, ${wave.opacity})`
+      ctx.fill()
+    })
+  }
+}
+
+// ========== 渐变流动动画 ==========
+const initGradientAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
+  let time = 0
+  const speed = config.speed || 1
+  
+  return () => {
+    const themeColor = getThemeColor()
+    time += 0.005 * speed
+    
+    // 动态多点渐变
+    const gradient = ctx.createRadialGradient(
+      canvas.width * (0.3 + Math.sin(time) * 0.2),
+      canvas.height * (0.3 + Math.cos(time * 0.7) * 0.2),
+      0,
+      canvas.width * 0.5,
+      canvas.height * 0.5,
+      canvas.width * 0.8
+    )
+    gradient.addColorStop(0, `hsla(${themeColor.hue + Math.sin(time) * 20}, 70%, 80%, 0.9)`)
+    gradient.addColorStop(0.5, `hsla(${themeColor.hue}, 60%, 85%, 0.85)`)
+    gradient.addColorStop(1, `hsla(${themeColor.hue - 20}, 50%, 90%, 0.9)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // 添加光斑
+    for (let i = 0; i < 3; i++) {
+      const x = canvas.width * (0.2 + i * 0.3 + Math.sin(time + i) * 0.1)
+      const y = canvas.height * (0.3 + Math.cos(time * 0.5 + i * 2) * 0.2)
+      const r = 100 + Math.sin(time + i) * 30
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r)
+      glow.addColorStop(0, `hsla(${themeColor.hue + i * 30}, 80%, 70%, 0.15)`)
+      glow.addColorStop(1, 'transparent')
+      ctx.fillStyle = glow
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    }
+  }
+}
+
+// ========== 气泡动画 ==========
+const initBubblesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
+  interface Bubble { x: number; y: number; r: number; speed: number; wobble: number; opacity: number }
+  const bubbles: Bubble[] = []
+  const speed = config.speed || 1
+  const density = config.density || 1
+  const count = Math.floor(25 * density)
+  
+  for (let i = 0; i < count; i++) {
+    bubbles.push({
+      x: Math.random() * canvas.width,
+      y: canvas.height + Math.random() * 100,
+      r: Math.random() * 20 + 10,
+      speed: (Math.random() * 1 + 0.5) * speed,
+      wobble: Math.random() * Math.PI * 2,
+      opacity: Math.random() * 0.3 + 0.1
+    })
+  }
+  
+  let time = 0
+  return () => {
+    const themeColor = getThemeColor()
+    time += 0.02 * speed
+    
+    // 背景
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+    gradient.addColorStop(0, `hsla(${themeColor.hue}, 55%, 90%, 0.95)`)
+    gradient.addColorStop(1, `hsla(${themeColor.hue + 15}, 60%, 85%, 0.95)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    bubbles.forEach(b => {
+      b.y -= b.speed
+      b.wobble += 0.02
+      const wobbleX = Math.sin(b.wobble) * 2
+      
+      if (b.y + b.r < 0) {
+        b.y = canvas.height + b.r
+        b.x = Math.random() * canvas.width
+      }
+      
+      // 气泡
+      ctx.beginPath()
+      ctx.arc(b.x + wobbleX, b.y, b.r, 0, Math.PI * 2)
+      ctx.fillStyle = `hsla(${themeColor.hue}, 70%, 70%, ${b.opacity})`
+      ctx.fill()
+      
+      // 高光
+      ctx.beginPath()
+      ctx.arc(b.x + wobbleX - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.2, 0, Math.PI * 2)
+      ctx.fillStyle = `hsla(0, 0%, 100%, ${b.opacity * 0.8})`
+      ctx.fill()
+    })
+  }
+}
+
+// ========== 星座动画 ==========
+const initConstellationAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
+  interface Star { x: number; y: number; r: number; twinkle: number; speed: number }
+  const stars: Star[] = []
+  const speed = config.speed || 1
+  const density = config.density || 1
+  const count = Math.floor(80 * density)
+  
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.5,
+      twinkle: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.02 + 0.01
+    })
+  }
+  
+  let time = 0
+  return () => {
+    const themeColor = getThemeColor()
+    time += 0.01 * speed
+    
+    // 深色背景
+    const gradient = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+    )
+    gradient.addColorStop(0, `hsla(${themeColor.hue}, 40%, 25%, 0.98)`)
+    gradient.addColorStop(1, `hsla(${themeColor.hue + 20}, 50%, 15%, 0.98)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // 星星和连线
+    stars.forEach((s, i) => {
+      s.twinkle += s.speed * speed
+      const opacity = 0.4 + Math.sin(s.twinkle) * 0.3
+      
+      ctx.beginPath()
+      ctx.arc(s.x, s.y, s.r * (1 + Math.sin(s.twinkle) * 0.3), 0, Math.PI * 2)
+      ctx.fillStyle = `hsla(${themeColor.hue + 40}, 80%, 80%, ${opacity})`
+      ctx.fill()
+      
+      // 连接附近星星
+      stars.slice(i + 1, i + 10).forEach(s2 => {
+        const dx = s.x - s2.x, dy = s.y - s2.y, dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 100) {
+          ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s2.x, s2.y)
+          ctx.strokeStyle = `hsla(${themeColor.hue + 40}, 60%, 70%, ${0.1 * (1 - dist / 100)})`
+          ctx.lineWidth = 0.5; ctx.stroke()
+        }
+      })
+    })
+  }
 }
 
 const initCanvas = () => {
@@ -207,100 +465,30 @@ const initCanvas = () => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  const config = getCanvasConfig()
+  if (config.type === 'none') return
+
   const resize = () => {
     const rect = canvas.parentElement?.getBoundingClientRect()
-    if (rect) {
-      canvas.width = rect.width
-      canvas.height = rect.height
-    }
+    if (rect) { canvas.width = rect.width; canvas.height = rect.height }
   }
-
   resize()
   window.addEventListener('resize', resize)
 
-  // 获取主题色 - 使用更深的颜色
-  const getThemeColor = () => {
-    const style = getComputedStyle(document.documentElement)
-    const hue = style.getPropertyValue('--ldoc-c-brand-hue').trim() || '231'
-    return { hue: parseInt(hue) || 231, s: 70, l: 50 }
+  // 根据配置选择动画类型
+  let animateFn: (() => void) | null = null
+  switch (config.type) {
+    case 'waves': animateFn = initWavesAnimation(ctx, canvas, config); break
+    case 'gradient': animateFn = initGradientAnimation(ctx, canvas, config); break
+    case 'bubbles': animateFn = initBubblesAnimation(ctx, canvas, config); break
+    case 'constellation': animateFn = initConstellationAnimation(ctx, canvas, config); break
+    case 'particles': default: animateFn = initParticlesAnimation(ctx, canvas, config); break
   }
 
-  // 渐变背景色
-  let gradientOffset = 0
-
-  // 创建粒子
-  const createParticles = () => {
-    particles = []
-    const count = Math.min(40, Math.floor((canvas.width * canvas.height) / 20000))
-    const themeColor = getThemeColor()
-
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        radius: Math.random() * 2.5 + 1,
-        opacity: Math.random() * 0.3 + 0.15,
-        color: `hsla(${themeColor.hue}, ${themeColor.s}%, ${themeColor.l}%`
-      })
-    }
-  }
-
-  createParticles()
-
-  // 动画循环
   const animate = () => {
-    const themeColor = getThemeColor()
-
-    // 绘制动态渐变背景
-    gradientOffset += 0.002
-    const gradient = ctx.createLinearGradient(
-      canvas.width * (0.3 + Math.sin(gradientOffset) * 0.2), 0,
-      canvas.width * (0.7 + Math.cos(gradientOffset) * 0.2), canvas.height
-    )
-    gradient.addColorStop(0, `hsla(${themeColor.hue}, 60%, 85%, 0.9)`)
-    gradient.addColorStop(0.5, `hsla(${themeColor.hue + 10}, 55%, 88%, 0.85)`)
-    gradient.addColorStop(1, `hsla(${themeColor.hue - 10}, 50%, 90%, 0.9)`)
-
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // 更新并绘制粒子
-    particles.forEach((p, i) => {
-      p.x += p.vx
-      p.y += p.vy
-
-      // 边界检测
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1
-
-      // 绘制粒子
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-      ctx.fillStyle = `${p.color}, ${p.opacity})`
-      ctx.fill()
-
-      // 连接附近粒子
-      particles.slice(i + 1).forEach(p2 => {
-        const dx = p.x - p2.x
-        const dy = p.y - p2.y
-        const dist = Math.sqrt(dx * dx + dy * dy)
-
-        if (dist < 120) {
-          ctx.beginPath()
-          ctx.moveTo(p.x, p.y)
-          ctx.lineTo(p2.x, p2.y)
-          ctx.strokeStyle = `${p.color}, ${0.08 * (1 - dist / 120)})`
-          ctx.lineWidth = 0.5
-          ctx.stroke()
-        }
-      })
-    })
-
+    animateFn?.()
     animationId = requestAnimationFrame(animate)
   }
-
   animate()
 
   return () => {
@@ -376,7 +564,29 @@ interface Banner {
 
 const { frontmatter } = useData()
 
+// HMR 更新计数器 - 强制重新计算 computed
+const hmrUpdateKey = ref(0)
+
+// 监听服务器发送的 WebSocket HMR 消息
+if (typeof window !== 'undefined' && (import.meta as any).hot) {
+  const hot = (import.meta as any).hot
+  hot.on('ldoc:frontmatter-update', (data: { file: string; frontmatter: Record<string, unknown> }) => {
+    console.log('[VPHome] Received WS frontmatter update:', data.file)
+    // 更新全局 pageData
+    if (window.__LDOC_PAGE_DATA__) {
+      window.__LDOC_PAGE_DATA__.value = {
+        ...window.__LDOC_PAGE_DATA__.value,
+        frontmatter: data.frontmatter
+      }
+    }
+    // 强制重新计算
+    hmrUpdateKey.value++
+  })
+}
+
 const hero = computed<Hero | undefined>(() => {
+  // 依赖 hmrUpdateKey 确保 HMR 时重新计算
+  void hmrUpdateKey.value
   return frontmatter.value.hero as Hero
 })
 

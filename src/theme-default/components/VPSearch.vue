@@ -591,19 +591,69 @@ onUnmounted(() => {
   color: var(--ldoc-c-text-3);
 }
 
-/* 动画 */
-.search-fade-enter-active,
+/* 优雅的打开/关闭动画 */
+.search-fade-enter-active {
+  animation: search-backdrop-in 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
 .search-fade-leave-active {
-  transition: all 0.2s ease-out;
+  animation: search-backdrop-out 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
-.search-fade-enter-from,
-.search-fade-leave-to {
-  opacity: 0;
+.search-fade-enter-active .vp-search-modal {
+  animation: search-modal-in 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
-.search-fade-enter-from .vp-search-modal,
-.search-fade-leave-to .vp-search-modal {
-  transform: scale(0.95) translateY(-20px);
+.search-fade-leave-active .vp-search-modal {
+  animation: search-modal-out 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes search-backdrop-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes search-backdrop-out {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes search-modal-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(-30px);
+    filter: blur(8px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes search-modal-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+    filter: blur(4px);
+  }
 }
 </style>

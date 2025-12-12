@@ -8,8 +8,8 @@ export default defineConfig({
   lang: 'zh-CN',
   // srcDir 已自动设置为 .ldesign/docs
 
-  // 主题配置 - 使用自定义主题
-  theme: 'ldoc-theme-clean',
+  // 主题配置 - 暂时使用默认主题测试
+  // theme: 'ldoc-theme-clean',
 
   // 使用插件
   plugins: [

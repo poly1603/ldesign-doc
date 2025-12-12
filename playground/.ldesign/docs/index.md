@@ -2,9 +2,13 @@
 layout: home
 title: LDoc - 现代化文档系统
 hero:
-  name: LDoc
-  text: 为现代化文档而生
-  tagline: 基于 Vite 的高性能文档框架，支持 Vue/React 组件渲染、主题系统、插件系统
+  name: LDesign Doc
+  text: 为现代化文档而生1
+  tagline: 基于 Vite 的高性能文档框架，支持 Vue/React 组件渲染、主题系统、插件系统3333
+  canvas:
+    type: waves
+    speed: 1.2
+    density: 1
   actions:
     - text: 快速开始
       link: /guide/getting-started

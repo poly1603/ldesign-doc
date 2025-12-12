@@ -3,7 +3,7 @@
  */
 
 import { resolve, dirname } from 'path'
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -148,13 +148,25 @@ export async function createDevServer(
 async function generateTempFiles(config: SiteConfig): Promise<void> {
   const tempDir = config.tempDir
 
-  // 确保临时目录存在
-  if (!existsSync(tempDir)) {
-    mkdirSync(tempDir, { recursive: true })
+  // 清理旧的临时目录，确保使用最新数据
+  if (existsSync(tempDir)) {
+    rmSync(tempDir, { recursive: true, force: true })
+    console.log(pc.gray('[ldoc] Cleared temp directory'))
   }
+
+  // 创建新的临时目录
+  mkdirSync(tempDir, { recursive: true })
 
   // 生成路由数据
   const routes = await generateRoutes(config)
+
+  // 调试：打印首页的 frontmatter
+  const indexRoute = routes.find(r => r.path === '/')
+  if (indexRoute) {
+    console.log(pc.cyan('[ldoc] Index page frontmatter:'))
+    console.log(pc.gray(`  hero.name: ${(indexRoute.frontmatter.hero as any)?.name || 'N/A'}`))
+    console.log(pc.gray(`  hero.text: ${(indexRoute.frontmatter.hero as any)?.text || 'N/A'}`))
+  }
 
   // 写入路由文件
   const routesCode = generateRoutesCode(routes, 'dev')

@@ -1,10 +1,70 @@
 /**
- * LDoc Admin UI - 高性能纯 HTML 版本
+ * LDoc Admin UI - 完整功能版 (使用 Lucide 图标)
  */
 
 export interface AdminUIOptions {
   docsPort?: number
 }
+
+const CSS = `
+:root{--primary:#6366f1;--success:#10b981;--danger:#ef4444;--bg:#f9fafb;--card:#fff;--border:#e5e7eb;--text:#111827;--text2:#6b7280}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#0f172a;color:#fff;position:fixed;height:100vh;display:flex;flex-direction:column}
+.logo{padding:16px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.nav{flex:1;padding:8px;overflow-y:auto}.nav-group{margin-bottom:16px}
+.nav-title{padding:8px 12px;font-size:10px;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 12px;color:rgba(255,255,255,0.6);border-radius:6px;cursor:pointer;font-size:13px}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff}.nav-item.active{background:var(--primary);color:#fff}
+.nav-footer{padding:12px;border-top:1px solid rgba(255,255,255,0.1)}
+.nav-footer a{color:rgba(255,255,255,0.5);text-decoration:none;font-size:12px;display:flex;align-items:center;gap:6px}
+.main{flex:1;margin-left:220px;padding:20px 24px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.page-header h1{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}.btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:6px 10px;font-size:12px}.btn-icon{width:32px;height:32px;padding:0;justify-content:center}
+.card{background:var(--card);border-radius:8px;border:1px solid var(--border);margin-bottom:16px}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px}
+.card-header .actions{margin-left:auto;display:flex;gap:6px}.card-body{padding:16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:8px;padding:16px;border:1px solid var(--border)}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.stat-icon.blue{background:#dbeafe;color:#2563eb}.stat-icon.green{background:#d1fae5;color:#059669}
+.stat-icon.purple{background:#ede9fe;color:#7c3aed}.stat-icon.orange{background:#ffedd5;color:#ea580c}
+.stat-value{font-size:24px;font-weight:700}.stat-label{font-size:12px;color:var(--text2);margin-top:2px}
+.form-group{margin-bottom:14px}.form-label{display:block;font-size:12px;font-weight:500;margin-bottom:5px;color:var(--text2)}
+.form-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+.form-input:focus{outline:none;border-color:var(--primary)}.form-hint{font-size:11px;color:#9ca3af;margin-top:3px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.checkbox{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}.checkbox input{width:16px;height:16px}
+.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.table th{font-weight:500;color:var(--text2);font-size:11px;text-transform:uppercase;background:var(--bg)}
+.list-item{display:flex;gap:8px;padding:10px;background:var(--bg);border-radius:6px;margin-bottom:6px;align-items:center}
+.list-item input{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px}
+.nav-cfg{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:10px}
+.nav-cfg-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.nav-cfg-head:hover{background:var(--bg)}.nav-cfg-head .inputs{flex:1;display:flex;gap:10px}
+.nav-cfg-head input{padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px}
+.nav-cfg-head input:first-child{width:120px}
+.nav-cfg-body{border-top:1px solid var(--border);padding:14px;background:var(--bg);display:none}
+.nav-cfg-body.open{display:block}.nav-cfg-body h4{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sb-group{margin-bottom:12px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:6px}
+.sb-group-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sb-group-head input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:500}
+.sb-item{display:flex;gap:8px;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;margin-left:16px;align-items:center}
+.sb-item input{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px}
+.sb-item input:first-of-type{width:120px}.sb-item input:last-of-type{flex:1}
+.page{display:none}.page.active{display:block}
+.badge{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge.blue{background:#dbeafe;color:#1d4ed8}.badge.green{background:#d1fae5;color:#047857}.badge.purple{background:#ede9fe;color:#6d28d9}
+.code{background:#1e293b;color:#e2e8f0;padding:14px;border-radius:6px;font-family:monospace;font-size:12px;overflow-x:auto}
+.toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(10px);transition:all 0.3s}
+.toast.show{opacity:1;transform:translateY(0)}.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+.empty{text-align:center;padding:32px;color:var(--text2)}
+@media(max-width:1200px){.stats{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}}
+`
 
 export function generateAdminHTML(options: AdminUIOptions = {}): string {
   const { docsPort = 5173 } = options
@@ -15,357 +75,227 @@ export function generateAdminHTML(options: AdminUIOptions = {}): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LDoc Admin</title>
-<style>
-:root{--primary:#6366f1;--primary-hover:#4f46e5;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--text:#1e293b;--text-secondary:#64748b;--radius:10px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
-.app{display:flex;min-height:100vh}
-.sidebar{width:220px;background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);color:#fff;position:fixed;height:100vh;display:flex;flex-direction:column}
-.logo{padding:20px;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1)}
-.logo svg{width:24px;height:24px}
-.nav{flex:1;padding:12px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:12px 16px;color:rgba(255,255,255,0.7);text-decoration:none;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:all 0.15s}
-.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff}
-.nav-item.active{background:var(--primary);color:#fff}
-.nav-item svg{width:18px;height:18px;opacity:0.8}
-.nav-footer{padding:16px;border-top:1px solid rgba(255,255,255,0.1)}
-.nav-footer a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:8px}
-.nav-footer a:hover{color:#fff}
-.main{flex:1;margin-left:220px;padding:24px 32px;min-height:100vh}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.header h1{font-size:24px;font-weight:600}
-.header-actions{display:flex;gap:12px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-hover)}
-.btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{background:var(--bg)}
-.btn-success{background:var(--success);color:#fff}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-sm{padding:6px 12px;font-size:13px}
-.btn svg{width:16px;height:16px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid var(--border)}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;background:rgba(99,102,241,0.1)}
-.stat-icon svg{width:20px;height:20px;color:var(--primary)}
-.stat-icon.success{background:rgba(16,185,129,0.1)}
-.stat-icon.success svg{color:var(--success)}
-.stat-icon.warning{background:rgba(245,158,11,0.1)}
-.stat-icon.warning svg{color:var(--warning)}
-.stat-value{font-size:28px;font-weight:700;margin-bottom:4px}
-.stat-label{color:var(--text-secondary);font-size:13px}
-.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:20px}
-.card-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
-.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
-.card-title svg{width:18px;height:18px;color:var(--primary)}
-.card-body{padding:20px}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:12px 16px;text-align:left}
-.table th{color:var(--text-secondary);font-weight:500;font-size:13px;border-bottom:1px solid var(--border)}
-.table td{border-bottom:1px solid var(--border)}
-.table tr:last-child td{border-bottom:none}
-.table code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:13px}
-.form-group{margin-bottom:16px}
-.form-label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text-secondary)}
-.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.15s}
-.form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-textarea.form-input{min-height:100px;resize:vertical;font-family:inherit}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.form-hint{font-size:12px;color:var(--text-secondary);margin-top:4px}
-.list-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border-radius:8px;margin-bottom:8px}
-.list-item input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px}
-.list-item input:focus{outline:none;border-color:var(--primary)}
-.empty{text-align:center;padding:40px;color:var(--text-secondary)}
-.empty svg{width:48px;height:48px;opacity:0.3;margin-bottom:12px}
-.page{display:none}
-.page.active{display:block}
-.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all 0.3s}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
-.badge-primary{background:rgba(99,102,241,0.1);color:var(--primary)}
-.badge-success{background:rgba(16,185,129,0.1);color:var(--success)}
-.file-tree{padding:8px}
-.file-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text-secondary)}
-.file-item:hover{background:var(--bg)}
-.file-item.active{background:rgba(99,102,241,0.1);color:var(--primary)}
-.file-item svg{width:16px;height:16px}
-.file-item.folder{font-weight:500;color:var(--text)}
-.editor-layout{display:grid;grid-template-columns:240px 1fr;gap:20px;height:calc(100vh - 160px)}
-.editor-sidebar{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:auto}
-.editor-main{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column}
-.editor-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px}
-.editor-content{flex:1;display:flex}
-.editor-textarea{flex:1;border:none;padding:16px;font-family:'Monaco','Menlo',monospace;font-size:14px;line-height:1.6;resize:none}
-.editor-textarea:focus{outline:none}
-.editor-preview{flex:1;padding:16px;border-left:1px solid var(--border);overflow:auto}
-.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:8px}
-.tab{padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-secondary)}
-.tab.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,0.05)}
-.sidebar-group{margin-bottom:16px;background:var(--bg);border-radius:10px;overflow:hidden}
-.sidebar-group-header{padding:14px 16px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.sidebar-group-title{font-weight:600;display:flex;align-items:center;gap:8px}
-.sidebar-group-items{padding:8px}
-.sidebar-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border-radius:6px;margin-bottom:6px}
-.sidebar-item input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px}
-.loading{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:1024px){.stats{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.stats{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.editor-layout{grid-template-columns:1fr}}
-</style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"><\/script>
+<style>${CSS}</style>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
-<div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>LDoc Admin</div>
+<div class="logo"><i data-lucide="book-open"></i>LDoc Admin</div>
 <nav class="nav">
-<a class="nav-item active" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>仪表盘</a>
-<a class="nav-item" onclick="showPage('site')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>站点配置</a>
-<a class="nav-item" onclick="showPage('nav')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>导航配置</a>
-<a class="nav-item" onclick="showPage('sidebar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>侧边栏</a>
-<a class="nav-item" onclick="showPage('editor')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>文档编辑</a>
-<a class="nav-item" onclick="showPage('build')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>构建部署</a>
+<div class="nav-group"><div class="nav-title">概览</div>
+<div class="nav-item active" onclick="go('dashboard')"><i data-lucide="layout-dashboard"></i>仪表盘</div></div>
+<div class="nav-group"><div class="nav-title">配置</div>
+<div class="nav-item" onclick="go('site')"><i data-lucide="settings"></i>站点配置</div>
+<div class="nav-item" onclick="go('theme')"><i data-lucide="palette"></i>主题配置</div>
+<div class="nav-item" onclick="go('markdown')"><i data-lucide="file-text"></i>Markdown</div>
+<div class="nav-item" onclick="go('build')"><i data-lucide="hammer"></i>构建配置</div>
+<div class="nav-item" onclick="go('vite')"><i data-lucide="zap"></i>Vite配置</div>
+<div class="nav-item" onclick="go('deploy')"><i data-lucide="rocket"></i>部署配置</div></div>
+<div class="nav-group"><div class="nav-title">内容</div>
+<div class="nav-item" onclick="go('nav')"><i data-lucide="menu"></i>导航与侧边栏</div>
+<div class="nav-item" onclick="go('docs')"><i data-lucide="files"></i>文档管理</div>
+<div class="nav-item" onclick="go('plugins')"><i data-lucide="puzzle"></i>插件</div></div>
 </nav>
-<div class="nav-footer"><a href="http://localhost:${docsPort}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>查看文档站点</a></div>
+<div class="nav-footer"><a href="http://localhost:${docsPort}" target="_blank"><i data-lucide="external-link"></i>预览站点</a></div>
 </aside>
-
 <main class="main">
-<!-- Dashboard -->
-<div id="page-dashboard" class="page active">
-<div class="header"><h1>仪表盘</h1><a href="http://localhost:${docsPort}" target="_blank" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>查看站点</a></div>
-<div class="stats">
-<div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="stat-value" id="s-pages">-</div><div class="stat-label">文档数量</div></div>
-<div class="stat"><div class="stat-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><div class="stat-value" id="s-folders">-</div><div class="stat-label">文件夹</div></div>
-<div class="stat"><div class="stat-icon warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div><div class="stat-value" id="s-nav">-</div><div class="stat-label">导航项</div></div>
-<div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div><div class="stat-value" id="s-sidebar">-</div><div class="stat-label">侧边栏项</div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>最近更新</div></div><div class="card-body"><table class="table"><thead><tr><th>标题</th><th>路径</th><th>更新时间</th><th>操作</th></tr></thead><tbody id="recent-list"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody></table></div></div>
-</div>
-
-<!-- Site Config -->
-<div id="page-site" class="page">
-<div class="header"><h1>站点配置</h1><button class="btn btn-primary" onclick="saveSite()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存配置</button></div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>基本信息</div></div><div class="card-body">
-<div class="form-row"><div class="form-group"><label class="form-label">站点标题</label><input id="site-title" class="form-input" placeholder="我的文档"><div class="form-hint">显示在浏览器标签页和导航栏</div></div><div class="form-group"><label class="form-label">站点描述</label><input id="site-desc" class="form-input" placeholder="一个现代化的文档站点"><div class="form-hint">用于 SEO 和社交分享</div></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">语言</label><input id="site-lang" class="form-input" placeholder="zh-CN"><div class="form-hint">页面语言属性</div></div><div class="form-group"><label class="form-label">基础路径</label><input id="site-base" class="form-input" placeholder="/"><div class="form-hint">部署的子路径，如 /docs/</div></div></div>
-</div></div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>路径信息</div></div><div class="card-body"><div class="form-row"><div class="form-group"><label class="form-label">源文件目录</label><input id="site-src" class="form-input" disabled></div><div class="form-group"><label class="form-label">输出目录</label><input id="site-out" class="form-input" disabled></div></div></div></div>
-</div>
-
-<!-- Nav Config -->
-<div id="page-nav" class="page">
-<div class="header"><h1>导航配置</h1><button class="btn btn-primary" onclick="addNav()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加导航</button></div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>预览</div></div><div class="card-body" style="background:var(--bg);border-radius:8px;padding:12px"><div id="nav-preview" style="display:flex;gap:20px;flex-wrap:wrap"></div></div></div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>导航项列表</div></div><div class="card-body"><div id="nav-list"></div></div></div>
-</div>
-
-<!-- Sidebar Config -->
-<div id="page-sidebar" class="page">
-<div class="header"><h1>侧边栏配置</h1><button class="btn btn-primary" onclick="addSidebarGroup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>添加分组</button></div>
-<div id="sidebar-list"></div>
-</div>
-
-<!-- Doc Editor -->
-<div id="page-editor" class="page">
-<div class="header"><h1>文档编辑</h1><div class="header-actions"><button class="btn btn-secondary" onclick="newDoc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>新建</button><button class="btn btn-primary" onclick="saveDoc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button></div></div>
-<div class="editor-layout"><div class="editor-sidebar"><div style="padding:12px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px">文件列表</div><div id="file-tree" class="file-tree"></div></div><div class="editor-main"><div class="editor-toolbar"><div class="tabs"><div class="tab active" onclick="setEditorTab('edit')">编辑</div><div class="tab" onclick="setEditorTab('preview')">预览</div><div class="tab" onclick="setEditorTab('split')">分栏</div></div><div style="flex:1"></div><span id="current-file" style="color:var(--text-secondary);font-size:13px">未选择文件</span></div><div class="editor-content" id="editor-content"><textarea class="editor-textarea" id="editor-textarea" placeholder="选择左侧文件开始编辑..."></textarea><div class="editor-preview" id="editor-preview"></div></div></div></div>
-</div>
-
-<!-- Build -->
-<div id="page-build" class="page">
-<div class="header"><h1>构建部署</h1></div>
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
-<div class="card" style="cursor:pointer;text-align:center" onclick="runBuild()"><div class="card-body"><div style="width:60px;height:60px;border-radius:16px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" width="28" height="28"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div style="font-weight:600;margin-bottom:4px">构建</div><div style="font-size:13px;color:var(--text-secondary)">打包生产版本</div></div></div>
-<div class="card" style="cursor:pointer;text-align:center" onclick="runPreview()"><div class="card-body"><div style="width:60px;height:60px;border-radius:16px;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" width="28" height="28"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div style="font-weight:600;margin-bottom:4px">预览</div><div style="font-size:13px;color:var(--text-secondary)">预览构建结果</div></div></div>
-<div class="card" style="cursor:pointer;text-align:center" onclick="runDeploy()"><div class="card-body"><div style="width:60px;height:60px;border-radius:16px;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" width="28" height="28"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-weight:600;margin-bottom:4px">部署</div><div style="font-size:13px;color:var(--text-secondary)">发布到线上</div></div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>输出日志</div></div><div class="card-body"><div id="build-log" style="background:#1e293b;color:#e2e8f0;padding:16px;border-radius:8px;font-family:monospace;font-size:13px;min-height:200px;max-height:400px;overflow:auto">等待执行命令...</div></div></div>
-</div>
+${getPages(docsPort)}
 </main>
 </div>
-
-<div id="toast" class="toast"></div>
-
-<script>
-var data={pages:[],nav:[],sidebar:{},site:{},tree:[]};
-var currentFile='';
-var editorMode='split';
-
-function showPage(name){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.querySelectorAll('.nav-item').forEach(function(a){a.classList.remove('active')});
-  document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item')[{dashboard:0,site:1,nav:2,sidebar:3,editor:4,build:5}[name]].classList.add('active');
-}
-
-function toast(msg,type){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast '+(type||'')+' show';
-  setTimeout(function(){t.classList.remove('show')},3000);
-}
-
-function loadData(){
-  fetch('/api/pages').then(function(r){return r.json()}).then(function(d){
-    data.pages=d.pages||[];
-    document.getElementById('s-pages').textContent=data.pages.length;
-    var folders=new Set();
-    data.pages.forEach(function(p){var f=p.path.split('/');if(f.length>1)folders.add(f.slice(0,-1).join('/'))});
-    document.getElementById('s-folders').textContent=folders.size;
-    renderRecent();
-  }).catch(function(){document.getElementById('s-pages').textContent='0'});
-
-  fetch('/api/nav').then(function(r){return r.json()}).then(function(d){
-    data.nav=d.nav||[];
-    document.getElementById('s-nav').textContent=data.nav.length;
-    renderNav();
-  }).catch(function(){document.getElementById('s-nav').textContent='0'});
-
-  fetch('/api/sidebar').then(function(r){return r.json()}).then(function(d){
-    data.sidebar=d.sidebar||{};
-    var count=0;
-    if(Array.isArray(data.sidebar)){data.sidebar.forEach(function(g){count+=(g.items?g.items.length:0)})}
-    else{Object.values(data.sidebar).forEach(function(arr){if(Array.isArray(arr))arr.forEach(function(g){count+=(g.items?g.items.length:0)})})}
-    document.getElementById('s-sidebar').textContent=count;
-    renderSidebar();
-  }).catch(function(){document.getElementById('s-sidebar').textContent='0'});
-
-  fetch('/api/site').then(function(r){return r.json()}).then(function(d){
-    data.site=d;
-    document.getElementById('site-title').value=d.title||'';
-    document.getElementById('site-desc').value=d.description||'';
-    document.getElementById('site-lang').value=d.lang||'zh-CN';
-    document.getElementById('site-base').value=d.base||'/';
-    document.getElementById('site-src').value=d.srcDir||'';
-    document.getElementById('site-out').value=d.outDir||'';
-  });
-
-  fetch('/api/tree').then(function(r){return r.json()}).then(function(d){
-    data.tree=d.tree||[];
-    renderFileTree();
-  });
-}
-
-function renderRecent(){
-  var html='';
-  var recent=data.pages.slice().sort(function(a,b){return new Date(b.updatedAt)-new Date(a.updatedAt)}).slice(0,8);
-  recent.forEach(function(p){
-    html+='<tr><td><strong>'+(p.title||'无标题')+'</strong></td><td><code>'+p.path+'</code></td><td>'+(p.updatedAt?new Date(p.updatedAt).toLocaleDateString():'—')+'</td><td><button class="btn btn-sm btn-secondary" onclick="editFile(\\''+p.path+'\\')">编辑</button></td></tr>';
-  });
-  document.getElementById('recent-list').innerHTML=html||'<tr><td colspan="4" class="empty">暂无文档</td></tr>';
-}
-
-function renderNav(){
-  var preview='';var list='';
-  data.nav.forEach(function(item,i){
-    preview+='<span style="padding:6px 14px;background:#fff;border-radius:6px;font-size:14px">'+item.text+'</span>';
-    list+='<div class="list-item"><input value="'+item.text+'" onchange="data.nav['+i+'].text=this.value;renderNav()" placeholder="文本"><input value="'+item.link+'" onchange="data.nav['+i+'].link=this.value" placeholder="链接"><button class="btn btn-sm btn-danger" onclick="data.nav.splice('+i+',1);renderNav()">删除</button></div>';
-  });
-  document.getElementById('nav-preview').innerHTML=preview||'<span style="color:var(--text-secondary)">暂无导航项</span>';
-  document.getElementById('nav-list').innerHTML=list||'<div class="empty">点击上方按钮添加导航项</div>';
-}
-
-function addNav(){data.nav.push({text:'新导航',link:'/'});renderNav()}
-
-function renderSidebar(){
-  var html='';
-  var sb=Array.isArray(data.sidebar)?data.sidebar:Object.values(data.sidebar).flat();
-  sb.forEach(function(group,gi){
-    html+='<div class="sidebar-group card"><div class="sidebar-group-header"><div class="sidebar-group-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><input value="'+(group.text||'')+'" style="border:none;font-size:14px;font-weight:600;width:150px" placeholder="分组名"></div><div><button class="btn btn-sm btn-secondary" onclick="addSidebarItem('+gi+')">添加项</button> <button class="btn btn-sm btn-danger" onclick="removeSidebarGroup('+gi+')">删除</button></div></div><div class="sidebar-group-items">';
-    (group.items||[]).forEach(function(item,ii){
-      html+='<div class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><input value="'+(item.text||'')+'" placeholder="标题"><input value="'+(item.link||'')+'" placeholder="链接"><button class="btn btn-sm btn-danger" onclick="removeSidebarItem('+gi+','+ii+')">×</button></div>';
-    });
-    if(!group.items||!group.items.length)html+='<div style="padding:16px;text-align:center;color:var(--text-secondary)">暂无项目</div>';
-    html+='</div></div>';
-  });
-  document.getElementById('sidebar-list').innerHTML=html||'<div class="card"><div class="card-body empty">点击上方按钮添加侧边栏分组</div></div>';
-}
-
-function addSidebarGroup(){
-  var sb=Array.isArray(data.sidebar)?data.sidebar:Object.values(data.sidebar).flat();
-  sb.push({text:'新分组',items:[]});
-  data.sidebar=sb;renderSidebar();
-}
-function removeSidebarGroup(gi){
-  var sb=Array.isArray(data.sidebar)?data.sidebar:Object.values(data.sidebar).flat();
-  sb.splice(gi,1);data.sidebar=sb;renderSidebar();
-}
-function addSidebarItem(gi){
-  var sb=Array.isArray(data.sidebar)?data.sidebar:Object.values(data.sidebar).flat();
-  sb[gi].items=sb[gi].items||[];sb[gi].items.push({text:'',link:''});
-  data.sidebar=sb;renderSidebar();
-}
-function removeSidebarItem(gi,ii){
-  var sb=Array.isArray(data.sidebar)?data.sidebar:Object.values(data.sidebar).flat();
-  sb[gi].items.splice(ii,1);data.sidebar=sb;renderSidebar();
-}
-
-function renderFileTree(){
-  var html='';
-  function render(items,level){
-    items.forEach(function(item){
-      var indent=level*16;
-      if(item.type==='directory'){
-        html+='<div class="file-item folder" style="padding-left:'+(12+indent)+'px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'+item.name+'</div>';
-        if(item.children)render(item.children,level+1);
-      }else{
-        html+='<div class="file-item" style="padding-left:'+(12+indent)+'px" onclick="openFile(\\''+item.path+'\\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'+item.name+'</div>';
-      }
-    });
-  }
-  render(data.tree,0);
-  document.getElementById('file-tree').innerHTML=html||'<div class="empty">暂无文件</div>';
-}
-
-function openFile(path){
-  currentFile=path;
-  document.getElementById('current-file').textContent=path;
-  document.querySelectorAll('.file-item').forEach(function(f){f.classList.remove('active')});
-  event.target.closest('.file-item').classList.add('active');
-  fetch('/api/doc?path='+encodeURIComponent(path)).then(function(r){return r.json()}).then(function(d){
-    document.getElementById('editor-textarea').value=d.content||'';
-    updatePreview();
-  });
-}
-
-function editFile(path){showPage('editor');setTimeout(function(){
-  var items=document.querySelectorAll('.file-item');
-  items.forEach(function(item){if(item.textContent.trim()===path.split('/').pop()){item.click()}});
-},100)}
-
-function updatePreview(){
-  var md=document.getElementById('editor-textarea').value;
-  var html=md.replace(/^### (.*$)/gim,'<h3>$1</h3>').replace(/^## (.*$)/gim,'<h2>$1</h2>').replace(/^# (.*$)/gim,'<h1>$1</h1>').replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>').replace(/\\n/g,'<br>');
-  document.getElementById('editor-preview').innerHTML='<div style="line-height:1.8">'+html+'</div>';
-}
-
-function setEditorTab(mode){
-  editorMode=mode;
-  document.querySelectorAll('.tabs .tab').forEach(function(t,i){t.classList.toggle('active',['edit','preview','split'][i]===mode)});
-  var content=document.getElementById('editor-content');
-  var textarea=document.getElementById('editor-textarea');
-  var preview=document.getElementById('editor-preview');
-  if(mode==='edit'){textarea.style.display='block';preview.style.display='none';textarea.style.flex='1'}
-  else if(mode==='preview'){textarea.style.display='none';preview.style.display='block';preview.style.flex='1';preview.style.borderLeft='none'}
-  else{textarea.style.display='block';preview.style.display='block';textarea.style.flex='1';preview.style.flex='1';preview.style.borderLeft='1px solid var(--border)'}
-  updatePreview();
-}
-
-function saveDoc(){
-  if(!currentFile)return toast('请先选择文件','error');
-  fetch('/api/doc',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentFile,content:document.getElementById('editor-textarea').value})}).then(function(r){return r.json()}).then(function(d){toast(d.success?'保存成功！':'保存失败',d.success?'success':'error')});
-}
-
-function saveSite(){toast('站点配置保存成功！','success')}
-function newDoc(){toast('新建文档功能开发中')}
-function runBuild(){addLog('开始构建...');setTimeout(function(){addLog('构建完成！')},1000)}
-function runPreview(){addLog('启动预览服务器...')}
-function runDeploy(){addLog('部署功能开发中...')}
-function addLog(msg){var log=document.getElementById('build-log');log.innerHTML+='<div>['+new Date().toLocaleTimeString()+'] '+msg+'</div>';log.scrollTop=log.scrollHeight}
-
-document.getElementById('editor-textarea').addEventListener('input',updatePreview);
-window.onload=loadData;
-</script>
+<div id="toast" class="toast"><i data-lucide="check"></i><span></span></div>
+<script>${getScript()}<\/script>
 </body>
 </html>`
+}
+
+function getPages(port: number): string {
+  return `
+<div id="p-dashboard" class="page active">
+<div class="page-header"><h1><i data-lucide="layout-dashboard"></i>仪表盘</h1>
+<div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="loadData()"><i data-lucide="refresh-cw"></i>刷新</button>
+<a href="http://localhost:${port}" target="_blank" class="btn btn-primary"><i data-lucide="external-link"></i>预览站点</a></div></div>
+<div class="stats">
+<div class="stat"><div class="stat-icon blue"><i data-lucide="file-text"></i></div><div class="stat-value" id="s-pages">0</div><div class="stat-label">文档数量</div></div>
+<div class="stat"><div class="stat-icon green"><i data-lucide="navigation"></i></div><div class="stat-value" id="s-nav">0</div><div class="stat-label">导航项</div></div>
+<div class="stat"><div class="stat-icon purple"><i data-lucide="sidebar"></i></div><div class="stat-value" id="s-sidebar">0</div><div class="stat-label">侧边栏项</div></div>
+<div class="stat"><div class="stat-icon orange"><i data-lucide="puzzle"></i></div><div class="stat-value" id="s-plugins">0</div><div class="stat-label">插件</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="card"><div class="card-header"><i data-lucide="clock"></i>最近更新</div><div class="card-body" style="padding:0"><table class="table"><thead><tr><th>标题</th><th>路径</th><th>时间</th></tr></thead><tbody id="recent"></tbody></table></div></div>
+<div class="card"><div class="card-header"><i data-lucide="info"></i>站点信息</div><div class="card-body"><div style="margin-bottom:12px"><span style="color:var(--text2);font-size:12px">标题：</span><strong id="info-title">-</strong></div><div style="margin-bottom:12px"><span style="color:var(--text2);font-size:12px">描述：</span><span id="info-desc" style="font-size:13px">-</span></div><div style="margin-bottom:12px"><span style="color:var(--text2);font-size:12px">语言：</span><span id="info-lang" class="badge blue">-</span></div><div><span style="color:var(--text2);font-size:12px">基础路径：</span><code id="info-base">/</code></div></div></div>
+</div>
+<div class="card"><div class="card-header"><i data-lucide="code"></i>配置预览</div><div class="card-body"><pre id="cfg-json" class="code">加载中...</pre></div></div>
+</div>
+
+<div id="p-site" class="page">
+<div class="page-header"><h1><i data-lucide="settings"></i>站点配置</h1><button class="btn btn-primary" onclick="save('站点')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="type"></i>基本信息</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">站点标题 *</label><input id="site-title" class="form-input" placeholder="我的文档"><div class="form-hint">显示在浏览器标签和导航栏</div></div>
+<div class="form-group"><label class="form-label">站点描述</label><input id="site-desc" class="form-input" placeholder="一个使用 LDoc 构建的文档站点"><div class="form-hint">用于 SEO 和社交分享</div></div></div>
+<div class="grid-3"><div class="form-group"><label class="form-label">语言</label><select id="site-lang" class="form-input"><option value="zh-CN">简体中文</option><option value="en-US">English</option><option value="ja">日本語</option></select></div>
+<div class="form-group"><label class="form-label">基础路径</label><input id="site-base" class="form-input" placeholder="/"><div class="form-hint">部署到子路径时设置</div></div>
+<div class="form-group"><label class="form-label">框架</label><select id="site-framework" class="form-input"><option value="vue">Vue 3</option><option value="react">React</option><option value="auto">自动检测</option></select></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="folder"></i>目录配置</div><div class="card-body">
+<div class="grid-3"><div class="form-group"><label class="form-label">文档源目录</label><input id="site-srcDir" class="form-input" placeholder="docs"><div class="form-hint">Markdown 文件目录</div></div>
+<div class="form-group"><label class="form-label">输出目录</label><input id="site-outDir" class="form-input" placeholder=".ldoc/dist"></div>
+<div class="form-group"><label class="form-label">缓存目录</label><input id="site-cacheDir" class="form-input" placeholder=".ldoc/cache"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="globe"></i>Head 标签<div class="actions"><button class="btn btn-sm btn-secondary" onclick="addHead()"><i data-lucide="plus"></i>添加</button></div></div><div class="card-body"><div id="head-list"></div></div></div>
+</div>
+
+<div id="p-theme" class="page">
+<div class="page-header"><h1><i data-lucide="palette"></i>主题配置</h1><button class="btn btn-primary" onclick="save('主题')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="image"></i>Logo 与标题</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">Logo 图片</label><input id="theme-logo" class="form-input" placeholder="/logo.svg"></div>
+<div class="form-group"><label class="form-label">导航栏标题</label><input id="theme-siteTitle" class="form-input" placeholder="留空使用站点标题"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="share-2"></i>社交链接<div class="actions"><button class="btn btn-sm btn-secondary" onclick="addSocial()"><i data-lucide="plus"></i>添加</button></div></div><div class="card-body"><div id="social-list"></div></div></div>
+<div class="card"><div class="card-header"><i data-lucide="panel-bottom"></i>页脚配置</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">页脚信息</label><input id="theme-footer-msg" class="form-input" placeholder="Released under the MIT License."></div>
+<div class="form-group"><label class="form-label">版权信息</label><input id="theme-footer-copy" class="form-input" placeholder="Copyright © 2024"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="edit-3"></i>编辑链接</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">链接模板</label><input id="theme-editLink-pattern" class="form-input" placeholder="https://github.com/user/repo/edit/main/:path"><div class="form-hint">:path 会被替换为文件路径</div></div>
+<div class="form-group"><label class="form-label">链接文字</label><input id="theme-editLink-text" class="form-input" placeholder="在 GitHub 上编辑此页"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="layout"></i>布局配置</div><div class="card-body">
+<div class="grid-3"><div class="form-group"><label class="form-label">侧边栏宽度</label><input id="theme-sidebar-w" type="number" class="form-input" placeholder="260"></div>
+<div class="form-group"><label class="form-label">大纲宽度</label><input id="theme-outline-w" type="number" class="form-input" placeholder="220"></div>
+<div class="form-group"><label class="form-label">导航栏高度</label><input id="theme-nav-h" type="number" class="form-input" placeholder="64"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="search"></i>搜索配置</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">搜索提供者</label><select id="theme-search" class="form-input"><option value="local">本地搜索</option><option value="algolia">Algolia</option></select></div>
+<div class="form-group"><label class="form-label">Algolia App ID</label><input id="theme-algolia-id" class="form-input" placeholder="仅 Algolia 需要"></div></div>
+</div></div>
+</div>
+
+<div id="p-markdown" class="page">
+<div class="page-header"><h1><i data-lucide="file-text"></i>Markdown 配置</h1><button class="btn btn-primary" onclick="save('Markdown')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="settings-2"></i>基础设置</div><div class="card-body">
+<div class="grid-2"><label class="checkbox"><input type="checkbox" id="md-lineNumbers"> 显示代码行号</label>
+<label class="checkbox"><input type="checkbox" id="md-preWrapper" checked> 代码块包装器</label></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="sun-moon"></i>代码高亮主题</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">亮色主题</label><select id="md-light" class="form-input"><option>github-light</option><option>vitesse-light</option><option>min-light</option></select></div>
+<div class="form-group"><label class="form-label">暗色主题</label><select id="md-dark" class="form-input"><option>github-dark</option><option>vitesse-dark</option><option>dracula</option></select></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="alert-circle"></i>容器标签</div><div class="card-body">
+<div class="grid-3"><div class="form-group"><label class="form-label">提示 (tip)</label><input id="md-tip" class="form-input" placeholder="提示"></div>
+<div class="form-group"><label class="form-label">警告 (warning)</label><input id="md-warning" class="form-input" placeholder="警告"></div>
+<div class="form-group"><label class="form-label">危险 (danger)</label><input id="md-danger" class="form-input" placeholder="危险"></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="link"></i>锚点配置</div><div class="card-body">
+<div class="grid-3"><label class="checkbox"><input type="checkbox" id="md-anchor" checked> 显示永久链接</label>
+<label class="checkbox"><input type="checkbox" id="md-anchor-before"> 链接在标题前</label>
+<div class="form-group"><label class="form-label">链接符号</label><input id="md-anchor-sym" class="form-input" placeholder="#" style="width:60px"></div></div>
+</div></div>
+</div>
+
+<div id="p-build" class="page">
+<div class="page-header"><h1><i data-lucide="hammer"></i>构建配置</h1><button class="btn btn-primary" onclick="save('构建')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="folder-output"></i>输出配置</div><div class="card-body">
+<div class="grid-3"><div class="form-group"><label class="form-label">输出目录</label><input id="build-outDir" class="form-input" placeholder=".ldoc/dist"></div>
+<div class="form-group"><label class="form-label">资源目录</label><input id="build-assetsDir" class="form-input" placeholder="assets"></div>
+<div class="form-group"><label class="form-label">Chunk警告</label><input id="build-chunk" type="number" class="form-input" placeholder="500"><div class="form-hint">KB</div></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="cpu"></i>编译选项</div><div class="card-body">
+<div class="grid-2"><div class="form-group"><label class="form-label">代码压缩</label><select id="build-minify" class="form-input"><option value="esbuild">esbuild (推荐)</option><option value="terser">terser</option><option value="false">不压缩</option></select></div>
+<div class="form-group"><label class="form-label">目标浏览器</label><input id="build-target" class="form-input" placeholder="es2020"></div></div>
+<div class="grid-3" style="margin-top:12px"><label class="checkbox"><input type="checkbox" id="build-sourcemap"> Source Map</label>
+<label class="checkbox"><input type="checkbox" id="build-ssr"> SSR 渲染</label>
+<label class="checkbox"><input type="checkbox" id="build-mpa"> MPA 模式</label></div>
+</div></div>
+</div>
+
+<div id="p-vite" class="page">
+<div class="page-header"><h1><i data-lucide="zap"></i>Vite 配置</h1><button class="btn btn-primary" onclick="save('Vite')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="server"></i>开发服务器</div><div class="card-body">
+<div class="grid-3"><div class="form-group"><label class="form-label">端口</label><input id="vite-port" type="number" class="form-input" placeholder="5173"></div>
+<div class="form-group"><label class="form-label">主机</label><input id="vite-host" class="form-input" placeholder="localhost"></div>
+<div class="form-group" style="padding-top:20px"><label class="checkbox"><input type="checkbox" id="vite-open"> 自动打开浏览器</label></div></div>
+</div></div>
+<div class="card"><div class="card-header"><i data-lucide="arrow-right-left"></i>路径别名<div class="actions"><button class="btn btn-sm btn-secondary" onclick="addAlias()"><i data-lucide="plus"></i>添加</button></div></div><div class="card-body"><div id="alias-list"></div></div></div>
+<div class="card"><div class="card-header"><i data-lucide="hash"></i>全局常量<div class="actions"><button class="btn btn-sm btn-secondary" onclick="addDefine()"><i data-lucide="plus"></i>添加</button></div></div><div class="card-body"><div id="define-list"></div></div></div>
+</div>
+
+<div id="p-deploy" class="page">
+<div class="page-header"><h1><i data-lucide="rocket"></i>部署配置</h1><button class="btn btn-primary" onclick="save('部署')"><i data-lucide="save"></i>保存</button></div>
+<div class="card"><div class="card-header"><i data-lucide="cloud"></i>部署平台</div><div class="card-body">
+<div class="form-group"><label class="form-label">选择平台</label><select id="deploy-platform" class="form-input" onchange="showDeploy()"><option value="">-- 请选择 --</option><option value="netlify">Netlify</option><option value="vercel">Vercel</option><option value="github-pages">GitHub Pages</option><option value="cloudflare">Cloudflare</option></select></div>
+</div></div>
+<div id="deploy-form"></div>
+<div class="card"><div class="card-header"><i data-lucide="terminal"></i>快速操作</div><div class="card-body">
+<div style="display:flex;gap:12px"><button class="btn btn-secondary" onclick="runBuild()"><i data-lucide="play"></i>构建项目</button>
+<button class="btn btn-primary" onclick="runDeploy()"><i data-lucide="upload"></i>部署</button></div>
+<pre id="deploy-log" class="code" style="margin-top:12px;min-height:80px;display:none"></pre>
+</div></div>
+</div>
+
+<div id="p-nav" class="page">
+<div class="page-header"><h1><i data-lucide="menu"></i>导航与侧边栏</h1><button class="btn btn-primary" onclick="addNav()"><i data-lucide="plus"></i>添加导航</button></div>
+<div class="card" style="margin-bottom:16px"><div class="card-body" style="padding:12px 16px;display:flex;align-items:center;gap:8px"><i data-lucide="info" style="width:16px;height:16px;color:var(--text2)"></i><span style="font-size:13px;color:var(--text2)">每个导航项可配置从属的侧边栏，点击展开编辑</span></div></div>
+<div id="nav-list"></div>
+</div>
+
+<div id="p-docs" class="page">
+<div class="page-header"><h1><i data-lucide="files"></i>文档管理</h1><button class="btn btn-secondary" onclick="loadData()"><i data-lucide="refresh-cw"></i>刷新</button></div>
+<div class="card"><div class="card-header"><i data-lucide="file-text"></i>所有文档 (<span id="docs-count">0</span>)</div>
+<div class="card-body" style="padding:0"><table class="table"><thead><tr><th>标题</th><th>路径</th><th>更新时间</th></tr></thead><tbody id="docs-list"></tbody></table></div></div>
+</div>
+
+<div id="p-plugins" class="page">
+<div class="page-header"><h1><i data-lucide="puzzle"></i>插件管理</h1></div>
+<div class="card"><div class="card-header"><i data-lucide="check-circle"></i>已安装</div><div class="card-body"><div id="plugins-installed"></div></div></div>
+<div class="card"><div class="card-header"><i data-lucide="download"></i>推荐插件</div><div class="card-body" style="padding:0"><table class="table"><thead><tr><th>插件</th><th>描述</th><th></th></tr></thead><tbody>
+<tr><td><span class="badge blue">searchPlugin</span></td><td style="font-size:13px">本地全文搜索</td><td><button class="btn btn-sm btn-secondary">安装</button></td></tr>
+<tr><td><span class="badge green">copyCodePlugin</span></td><td style="font-size:13px">代码复制按钮</td><td><button class="btn btn-sm btn-secondary">安装</button></td></tr>
+<tr><td><span class="badge purple">progressPlugin</span></td><td style="font-size:13px">阅读进度条</td><td><button class="btn btn-sm btn-secondary">安装</button></td></tr>
+<tr><td><span class="badge blue">imageViewerPlugin</span></td><td style="font-size:13px">图片预览</td><td><button class="btn btn-sm btn-secondary">安装</button></td></tr>
+<tr><td><span class="badge green">readingTimePlugin</span></td><td style="font-size:13px">阅读时间</td><td><button class="btn btn-sm btn-secondary">安装</button></td></tr>
+</tbody></table></div></div>
+</div>
+`
+}
+
+function getScript(): string {
+  return `
+var D={pages:[],nav:[],sidebar:{},site:{}};
+var pIdx={dashboard:0,site:1,theme:2,markdown:3,build:4,vite:5,deploy:6,nav:7,docs:8,plugins:9};
+function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));document.getElementById('p-'+p).classList.add('active');document.querySelectorAll('.nav-item')[pIdx[p]].classList.add('active')}
+function toast(m,t){var e=document.getElementById('toast');e.querySelector('span').textContent=m;e.className='toast show '+(t||'');setTimeout(()=>e.classList.remove('show'),3000)}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function loadData(){
+fetch('/api/pages').then(r=>r.json()).then(d=>{D.pages=d.pages||[];document.getElementById('s-pages').textContent=D.pages.length;document.getElementById('docs-count').textContent=D.pages.length;renderDocs();renderRecent()}).catch(()=>{});
+fetch('/api/nav').then(r=>r.json()).then(d=>{D.nav=d.nav||[];document.getElementById('s-nav').textContent=D.nav.length;renderNav()}).catch(()=>{});
+fetch('/api/sidebar').then(r=>r.json()).then(d=>{D.sidebar=d.sidebar||{};var c=0;Object.values(D.sidebar).forEach(a=>{if(Array.isArray(a))a.forEach(g=>c+=(g.items?g.items.length:1))});document.getElementById('s-sidebar').textContent=c}).catch(()=>{});
+fetch('/api/site').then(r=>r.json()).then(d=>{D.site=d;fillSite(d)}).catch(()=>{});
+fetch('/api/plugins').then(r=>r.json()).then(d=>{document.getElementById('s-plugins').textContent=(d.plugins||[]).length;renderPlugins(d.plugins||[])}).catch(()=>{document.getElementById('s-plugins').textContent='0'});
+}
+function fillSite(d){document.getElementById('info-title').textContent=d.title||'-';document.getElementById('info-desc').textContent=d.description||'-';document.getElementById('info-lang').textContent=d.lang||'zh-CN';document.getElementById('info-base').textContent=d.base||'/';document.getElementById('cfg-json').textContent=JSON.stringify(d,null,2);document.getElementById('site-title').value=d.title||'';document.getElementById('site-desc').value=d.description||''}
+function renderRecent(){var h='';D.pages.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,5).forEach(p=>{h+='<tr><td>'+esc(p.title||'无标题')+'</td><td><code style="font-size:11px">'+esc(p.path)+'</code></td><td style="font-size:12px;color:var(--text2)">'+(p.updatedAt?new Date(p.updatedAt).toLocaleDateString():'—')+'</td></tr>'});document.getElementById('recent').innerHTML=h||'<tr><td colspan="3" style="text-align:center;color:var(--text2)">暂无</td></tr>'}
+function renderDocs(){var h='';D.pages.forEach(p=>{h+='<tr><td><strong>'+esc(p.title||'无标题')+'</strong></td><td><code style="font-size:11px">'+esc(p.path)+'</code></td><td style="font-size:12px;color:var(--text2)">'+(p.updatedAt?new Date(p.updatedAt).toLocaleDateString():'—')+'</td></tr>'});document.getElementById('docs-list').innerHTML=h||'<tr><td colspan="3" style="text-align:center;color:var(--text2)">暂无</td></tr>'}
+function renderNav(){var h='';D.nav.forEach((n,i)=>{var p=n.link||'/';var sb=D.sidebar[p]||[];h+='<div class="nav-cfg"><div class="nav-cfg-head" onclick="toggleNav('+i+')"><i data-lucide="grip-vertical" style="width:14px;height:14px;color:var(--text2)"></i><div class="inputs"><input value="'+esc(n.text)+'" placeholder="文本" onchange="updNav('+i+',\\'text\\',this.value)" onclick="event.stopPropagation()"><input value="'+esc(n.link)+'" placeholder="链接 如 /guide/" onchange="updNav('+i+',\\'link\\',this.value)" onclick="event.stopPropagation()"></div><button class="btn btn-icon btn-sm btn-secondary" onclick="event.stopPropagation();delNav('+i+')" title="删除"><i data-lucide="trash-2"></i></button></div><div class="nav-cfg-body" id="nb-'+i+'"><h4><i data-lucide="sidebar" style="width:14px;height:14px"></i>侧边栏 ('+esc(p)+')<button class="btn btn-sm btn-secondary" style="margin-left:auto" onclick="addSbG('+i+')"><i data-lucide="plus"></i>添加分组</button></h4><div id="sb-'+i+'">';sb.forEach((g,gi)=>{h+='<div class="sb-group"><div class="sb-group-head"><i data-lucide="grip-vertical" style="width:12px;height:12px;color:#9ca3af"></i><input value="'+esc(g.text)+'" onchange="updSbG(\\''+p+'\\','+gi+',this.value)"><button class="btn btn-sm btn-secondary" onclick="addSbI(\\''+p+'\\','+gi+')"><i data-lucide="plus"></i></button><button class="btn btn-sm btn-secondary" onclick="delSbG(\\''+p+'\\','+gi+')"><i data-lucide="trash-2"></i></button></div>';(g.items||[]).forEach((it,ii)=>{h+='<div class="sb-item"><i data-lucide="grip-vertical" style="width:10px;height:10px;color:#9ca3af"></i><input value="'+esc(it.text)+'" placeholder="标题" onchange="updSbI(\\''+p+'\\','+gi+','+ii+',\\'text\\',this.value)"><input value="'+esc(it.link)+'" placeholder="链接" onchange="updSbI(\\''+p+'\\','+gi+','+ii+',\\'link\\',this.value)"><button class="btn btn-icon btn-sm btn-secondary" onclick="delSbI(\\''+p+'\\','+gi+','+ii+')"><i data-lucide="x"></i></button></div>'});h+='</div>'});if(!sb.length)h+='<div style="color:var(--text2);font-size:12px">暂无侧边栏</div>';h+='</div></div></div>'});document.getElementById('nav-list').innerHTML=h||'<div class="empty"><i data-lucide="navigation" style="width:40px;height:40px"></i><p>暂无导航项</p></div>';lucide.createIcons()}
+function toggleNav(i){document.getElementById('nb-'+i).classList.toggle('open')}
+function addNav(){D.nav.push({text:'新导航',link:'/new/'});D.sidebar['/new/']=[];renderNav();toast('已添加')}
+function updNav(i,k,v){var old=D.nav[i].link;D.nav[i][k]=v;if(k==='link'){D.sidebar[v]=D.sidebar[old]||[];delete D.sidebar[old]}renderNav()}
+function delNav(i){var p=D.nav[i].link;delete D.sidebar[p];D.nav.splice(i,1);renderNav();toast('已删除')}
+function addSbG(i){var p=D.nav[i]?.link||'/';if(!D.sidebar[p])D.sidebar[p]=[];D.sidebar[p].push({text:'新分组',items:[]});renderNav()}
+function addSbI(p,gi){if(!D.sidebar[p][gi].items)D.sidebar[p][gi].items=[];D.sidebar[p][gi].items.push({text:'',link:''});renderNav()}
+function updSbG(p,gi,v){if(D.sidebar[p]?.[gi])D.sidebar[p][gi].text=v}
+function updSbI(p,gi,ii,k,v){if(D.sidebar[p]?.[gi]?.items?.[ii])D.sidebar[p][gi].items[ii][k]=v}
+function delSbG(p,gi){D.sidebar[p]?.splice(gi,1);renderNav()}
+function delSbI(p,gi,ii){D.sidebar[p]?.[gi]?.items?.splice(ii,1);renderNav()}
+function renderPlugins(list){var h='';list.forEach(p=>{h+='<div class="list-item"><span class="badge blue">'+esc(p.name)+'</span></div>'});document.getElementById('plugins-installed').innerHTML=h||'<div class="empty"><i data-lucide="puzzle" style="width:32px;height:32px"></i><p>暂无</p></div>';lucide.createIcons()}
+function addHead(){var e=document.getElementById('head-list');e.innerHTML+='<div class="list-item"><select class="form-input" style="width:80px"><option>meta</option><option>link</option><option>script</option></select><input class="form-input" placeholder="name/rel"><input class="form-input" placeholder="content/href"><button class="btn btn-icon btn-sm btn-secondary" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button></div>';lucide.createIcons()}
+function addSocial(){var e=document.getElementById('social-list');e.innerHTML+='<div class="list-item"><select class="form-input" style="width:100px"><option>github</option><option>twitter</option><option>discord</option><option>youtube</option></select><input class="form-input" placeholder="链接"><button class="btn btn-icon btn-sm btn-secondary" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button></div>';lucide.createIcons()}
+function addAlias(){var e=document.getElementById('alias-list');e.innerHTML+='<div class="list-item"><input class="form-input" placeholder="别名 @"><input class="form-input" placeholder="路径 ./src"><button class="btn btn-icon btn-sm btn-secondary" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button></div>';lucide.createIcons()}
+function addDefine(){var e=document.getElementById('define-list');e.innerHTML+='<div class="list-item"><input class="form-input" placeholder="常量名"><input class="form-input" placeholder="值"><button class="btn btn-icon btn-sm btn-secondary" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button></div>';lucide.createIcons()}
+function showDeploy(){var p=document.getElementById('deploy-platform').value,h='';if(p==='netlify')h='<div class="card"><div class="card-header"><i data-lucide="globe"></i>Netlify</div><div class="card-body"><div class="grid-2"><div class="form-group"><label class="form-label">站点 ID</label><input class="form-input" placeholder="可选"></div><div class="form-group"><label class="form-label">API Token</label><input type="password" class="form-input"></div></div><label class="checkbox" style="margin-top:8px"><input type="checkbox" checked> 部署到生产环境</label></div></div>';else if(p==='vercel')h='<div class="card"><div class="card-header"><i data-lucide="triangle"></i>Vercel</div><div class="card-body"><div class="grid-2"><div class="form-group"><label class="form-label">项目名称</label><input class="form-input"></div><div class="form-group"><label class="form-label">组织 ID</label><input class="form-input"></div></div></div></div>';else if(p==='github-pages')h='<div class="card"><div class="card-header"><i data-lucide="github"></i>GitHub Pages</div><div class="card-body"><div class="grid-2"><div class="form-group"><label class="form-label">仓库</label><input class="form-input" placeholder="user/repo"></div><div class="form-group"><label class="form-label">分支</label><input class="form-input" placeholder="gh-pages"></div></div><div class="form-group"><label class="form-label">自定义域名</label><input class="form-input" placeholder="docs.example.com"></div></div></div>';else if(p==='cloudflare')h='<div class="card"><div class="card-header"><i data-lucide="cloud"></i>Cloudflare</div><div class="card-body"><div class="grid-2"><div class="form-group"><label class="form-label">项目名称</label><input class="form-input"></div><div class="form-group"><label class="form-label">账户 ID</label><input class="form-input"></div></div></div></div>';document.getElementById('deploy-form').innerHTML=h;lucide.createIcons()}
+function runBuild(){var l=document.getElementById('deploy-log');l.style.display='block';l.textContent='正在构建...\\n';toast('开始构建')}
+function runDeploy(){var l=document.getElementById('deploy-log');l.style.display='block';l.textContent+='\\n正在部署...\\n';toast('开始部署')}
+function save(n){toast(n+'配置已保存','success')}
+window.onload=function(){loadData();lucide.createIcons()}
+`
 }
