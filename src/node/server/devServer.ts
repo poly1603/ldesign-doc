@@ -2,8 +2,11 @@
  * 开发服务器 - 重构版
  */
 
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 import { createServer as createViteServer, type ViteDevServer } from 'vite'
 import type { SiteConfig, MarkdownRenderer } from '../../shared/types'
 import type { PluginContainer } from '../../plugin/pluginContainer'
@@ -22,6 +25,39 @@ export interface DevServer {
   port: number
   close: () => Promise<void>
   restart: () => Promise<void>
+}
+
+/**
+ * 获取客户端别名配置
+ */
+function getClientAlias(config: SiteConfig, userViteConfig: any): Record<string, string> {
+  const alias: Record<string, string> = {
+    '@theme': config.themeDir,
+    '@': config.srcDir
+  }
+
+  // 合并用户的 alias 配置（只处理对象格式）
+  const userAlias = (userViteConfig.resolve as Record<string, unknown>)?.alias
+  if (userAlias && typeof userAlias === 'object' && !Array.isArray(userAlias)) {
+    Object.assign(alias, userAlias)
+  }
+
+  // 智能解析 @ldesign/doc/client 路径
+  const nodeModulesPath = resolve(config.root, 'node_modules/@ldesign/doc/dist/es/client/index.js')
+  // 检查是否在 @ldesign/doc 包内部开发
+  const packageRoot = resolve(__dirname, '../../..')  // dist/es/node -> 包根目录
+  const localClientPath = resolve(packageRoot, 'dist/es/client/index.js')
+  const srcClientPath = resolve(packageRoot, 'src/client/index.ts')
+
+  if (existsSync(nodeModulesPath)) {
+    alias['@ldesign/doc/client'] = nodeModulesPath
+  } else if (existsSync(localClientPath)) {
+    alias['@ldesign/doc/client'] = localClientPath
+  } else if (existsSync(srcClientPath)) {
+    alias['@ldesign/doc/client'] = srcClientPath
+  }
+
+  return alias
 }
 
 /**
@@ -64,12 +100,7 @@ export async function createDevServer(
       ...userServerConfig
     },
     resolve: {
-      alias: {
-        '@theme': config.themeDir,
-        '@': config.srcDir,
-        '@ldesign/doc/client': resolve(config.root, 'node_modules/@ldesign/doc/dist/es/client/index.js'),
-        ...(userViteConfig.resolve?.alias || {})
-      }
+      alias: getClientAlias(config, userViteConfig)
     },
     optimizeDeps: {
       include: ['vue', 'vue-router', ...(userViteConfig.optimizeDeps?.include || [])]

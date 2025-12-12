@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDoc Admin</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.prod.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; color: #333; }
+.admin-layout { display: flex; min-height: 100vh; }
+.admin-sidebar { width: 220px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 0; position: fixed; height: 100vh; }
+.admin-logo { padding: 0 20px 20px; font-size: 22px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+.admin-menu { list-style: none; }
+.admin-menu a { display: flex; align-items: center; padding: 12px 20px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.2s; }
+.admin-menu a:hover, .admin-menu a.router-link-active { background: rgba(255,255,255,0.1); color: white; }
+.admin-menu svg { width: 18px; height: 18px; margin-right: 10px; }
+.admin-main { flex: 1; margin-left: 220px; padding: 20px 30px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-header h1 { font-size: 22px; font-weight: 600; }
+.card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; margin-bottom: 20px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #333; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-card h3 { font-size: 28px; font-weight: 600; color: #667eea; }
+.stat-card p { color: #888; margin-top: 6px; font-size: 13px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
+.form-input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; transition: border-color 0.2s; }
+.form-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+textarea.form-input { min-height: 200px; font-family: Monaco, Menlo, monospace; font-size: 12px; line-height: 1.5; }
+.btn { padding: 9px 18px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+.btn-secondary { background: #f0f0f0; color: #333; }
+.btn-danger { background: #ff4757; color: white; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+.table th { font-weight: 600; color: #555; background: #fafafa; }
+.table tr:hover { background: #f9f9f9; }
+.editor-container { display: grid; grid-template-columns: 240px 1fr; gap: 16px; height: calc(100vh - 100px); }
+.editor-sidebar { background: white; border-radius: 10px; padding: 14px; overflow-y: auto; }
+.editor-main { background: white; border-radius: 10px; padding: 20px; overflow-y: auto; }
+.tree-item { padding: 7px 10px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; font-size: 13px; }
+.tree-item:hover { background: #f0f0f0; }
+.tree-item.active { background: rgba(102,126,234,0.1); color: #667eea; }
+.tree-folder { padding-left: 14px; }
+.tree-icon { margin-right: 6px; }
+.tabs { display: flex; border-bottom: 1px solid #eee; margin-bottom: 16px; }
+.tab { padding: 10px 18px; cursor: pointer; border-bottom: 2px solid transparent; color: #666; font-size: 13px; }
+.tab:hover { color: #333; }
+.tab.active { color: #667eea; border-bottom-color: #667eea; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 6px; z-index: 1000; font-size: 13px; }
+.toast.success { background: #00b894; }
+.toast.error { background: #ff4757; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: white; border-radius: 10px; padding: 20px; width: 420px; max-width: 90%; }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.draggable-item { padding: 10px 14px; background: #fafafa; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.drag-handle { color: #999; margin-right: 8px; cursor: move; }
+.md-preview { line-height: 1.7; font-size: 14px; }
+.md-preview h1 { font-size: 1.8em; margin: 0.6em 0; }
+.md-preview h2 { font-size: 1.4em; margin: 0.7em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+.md-preview h3 { font-size: 1.2em; margin: 0.8em 0; }
+.md-preview p { margin: 1em 0; }
+.md-preview code { background: #f5f5f5; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
+.md-preview pre { background: #2d2d2d; color: #f8f8f2; padding: 14px; border-radius: 6px; overflow-x: auto; }
+.md-preview pre code { background: none; padding: 0; }
+.md-preview blockquote { border-left: 3px solid #667eea; margin: 1em 0; padding-left: 1em; color: #666; }
+.md-preview ul, .md-preview ol { margin: 1em 0; padding-left: 1.5em; }
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: #888; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+const DOCS_PORT = 8879;
+const { createApp, ref, computed, onMounted, watch } = Vue
+const { createRouter, createWebHistory } = VueRouter
+
+const api = {
+  async get(url) { return (await fetch(url)).json() },
+  async post(url, data) { return (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json() },
+  async put(url, data) { return (await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json() },
+  async del(url) { return (await fetch(url, { method: 'DELETE' })).json() }
+}
+
+function renderMd(md) {
+  if (!md) return ''
+  return md
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\`\`\`([\s\S]*?)\`\`\`/g, '<pre><code>$1</code></pre>')
+    .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
+    .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+    .replace(/^- (.*$)/gim, '<li>$1</li>')
+    .replace(/\n/g, '<br>')
+}
+
+// 仪表盘
+const Dashboard = {
+  template: \`
+    <div>
+      <div class="admin-header"><h1>仪表盘</h1><a :href="'http://localhost:' + DOCS_PORT" target="_blank" class="btn btn-primary">查看文档站点 →</a></div>
+      <div class="stats-grid">
+        <div class="stat-card"><h3>{{ pages.length }}</h3><p>文档数量</p></div>
+        <div class="stat-card"><h3>{{ site.title || 'LDoc' }}</h3><p>站点名称</p></div>
+        <div class="stat-card"><h3>{{ site.lang || 'zh-CN' }}</h3><p>语言</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title">最近更新</div>
+        <table class="table">
+          <thead><tr><th>标题</th><th>路径</th><th>更新时间</th><th></th></tr></thead>
+          <tbody>
+            <tr v-for="p in recentPages" :key="p.path">
+              <td>{{ p.title }}</td><td><code>{{ p.path }}</code></td><td>{{ formatDate(p.updatedAt) }}</td>
+              <td><router-link :to="'/editor?path=' + encodeURIComponent(p.path)" class="btn btn-secondary">编辑</router-link></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  \`,
+  setup() {
+    const pages = ref([]), site = ref({})
+    onMounted(async () => {
+      const [pRes, sRes] = await Promise.all([api.get('/api/pages'), api.get('/api/site')])
+      pages.value = pRes.pages || []; site.value = sRes
+    })
+    const recentPages = computed(() => [...pages.value].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 8))
+    const formatDate = d => new Date(d).toLocaleString('zh-CN')
+    return { pages, site, recentPages, formatDate }
+  }
+}
+
+// 配置编辑
+const ConfigEditor = {
+  template: \`
+    <div>
+      <div class="admin-header"><h1>配置编辑</h1><button @click="save" class="btn btn-primary" :disabled="saving">{{ saving ? '保存中...' : '保存配置' }}</button></div>
+      <div class="card">
+        <div class="card-title">doc.config.ts <span style="font-weight:normal;color:#888;font-size:12px;margin-left:8px">{{ path }}</span></div>
+        <textarea v-model="content" class="form-input" style="min-height:500px;font-family:Monaco,monospace" spellcheck="false"></textarea>
+      </div>
+      <div v-if="toast" :class="['toast', toast.type]">{{ toast.msg }}</div>
+    </div>
+  \`,
+  setup() {
+    const content = ref(''), path = ref(''), saving = ref(false), toast = ref(null)
+    onMounted(async () => { const r = await api.get('/api/config'); content.value = r.config || ''; path.value = r.path || '' })
+    const showToast = (msg, type='success') => { toast.value = {msg, type}; setTimeout(() => toast.value = null, 3000) }
+    const save = async () => {
+      saving.value = true
+      try { const r = await api.put('/api/config', {content: content.value}); showToast(r.success ? '配置已保存！' : (r.error || '失败'), r.success ? 'success' : 'error') }
+      catch(e) { showToast('保存失败', 'error') }
+      saving.value = false
+    }
+    return { content, path, saving, toast, save }
+  }
+}
+
+// 文档编辑
+const DocEditor = {
+  template: \`
+    <div>
+      <div class="admin-header">
+        <h1>文档编辑</h1>
+        <div style="display:flex;gap:10px">
+          <button @click="showNew=true" class="btn btn-secondary">+ 新建</button>
+          <button @click="save" class="btn btn-primary" :disabled="saving||!curPath">{{ saving ? '保存中...' : '保存' }}</button>
+        </div>
+      </div>
+      <div class="editor-container">
+        <div class="editor-sidebar">
+          <div class="card-title">文档列表</div>
+          <div v-for="item in tree" :key="item.path">
+            <div v-if="item.type==='directory'">
+              <div class="tree-item" @click="openFolders[item.path]=!openFolders[item.path]"><span class="tree-icon">📁</span>{{ item.name }}</div>
+              <div v-if="openFolders[item.path]" class="tree-folder">
+                <div v-for="c in item.children" :key="c.path" class="tree-item" :class="{active:curPath===c.path}" @click="select(c.path)"><span class="tree-icon">📄</span>{{ c.name }}</div>
+              </div>
+            </div>
+            <div v-else class="tree-item" :class="{active:curPath===item.path}" @click="select(item.path)"><span class="tree-icon">📄</span>{{ item.name }}</div>
+          </div>
+        </div>
+        <div class="editor-main">
+          <div v-if="curPath">
+            <div class="tabs">
+              <div class="tab" :class="{active:tab==='edit'}" @click="tab='edit'">编辑</div>
+              <div class="tab" :class="{active:tab==='preview'}" @click="tab='preview'">预览</div>
+              <div class="tab" :class="{active:tab==='meta'}" @click="tab='meta'">元数据</div>
+            </div>
+            <div v-show="tab==='edit'"><textarea v-model="content" class="form-input" style="min-height:450px" spellcheck="false"></textarea></div>
+            <div v-show="tab==='preview'" class="md-preview" v-html="preview"></div>
+            <div v-show="tab==='meta'">
+              <div class="form-group"><label class="form-label">标题</label><input v-model="fm.title" class="form-input"/></div>
+              <div class="form-group"><label class="form-label">描述</label><input v-model="fm.description" class="form-input"/></div>
+              <div class="form-group"><label class="form-label">布局</label><select v-model="fm.layout" class="form-input"><option value="">默认</option><option value="doc">文档</option><option value="home">首页</option></select></div>
+            </div>
+          </div>
+          <div v-else class="loading">选择一个文档开始编辑</div>
+        </div>
+      </div>
+      <div v-if="showNew" class="modal-overlay" @click.self="showNew=false">
+        <div class="modal">
+          <div class="modal-title">新建文档</div>
+          <div class="form-group"><label class="form-label">路径</label><input v-model="newPath" class="form-input" placeholder="guide/intro.md"/></div>
+          <div class="form-group"><label class="form-label">标题</label><input v-model="newTitle" class="form-input" placeholder="文档标题"/></div>
+          <div class="modal-actions"><button @click="showNew=false" class="btn btn-secondary">取消</button><button @click="create" class="btn btn-primary">创建</button></div>
+        </div>
+      </div>
+      <div v-if="toast" :class="['toast', toast.type]">{{ toast.msg }}</div>
+    </div>
+  \`,
+  setup() {
+    const tree = ref([]), curPath = ref(''), content = ref(''), fm = ref({}), tab = ref('edit')
+    const openFolders = ref({}), saving = ref(false), showNew = ref(false), newPath = ref(''), newTitle = ref(''), toast = ref(null)
+    const preview = computed(() => renderMd(content.value))
+    
+    onMounted(async () => {
+      const r = await api.get('/api/tree'); tree.value = r.tree || []
+      const expand = items => items.forEach(i => { if(i.type==='directory') { openFolders.value[i.path]=true; if(i.children) expand(i.children) } })
+      expand(tree.value)
+      const p = new URLSearchParams(location.search).get('path')
+      if(p) select(p)
+    })
+    
+    const showToast = (msg, type='success') => { toast.value = {msg, type}; setTimeout(() => toast.value = null, 3000) }
+    const select = async path => { curPath.value = path; const r = await api.get('/api/pages/'+encodeURIComponent(path)); content.value = r.content || ''; fm.value = r.frontmatter || {} }
+    const save = async () => {
+      if(!curPath.value) return; saving.value = true
+      try { const r = await api.put('/api/pages/'+encodeURIComponent(curPath.value), {content: content.value, frontmatter: fm.value}); showToast(r.success ? '已保存！' : (r.error||'失败'), r.success ? 'success' : 'error') }
+      catch(e) { showToast('保存失败', 'error') }
+      saving.value = false
+    }
+    const create = async () => {
+      if(!newPath.value) return
+      const path = newPath.value.endsWith('.md') ? newPath.value : newPath.value + '.md'
+      try {
+        const r = await api.post('/api/pages', {path, content: '# '+(newTitle.value||'新文档')+'\n\n开始编写...', frontmatter: newTitle.value ? {title: newTitle.value} : {}})
+        if(r.success) { showToast('已创建！'); showNew.value = false; newPath.value = ''; newTitle.value = ''; const tr = await api.get('/api/tree'); tree.value = tr.tree || []; select(path) }
+        else showToast(r.error||'失败', 'error')
+      } catch(e) { showToast('创建失败', 'error') }
+    }
+    return { tree, curPath, content, fm, tab, openFolders, saving, showNew, newPath, newTitle, toast, preview, select, save, create }
+  }
+}
+
+// 导航编辑
+const NavEditor = {
+  template: \`
+    <div>
+      <div class="admin-header"><h1>导航配置</h1><button @click="add" class="btn btn-primary">+ 添加</button></div>
+      <div class="card">
+        <div class="card-title">顶部导航栏</div>
+        <div v-if="!nav.length" style="text-align:center;padding:30px;color:#888">暂无导航项</div>
+        <div v-for="(item,i) in nav" :key="i" class="draggable-item">
+          <div style="display:flex;align-items:center;flex:1"><span class="drag-handle">☰</span>
+            <input v-model="item.text" class="form-input" style="width:140px;margin-right:8px" placeholder="文本"/>
+            <input v-model="item.link" class="form-input" style="flex:1" placeholder="/guide/"/>
+          </div>
+          <button @click="nav.splice(i,1)" class="btn btn-danger" style="padding:5px 10px">删</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">预览代码（复制到配置文件）</div><pre style="background:#2d2d2d;color:#f8f8f2;padding:14px;border-radius:6px;font-size:12px;overflow-x:auto">{{ code }}</pre></div>
+      <div v-if="toast" :class="['toast', toast.type]">{{ toast.msg }}</div>
+    </div>
+  \`,
+  setup() {
+    const nav = ref([]), toast = ref(null)
+    onMounted(async () => { const r = await api.get('/api/nav'); nav.value = r.nav || [] })
+    const code = computed(() => 'nav: ' + JSON.stringify(nav.value, null, 2))
+    const add = () => nav.value.push({text: '新导航', link: '/'})
+    return { nav, toast, code, add }
+  }
+}
+
+// 侧边栏编辑
+const SidebarEditor = {
+  template: \`
+    <div>
+      <div class="admin-header"><h1>侧边栏配置</h1><button @click="addGroup" class="btn btn-primary">+ 添加分组</button></div>
+      <div class="card">
+        <div class="card-title">侧边栏分组</div>
+        <div v-for="(g,gi) in sidebar" :key="gi" style="margin-bottom:16px;padding:14px;background:#fafafa;border-radius:6px">
+          <div style="display:flex;align-items:center;margin-bottom:10px">
+            <input v-model="g.text" class="form-input" style="width:180px;margin-right:8px" placeholder="分组标题"/>
+            <button @click="addItem(gi)" class="btn btn-secondary" style="margin-right:8px">+ 项</button>
+            <button @click="sidebar.splice(gi,1)" class="btn btn-danger" style="padding:5px 10px">删组</button>
+          </div>
+          <div v-for="(item,ii) in g.items" :key="ii" class="draggable-item" style="margin-left:16px">
+            <input v-model="item.text" class="form-input" style="width:140px;margin-right:8px" placeholder="标题"/>
+            <input v-model="item.link" class="form-input" style="flex:1" placeholder="/guide/intro"/>
+            <button @click="g.items.splice(ii,1)" class="btn btn-danger" style="padding:5px 10px">删</button>
+          </div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">预览代码</div><pre style="background:#2d2d2d;color:#f8f8f2;padding:14px;border-radius:6px;font-size:12px;overflow-x:auto">{{ code }}</pre></div>
+    </div>
+  \`,
+  setup() {
+    const sidebar = ref([])
+    onMounted(async () => {
+      const r = await api.get('/api/sidebar')
+      const d = r.sidebar
+      if(Array.isArray(d)) sidebar.value = d
+      else if(d && typeof d === 'object') sidebar.value = Object.values(d).flat()
+    })
+    const code = computed(() => 'sidebar: ' + JSON.stringify(sidebar.value, null, 2))
+    const addGroup = () => sidebar.value.push({text: '新分组', items: []})
+    const addItem = gi => { if(!sidebar.value[gi].items) sidebar.value[gi].items = []; sidebar.value[gi].items.push({text: '新页面', link: '/'}) }
+    return { sidebar, code, addGroup, addItem }
+  }
+}
+
+// 路由
+const routes = [
+  { path: '/', component: Dashboard },
+  { path: '/config', component: ConfigEditor },
+  { path: '/editor', component: DocEditor },
+  { path: '/nav', component: NavEditor },
+  { path: '/sidebar', component: SidebarEditor }
+]
+
+const router = createRouter({ history: createWebHistory(), routes })
+
+// App
+const App = {
+  template: \`
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-logo">📚 LDoc Admin</div>
+        <ul class="admin-menu">
+          <li><router-link to="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>仪表盘</router-link></li>
+          <li><router-link to="/editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>文档编辑</router-link></li>
+          <li><router-link to="/config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>配置编辑</router-link></li>
+          <li><router-link to="/nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>导航配置</router-link></li>
+          <li><router-link to="/sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>侧边栏</router-link></li>
+        </ul>
+      </aside>
+      <main class="admin-main"><router-view/></main>
+    </div>
+  \`
+}
+
+createApp(App).use(router).mount('#app')
+</script>
+</body>
+</html>

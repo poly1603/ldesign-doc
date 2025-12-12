@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDoc Admin</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.prod.js"></script>
+  <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root { --primary: #6366f1; --primary-dark: #4f46e5; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827; --radius: 12px; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --transition: all 0.2s ease; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-800); }
+.admin-layout { display: flex; min-height: 100vh; }
+.admin-sidebar { width: 260px; background: white; border-right: 1px solid var(--gray-200); position: fixed; height: 100vh; display: flex; flex-direction: column; }
+.admin-logo { padding: 20px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--gray-100); }
+.admin-logo i { color: var(--primary); }
+.admin-logo span { font-size: 18px; font-weight: 700; color: var(--primary); }
+.admin-menu { list-style: none; padding: 16px 12px; flex: 1; }
+.admin-menu li { margin-bottom: 4px; }
+.admin-menu a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--gray-600); text-decoration: none; border-radius: 10px; transition: var(--transition); font-weight: 500; }
+.admin-menu a:hover { background: var(--gray-100); color: var(--gray-900); }
+.admin-menu a.router-link-active { background: var(--primary); color: white; }
+.admin-menu i { width: 20px; height: 20px; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--gray-100); }
+.sidebar-footer a { display: flex; align-items: center; gap: 8px; color: var(--gray-500); text-decoration: none; font-size: 13px; }
+.sidebar-footer a:hover { color: var(--primary); }
+.admin-main { flex: 1; margin-left: 260px; padding: 24px 32px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.page-header h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+.page-header h1 i { color: var(--primary); }
+.page-subtitle { color: var(--gray-500); font-size: 14px; margin-top: 4px; }
+.card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); }
+.card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.card-title i { color: var(--primary); }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+.stat-card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
+.stat-card.success::before { background: var(--success); }
+.stat-card.warning::before { background: var(--warning); }
+.stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; background: var(--gray-100); }
+.stat-icon i { color: var(--primary); }
+.stat-card.success .stat-icon i { color: var(--success); }
+.stat-card.warning .stat-icon i { color: var(--warning); }
+.stat-value { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+.stat-label { color: var(--gray-500); font-size: 14px; }
+.chart-container { height: 300px; }
+.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--gray-700); }
+.form-hint { font-size: 13px; color: var(--gray-500); margin-top: 6px; }
+.form-input { width: 100%; padding: 12px 16px; border: 1px solid var(--gray-200); border-radius: 10px; font-size: 14px; transition: var(--transition); }
+.form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+textarea.form-input { min-height: 120px; resize: vertical; font-family: inherit; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: var(--transition); }
+.btn i { width: 18px; height: 18px; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+.btn-secondary:hover { background: var(--gray-200); }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--gray-200); color: var(--gray-600); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
+.editor-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; height: calc(100vh - 140px); }
+.editor-sidebar { background: white; border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.editor-sidebar-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; }
+.editor-sidebar-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.editor-tree { flex: 1; overflow-y: auto; padding: 12px; }
+.tree-item { padding: 10px 12px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: var(--transition); color: var(--gray-600); }
+.tree-item:hover { background: var(--gray-100); }
+.tree-item.active { background: rgba(99,102,241,0.1); color: var(--primary); }
+.tree-item i { width: 18px; height: 18px; }
+.tree-folder { margin-left: 20px; }
+.editor-main { background: white; border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.editor-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--gray-100); display: flex; gap: 8px; }
+.editor-toolbar .btn-icon { background: var(--gray-100); }
+.editor-content { flex: 1; display: grid; grid-template-columns: 1fr 1fr; }
+.editor-write { border-right: 1px solid var(--gray-100); }
+.editor-write textarea { width: 100%; height: 100%; border: none; padding: 20px; font-family: Monaco, monospace; font-size: 14px; line-height: 1.7; resize: none; }
+.editor-write textarea:focus { outline: none; }
+.editor-preview { padding: 20px; overflow-y: auto; }
+.md-preview { line-height: 1.8; font-size: 15px; }
+.md-preview h1 { font-size: 2em; margin: 0.8em 0 0.4em; }
+.md-preview h2 { font-size: 1.5em; margin: 0.8em 0 0.4em; border-bottom: 1px solid var(--gray-200); padding-bottom: 0.3em; }
+.md-preview h3 { font-size: 1.25em; margin: 0.8em 0 0.4em; }
+.md-preview p { margin: 1em 0; }
+.md-preview code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+.md-preview pre { background: var(--gray-900); color: #e5e7eb; padding: 16px; border-radius: 8px; overflow-x: auto; }
+.md-preview pre code { background: none; padding: 0; color: inherit; }
+.md-preview blockquote { border-left: 4px solid var(--primary); margin: 1em 0; padding: 0.5em 1em; background: var(--gray-50); }
+.nav-preview { display: flex; gap: 12px; padding: 16px; background: var(--gray-100); border-radius: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.nav-preview-item { padding: 8px 16px; background: white; border-radius: 6px; font-size: 14px; color: var(--gray-600); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.nav-item-card { background: white; border: 1px solid var(--gray-200); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; }
+.nav-item-card:hover { border-color: var(--primary); }
+.nav-item-content { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sidebar-group { background: white; border: 1px solid var(--gray-200); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+.sidebar-group-header { padding: 16px 20px; background: var(--gray-50); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-200); }
+.sidebar-group-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sidebar-group-items { padding: 12px; }
+.sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 8px; margin-bottom: 8px; }
+.deploy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+.deploy-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 24px; text-align: center; cursor: pointer; transition: var(--transition); }
+.deploy-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+.deploy-card.active { border-color: var(--primary); background: rgba(99,102,241,0.05); }
+.deploy-icon { width: 64px; height: 64px; border-radius: 16px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.deploy-icon i { width: 32px; height: 32px; color: var(--gray-600); }
+.deploy-card.active .deploy-icon i { color: var(--primary); }
+.deploy-title { font-weight: 600; margin-bottom: 8px; }
+.deploy-desc { font-size: 13px; color: var(--gray-500); }
+.build-log { background: var(--gray-900); border-radius: 10px; padding: 20px; font-family: Monaco, monospace; font-size: 13px; color: #e5e7eb; max-height: 400px; overflow-y: auto; }
+.build-log-line { margin-bottom: 4px; display: flex; gap: 12px; }
+.build-log-time { color: var(--gray-500); }
+.build-log-content.success { color: var(--success); }
+.build-log-content.error { color: var(--danger); }
+.build-progress { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin: 20px 0; }
+.build-progress-bar { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: white; border-radius: var(--radius); padding: 24px; width: 480px; max-width: 90%; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-title { font-size: 18px; font-weight: 600; }
+.modal-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.modal-close:hover { background: var(--gray-100); }
+.modal-body { margin-bottom: 24px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 12px; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-800); color: white; padding: 14px 20px; border-radius: 10px; z-index: 1000; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.tabs { display: flex; gap: 4px; background: var(--gray-100); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
+.tab { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--gray-600); cursor: pointer; }
+.tab.active { background: white; color: var(--primary); }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--gray-100); }
+.table th { font-weight: 600; color: var(--gray-600); background: var(--gray-50); font-size: 13px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+.empty-state i { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state p { font-size: 15px; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .chart-grid { grid-template-columns: 1fr; } .deploy-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .admin-sidebar { display: none; } .admin-main { margin-left: 0; } .stats-grid { grid-template-columns: 1fr; } .editor-layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+const DOCS_PORT = 8878;
+const { createApp, ref, computed, onMounted, nextTick } = Vue;
+const { createRouter, createWebHistory } = VueRouter;
+const initIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+const api = {
+  async get(url) { return (await fetch(url)).json(); },
+  async post(url, data) { return (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json(); },
+  async put(url, data) { return (await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json(); }
+};
+function renderMd(md) { if (!md) return ''; return md.replace(/^### (.*$)/gim, '<h3>$1</h3>').replace(/^## (.*$)/gim, '<h2>$1</h2>').replace(/^# (.*$)/gim, '<h1>$1</h1>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
+
+const Dashboard = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="layout-dashboard"></i> 仪表盘</h1><p class="page-subtitle">站点数据概览</p></div><a :href="docsUrl" target="_blank" class="btn btn-primary"><i data-lucide="external-link"></i> 查看站点</a></div><div class="stats-grid"><div class="stat-card"><div class="stat-icon"><i data-lucide="file-text"></i></div><div class="stat-value">{{ pages.length }}</div><div class="stat-label">文档数量</div></div><div class="stat-card success"><div class="stat-icon"><i data-lucide="folder"></i></div><div class="stat-value">{{ folders }}</div><div class="stat-label">文件夹</div></div><div class="stat-card warning"><div class="stat-icon"><i data-lucide="book-open"></i></div><div class="stat-value">{{ navCount }}</div><div class="stat-label">导航项</div></div><div class="stat-card"><div class="stat-icon"><i data-lucide="sidebar"></i></div><div class="stat-value">{{ sidebarCount }}</div><div class="stat-label">侧边栏项</div></div></div><div class="chart-grid"><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="bar-chart-3"></i> 文档分布</div></div><div id="chart-docs" class="chart-container"></div></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="pie-chart"></i> 类型占比</div></div><div id="chart-types" class="chart-container"></div></div></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="clock"></i> 最近更新</div></div><table class="table"><thead><tr><th>文档</th><th>路径</th><th>时间</th><th></th></tr></thead><tbody><tr v-for="p in recentPages" :key="p.path"><td><strong>{{ p.title || "无标题" }}</strong></td><td><code>{{ p.path }}</code></td><td>{{ formatDate(p.updatedAt) }}</td><td><router-link :to=""/editor?path=" + encodeURIComponent(p.path)" class="btn btn-sm btn-secondary">编辑</router-link></td></tr><tr v-if="!recentPages.length"><td colspan="4" style="text-align:center;padding:40px;color:#9ca3af">暂无文档</td></tr></tbody></table></div></div>',
+  setup() {
+    const pages = ref([]), nav = ref([]), sidebar = ref([]), docsUrl = 'http://localhost:' + DOCS_PORT;
+    const folders = computed(() => new Set(pages.value.map(p => p.path.split('/').slice(0,-1).join('/'))).size);
+    const navCount = computed(() => nav.value.length);
+    const sidebarCount = computed(() => sidebar.value.reduce((sum, g) => sum + (g.items?.length || 0), 0));
+    const recentPages = computed(() => [...pages.value].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 6));
+    const formatDate = d => d ? new Date(d).toLocaleDateString('zh-CN') : '-';
+    const initCharts = () => { if (typeof echarts === 'undefined') return; const c1 = echarts.init(document.getElementById('chart-docs')); const fd = {}; pages.value.forEach(p => { const f = p.path.split('/')[0] || '根目录'; fd[f] = (fd[f]||0)+1; }); c1.setOption({ xAxis: { type: 'category', data: Object.keys(fd) }, yAxis: { type: 'value' }, series: [{ data: Object.values(fd), type: 'bar', itemStyle: { color: '#6366f1', borderRadius: [6,6,0,0] } }], grid: { left: 40, right: 20, top: 20, bottom: 40 } }); const c2 = echarts.init(document.getElementById('chart-types')); c2.setOption({ series: [{ type: 'pie', radius: ['50%','75%'], data: [{ value: pages.value.filter(p=>p.path.endsWith('.md')).length, name: 'Markdown', itemStyle:{color:'#6366f1'} }, { value: pages.value.filter(p=>!p.path.endsWith('.md')).length, name: '其他', itemStyle:{color:'#e5e7eb'} }] }] }); window.addEventListener('resize', () => { c1.resize(); c2.resize(); }); };
+    onMounted(async () => { const [pRes, nRes, sRes] = await Promise.all([api.get('/api/pages'), api.get('/api/nav'), api.get('/api/sidebar')]); pages.value = pRes.pages || []; nav.value = nRes.nav || []; sidebar.value = Array.isArray(sRes.sidebar) ? sRes.sidebar : []; nextTick(() => { initIcons(); setTimeout(initCharts, 100); }); });
+    return { pages, folders, navCount, sidebarCount, recentPages, formatDate, docsUrl };
+  }
+};
+
+const SiteConfig = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="settings"></i> 站点配置</h1><p class="page-subtitle">可视化配置站点信息</p></div><button @click="save" class="btn btn-primary" :disabled="saving"><i data-lucide="save"></i> {{ saving ? "保存中..." : "保存" }}</button></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="globe"></i> 基本信息</div></div><div class="form-row"><div class="form-group"><label class="form-label">站点标题</label><input v-model="config.title" class="form-input" placeholder="我的文档"/></div><div class="form-group"><label class="form-label">站点描述</label><input v-model="config.description" class="form-input" placeholder="描述"/></div></div><div class="form-row"><div class="form-group"><label class="form-label">语言</label><input v-model="config.lang" class="form-input" placeholder="zh-CN"/></div><div class="form-group"><label class="form-label">基础路径</label><input v-model="config.base" class="form-input" placeholder="/"/></div></div></div><div v-if="toast" :class="["toast", toast.type]">{{ toast.msg }}</div></div>',
+  setup() { const config = ref({ title: '', description: '', lang: 'zh-CN', base: '/' }), saving = ref(false), toast = ref(null); const showToast = (msg, type='success') => { toast.value = {msg, type}; setTimeout(() => toast.value = null, 3000); }; onMounted(async () => { const r = await api.get('/api/site'); Object.assign(config.value, r); nextTick(initIcons); }); const save = async () => { saving.value = true; try { const r = await api.put('/api/site', config.value); showToast(r.success ? '已保存！' : (r.error || '失败'), r.success ? 'success' : 'error'); } catch(e) { showToast('失败', 'error'); } saving.value = false; }; return { config, saving, toast, save }; }
+};
+
+const NavConfig = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="navigation"></i> 导航配置</h1><p class="page-subtitle">配置顶部导航栏</p></div><button @click="add" class="btn btn-primary"><i data-lucide="plus"></i> 添加</button></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="eye"></i> 预览</div></div><div class="nav-preview"><div v-for="item in nav" :key="item.text" class="nav-preview-item">{{ item.text }}</div><div v-if="!nav.length" style="color:#9ca3af">暂无</div></div></div><div v-for="(item, i) in nav" :key="i" class="nav-item-card"><div class="nav-item-content"><div class="form-group" style="margin:0"><label class="form-label" style="font-size:12px">文本</label><input v-model="item.text" class="form-input" placeholder="首页"/></div><div class="form-group" style="margin:0"><label class="form-label" style="font-size:12px">链接</label><input v-model="item.link" class="form-input" placeholder="/"/></div></div><button @click="nav.splice(i,1)" class="btn btn-sm btn-danger"><i data-lucide="trash-2"></i></button></div><div v-if="!nav.length" class="empty-state"><i data-lucide="navigation"></i><p>暂无导航项</p><button @click="add" class="btn btn-primary"><i data-lucide="plus"></i> 添加</button></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="code"></i> 配置代码</div></div><pre class="build-log" style="max-height:200px">{{ code }}</pre></div></div>',
+  setup() { const nav = ref([]); onMounted(async () => { const r = await api.get('/api/nav'); nav.value = r.nav || []; nextTick(initIcons); }); const code = computed(() => 'nav: ' + JSON.stringify(nav.value, null, 2)); const add = () => { nav.value.push({text: '新导航', link: '/'}); nextTick(initIcons); }; return { nav, code, add }; }
+};
+
+const SidebarConfig = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="sidebar"></i> 侧边栏配置</h1><p class="page-subtitle">配置文档侧边栏</p></div><button @click="addGroup" class="btn btn-primary"><i data-lucide="folder-plus"></i> 添加分组</button></div><div v-for="(g, gi) in sidebar" :key="gi" class="sidebar-group"><div class="sidebar-group-header"><div class="sidebar-group-title"><i data-lucide="folder"></i><input v-model="g.text" class="form-input" style="width:200px" placeholder="分组名"/></div><div style="display:flex;gap:8px"><button @click="g.items.push({text:"",link:""})" class="btn btn-sm btn-secondary"><i data-lucide="plus"></i></button><button @click="sidebar.splice(gi,1)" class="btn btn-sm btn-danger"><i data-lucide="trash-2"></i></button></div></div><div class="sidebar-group-items"><div v-for="(item, ii) in g.items" :key="ii" class="sidebar-item"><i data-lucide="file-text" style="color:#9ca3af"></i><input v-model="item.text" class="form-input" style="flex:1" placeholder="标题"/><input v-model="item.link" class="form-input" style="flex:1" placeholder="/guide/intro"/><button @click="g.items.splice(ii,1)" class="btn btn-icon btn-danger" style="width:32px;height:32px"><i data-lucide="x"></i></button></div><div v-if="!g.items.length" style="padding:20px;text-align:center;color:#9ca3af">暂无</div></div></div><div v-if="!sidebar.length" class="empty-state"><i data-lucide="sidebar"></i><p>暂无分组</p><button @click="addGroup" class="btn btn-primary"><i data-lucide="folder-plus"></i> 添加</button></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="code"></i> 配置代码</div></div><pre class="build-log" style="max-height:200px">{{ code }}</pre></div></div>',
+  setup() { const sidebar = ref([]); onMounted(async () => { const r = await api.get('/api/sidebar'); const d = r.sidebar; if (Array.isArray(d)) sidebar.value = d; else if (d && typeof d === 'object') sidebar.value = Object.values(d).flat(); nextTick(initIcons); }); const code = computed(() => 'sidebar: ' + JSON.stringify(sidebar.value, null, 2)); const addGroup = () => { sidebar.value.push({text: '新分组', items: []}); nextTick(initIcons); }; return { sidebar, code, addGroup }; }
+};
+
+const DocEditor = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="edit-3"></i> 文档编辑</h1><p class="page-subtitle">编辑文档内容</p></div><div style="display:flex;gap:12px"><button @click="showNew=true" class="btn btn-secondary"><i data-lucide="file-plus"></i> 新建</button><button @click="save" class="btn btn-primary" :disabled="saving||!curPath"><i data-lucide="save"></i> {{ saving ? "保存中..." : "保存" }}</button></div></div><div class="editor-layout"><div class="editor-sidebar"><div class="editor-sidebar-header"><div class="editor-sidebar-title"><i data-lucide="files"></i> 文件</div></div><div class="editor-tree"><template v-for="item in tree" :key="item.path"><div v-if="item.type==="directory"" class="tree-item" @click="toggleFolder(item.path)"><i :data-lucide="openFolders[item.path] ? 'folder-open' : 'folder'"></i> {{ item.name }}</div><template v-if="openFolders[item.path] && item.children"><div v-for="child in item.children" :key="child.path" class="tree-item tree-folder" :class="{active: curPath===child.path}" @click="openFile(child.path)"><i data-lucide="file-text"></i> {{ child.name }}</div></template><div v-if="item.type==="file"" class="tree-item" :class="{active: curPath===item.path}" @click="openFile(item.path)"><i data-lucide="file-text"></i> {{ item.name }}</div></template></div></div><div class="editor-main"><div class="editor-toolbar"><button class="btn btn-icon" title="粗体"><i data-lucide="bold"></i></button><button class="btn btn-icon" title="斜体"><i data-lucide="italic"></i></button><button class="btn btn-icon" title="链接"><i data-lucide="link"></i></button><div style="flex:1"></div><div class="tabs" style="margin:0"><div class="tab" :class="{active:tab==="edit"}" @click="tab="edit"">编辑</div><div class="tab" :class="{active:tab==="preview"}" @click="tab="preview"">预览</div><div class="tab" :class="{active:tab==="split"}" @click="tab="split"">分栏</div></div></div><div class="editor-content" :style="{gridTemplateColumns: tab==="split"?"1fr 1fr":tab==="edit"?"1fr 0":"0 1fr"}"><div class="editor-write" v-show="tab!=="preview""><textarea v-model="content" placeholder="输入 Markdown..." spellcheck="false"></textarea></div><div class="editor-preview" v-show="tab!=="edit""><div class="md-preview" v-html="preview"></div></div></div></div></div><div v-if="showNew" class="modal-overlay" @click.self="showNew=false"><div class="modal"><div class="modal-header"><div class="modal-title">新建文档</div><div class="modal-close" @click="showNew=false"><i data-lucide="x"></i></div></div><div class="modal-body"><div class="form-group"><label class="form-label">路径</label><input v-model="newPath" class="form-input" placeholder="guide/intro.md"/></div><div class="form-group"><label class="form-label">标题</label><input v-model="newTitle" class="form-input" placeholder="快速开始"/></div></div><div class="modal-footer"><button @click="showNew=false" class="btn btn-secondary">取消</button><button @click="create" class="btn btn-primary"><i data-lucide="plus"></i> 创建</button></div></div></div><div v-if="toast" :class="["toast", toast.type]">{{ toast.msg }}</div></div>',
+  setup() { const tree = ref([]), curPath = ref(''), content = ref(''), tab = ref('split'), openFolders = ref({}), saving = ref(false), showNew = ref(false), newPath = ref(''), newTitle = ref(''), toast = ref(null); const preview = computed(() => renderMd(content.value)); const showToast = (msg, type='success') => { toast.value = {msg, type}; setTimeout(() => toast.value = null, 3000); }; const toggleFolder = (path) => { openFolders.value[path] = !openFolders.value[path]; nextTick(initIcons); }; const openFile = async (path) => { curPath.value = path; const r = await api.get('/api/doc?path=' + encodeURIComponent(path)); content.value = r.content || ''; }; const save = async () => { if (!curPath.value) return; saving.value = true; try { const r = await api.put('/api/doc', { path: curPath.value, content: content.value }); showToast(r.success ? '已保存！' : (r.error || '失败'), r.success ? 'success' : 'error'); } catch(e) { showToast('失败', 'error'); } saving.value = false; }; const create = async () => { if (!newPath.value) return; try { const r = await api.post('/api/doc', { path: newPath.value, title: newTitle.value }); if (r.success) { showNew.value = false; showToast('已创建！'); const tRes = await api.get('/api/tree'); tree.value = tRes.tree || []; openFile(newPath.value); } else { showToast(r.error || '失败', 'error'); } } catch(e) { showToast('失败', 'error'); } }; onMounted(async () => { const r = await api.get('/api/tree'); tree.value = r.tree || []; const expand = items => items.forEach(i => { if(i.type==='directory') { openFolders.value[i.path]=true; if(i.children) expand(i.children); } }); expand(tree.value); const p = new URLSearchParams(location.search).get('path'); if (p) openFile(p); nextTick(initIcons); }); return { tree, curPath, content, tab, openFolders, saving, showNew, newPath, newTitle, toast, preview, toggleFolder, openFile, save, create }; }
+};
+
+const BuildDeploy = {
+  template: '<div><div class="page-header"><div><h1><i data-lucide="rocket"></i> 构建部署</h1><p class="page-subtitle">打包和部署文档</p></div></div><div class="deploy-grid"><div class="deploy-card" :class="{active: action===\'build\'}" @click="action=\'build\'"><div class="deploy-icon"><i data-lucide="hammer"></i></div><div class="deploy-title">构建</div><div class="deploy-desc">打包生产版本</div></div><div class="deploy-card" :class="{active: action===\'preview\'}" @click="action=\'preview\'"><div class="deploy-icon"><i data-lucide="eye"></i></div><div class="deploy-title">预览</div><div class="deploy-desc">预览构建结果</div></div><div class="deploy-card" :class="{active: action===\'deploy\'}" @click="action=\'deploy\'"><div class="deploy-icon"><i data-lucide="cloud-upload"></i></div><div class="deploy-title">部署</div><div class="deploy-desc">发布到线上</div></div></div><div class="card"><div class="card-header"><div class="card-title"><i data-lucide="terminal"></i> 操作面板</div><button @click="execute" class="btn btn-primary" :disabled="running"><i :data-lucide="running ? \'loader\' : \'play\'" :class="{\'animate-spin\': running}"></i> {{ running ? "执行中..." : "开始" + actionName }}</button></div><div v-if="progress > 0" class="build-progress"><div class="build-progress-bar" :style="{width: progress + \'%\'}"></div></div><div class="build-log"><div v-for="(log, i) in logs" :key="i" class="build-log-line"><span class="build-log-time">{{ log.time }}</span><span class="build-log-content" :class="log.type">{{ log.msg }}</span></div><div v-if="!logs.length" style="color:#6b7280">等待执行...</div></div></div></div>',
+  setup() { const action = ref('build'), running = ref(false), progress = ref(0), logs = ref([]); const actionName = computed(() => ({ build: '构建', preview: '预览', deploy: '部署' })[action.value]); const addLog = (msg, type = '') => { const time = new Date().toLocaleTimeString('zh-CN'); logs.value.push({ time, msg, type }); }; const execute = async () => { if (running.value) return; running.value = true; progress.value = 0; logs.value = []; addLog('开始' + actionName.value + '...'); const steps = [{ msg: '分析项目...', p: 20 }, { msg: '编译文件...', p: 50 }, { msg: '优化产物...', p: 80 }, { msg: '生成输出...', p: 100 }]; for (const s of steps) { await new Promise(r => setTimeout(r, 800)); addLog(s.msg); progress.value = s.p; } addLog(actionName.value + '完成！', 'success'); running.value = false; nextTick(initIcons); }; onMounted(() => nextTick(initIcons)); return { action, running, progress, logs, actionName, execute }; }
+};
+
+const routes = [
+  { path: '/', component: Dashboard },
+  { path: '/site', component: SiteConfig },
+  { path: '/nav', component: NavConfig },
+  { path: '/sidebar', component: SidebarConfig },
+  { path: '/editor', component: DocEditor },
+  { path: '/deploy', component: BuildDeploy }
+];
+
+const router = createRouter({ history: createWebHistory(), routes });
+
+const App = {
+  template: '<div class="admin-layout"><aside class="admin-sidebar"><div class="admin-logo"><i data-lucide="book-open"></i><span>LDoc Admin</span></div><ul class="admin-menu"><li><router-link to="/"><i data-lucide="layout-dashboard"></i> 仪表盘</router-link></li><li><router-link to="/site"><i data-lucide="settings"></i> 站点配置</router-link></li><li><router-link to="/nav"><i data-lucide="navigation"></i> 导航配置</router-link></li><li><router-link to="/sidebar"><i data-lucide="sidebar"></i> 侧边栏配置</router-link></li><li><router-link to="/editor"><i data-lucide="edit-3"></i> 文档编辑</router-link></li><li><router-link to="/deploy"><i data-lucide="rocket"></i> 构建部署</router-link></li></ul><div class="sidebar-footer"><a :href="docsUrl" target="_blank"><i data-lucide="external-link"></i> 查看文档站点</a></div></aside><main class="admin-main"><router-view></router-view></main></div>',
+  setup() { const docsUrl = 'http://localhost:' + DOCS_PORT; onMounted(() => nextTick(initIcons)); return { docsUrl }; }
+};
+
+createApp(App).use(router).mount('#app');
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import { createDevServer } from './server/devServer'
 import { createBuilder } from './build'
 import { createMarkdownRenderer } from '../markdown/createMarkdown'
 import { createPluginContainer } from '../plugin/pluginContainer'
+import { createAdminServer } from './admin'
 
 export interface LDocInstance {
   config: SiteConfig
@@ -73,6 +74,7 @@ export async function createLDoc(
 
   // 服务器实例引用
   let server: Awaited<ReturnType<typeof createDevServer>> | null = null
+  let adminServer: ReturnType<typeof createAdminServer> | null = null
 
   const instance: LDocInstance = {
     config,
@@ -83,8 +85,20 @@ export async function createLDoc(
         pluginContainer,
         onUpdate: () => updateCallbacks.forEach(cb => cb())
       })
+
+      // 启动管理系统服务器
+      const adminPort = server.port + 1
+      adminServer = createAdminServer(config, { port: adminPort, docsPort: server.port })
+
+      // 打印访问地址（不自动打开，避免重复）
+      console.log(`\n  📄 文档: http://localhost:${server.port}${config.base}`)
+      console.log(`  ⚙️  Admin: http://localhost:${adminPort}/\n`)
+
       return {
-        close: () => server!.close(),
+        close: async () => {
+          await server!.close()
+          adminServer?.close()
+        },
         port: server.port
       }
     },
@@ -119,6 +133,9 @@ export async function createLDoc(
     async close() {
       if (server) {
         await server.close()
+      }
+      if (adminServer) {
+        adminServer.close()
       }
     }
   }
