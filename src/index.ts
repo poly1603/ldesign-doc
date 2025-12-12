@@ -37,3 +37,6 @@ export type { MarkdownRenderer, MarkdownOptions } from './shared/types'
 
 // 导出工具函数
 export * from './shared/utils'
+
+// 导出内置插件
+export * from './plugins'

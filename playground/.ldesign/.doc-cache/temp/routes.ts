@@ -26,10 +26,50 @@ export const routes = [
     }
   },
   {
+    path: '/api/components',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/components.md'),
+    meta: { 
+      title: 'components',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/api/composables',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/composables.md'),
+    meta: { 
+      title: 'composables',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/api/frontmatter',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/frontmatter.md'),
+    meta: { 
+      title: 'frontmatter',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/api/site-config',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/site-config.md'),
+    meta: { 
+      title: 'site-config',
+      frontmatter: {}
+    }
+  },
+  {
     path: '/api/theme',
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme.md'),
     meta: { 
       title: 'theme',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/api/theme-config',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme-config.md'),
+    meta: { 
+      title: 'theme-config',
       frontmatter: {}
     }
   },
@@ -58,10 +98,34 @@ export const routes = [
     }
   },
   {
+    path: '/guide/assets',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/assets.md'),
+    meta: { 
+      title: 'assets',
+      frontmatter: {}
+    }
+  },
+  {
     path: '/guide/configuration',
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/configuration.md'),
     meta: { 
       title: 'configuration',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/guide/deploy',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/deploy.md'),
+    meta: { 
+      title: 'deploy',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/guide/frontmatter',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/frontmatter.md'),
+    meta: { 
+      title: 'frontmatter',
       frontmatter: {}
     }
   },
@@ -94,6 +158,94 @@ export const routes = [
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/theme.md'),
     meta: { 
       title: 'theme',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/index.md'),
+    meta: { 
+      title: '',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/api',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/api.md'),
+    meta: { 
+      title: 'api',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/comment',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/comment.md'),
+    meta: { 
+      title: 'comment',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/copy-code',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/copy-code.md'),
+    meta: { 
+      title: 'copy-code',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/development',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/development.md'),
+    meta: { 
+      title: 'development',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/image-viewer',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/image-viewer.md'),
+    meta: { 
+      title: 'image-viewer',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/last-updated',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/last-updated.md'),
+    meta: { 
+      title: 'last-updated',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/progress',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/progress.md'),
+    meta: { 
+      title: 'progress',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/reading-time',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/reading-time.md'),
+    meta: { 
+      title: 'reading-time',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/search',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/search.md'),
+    meta: { 
+      title: 'search',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/using',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/using.md'),
+    meta: { 
+      title: 'using',
       frontmatter: {}
     }
   },

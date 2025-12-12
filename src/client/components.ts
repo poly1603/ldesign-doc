@@ -230,5 +230,6 @@ export const ReactDemo = defineComponent({
   }
 })
 
-// Re-export PluginSlot component
+// Re-export plugin components
 export { default as PluginSlot } from './components/PluginSlot.vue'
+export { default as PluginUI } from './components/PluginUI.vue'

@@ -343,38 +343,84 @@ export interface PluginGlobalComponent {
 }
 
 export interface LDocPlugin {
+  /** 插件名称，必须唯一 */
   name: string
 
-  // 配置钩子
+  /** 插件执行顺序，数字越小越先执行，默认 100 */
+  enforce?: 'pre' | 'post' | number
+
+  // ============== 配置阶段钩子 ==============
+
+  /** 修改用户配置，在配置解析前调用 */
   config?: (config: UserConfig, env: ConfigEnv) => UserConfig | null | void | Promise<UserConfig | null | void>
+
+  /** 配置解析完成后调用 */
   configResolved?: (config: SiteConfig) => void | Promise<void>
 
-  // Vite 插件扩展
+  // ============== Vite 扩展 ==============
+
+  /** 返回额外的 Vite 插件 */
   vitePlugins?: () => VitePlugin[] | Promise<VitePlugin[]>
 
-  // Markdown 扩展
+  // ============== Markdown 扩展 ==============
+
+  /** 扩展 Markdown 渲染器 */
   extendMarkdown?: (md: MarkdownRenderer) => void
 
-  // 页面数据扩展
-  extendPageData?: (pageData: PageData) => void | Promise<void>
+  // ============== 数据扩展 ==============
 
-  // 路由扩展
+  /** 扩展页面数据，可以添加自定义字段 */
+  extendPageData?: (pageData: PageData, ctx: PluginPageContext) => void | Promise<void>
+
+  /** 扩展站点数据 */
+  extendSiteData?: (siteData: SiteData) => void | Promise<void>
+
+  // ============== 路由扩展 ==============
+
+  /** 扩展或修改路由 */
   extendRoutes?: (routes: Route[]) => Route[] | void
 
-  // 构建钩子
-  buildStart?: (config: SiteConfig) => void | Promise<void>
-  buildEnd?: (config: SiteConfig) => void | Promise<void>
+  /** 路由切换前调用（客户端） */
+  onBeforeRouteChange?: (to: string, from: string) => boolean | void | Promise<boolean | void>
 
-  // 生成钩子
+  /** 路由切换后调用（客户端） */
+  onAfterRouteChange?: (to: string) => void | Promise<void>
+
+  // ============== 构建生命周期 ==============
+
+  /** 构建开始时调用 */
+  buildStart?: (config: SiteConfig) => void | Promise<void>
+
+  /** 每个页面渲染前调用 */
+  onBeforePageRender?: (page: PageRenderContext) => void | Promise<void>
+
+  /** 每个页面渲染后调用 */
+  onAfterPageRender?: (page: PageRenderContext) => void | Promise<void>
+
+  /** 所有页面生成后调用 */
   generateBundle?: (config: SiteConfig) => void | Promise<void>
 
-  // ============== UI 注入系统（新增）==============
+  /** 构建完成后调用 */
+  buildEnd?: (config: SiteConfig) => void | Promise<void>
+
+  // ============== 客户端生命周期 ==============
+
+  /** 客户端应用初始化 */
+  onClientInit?: (ctx: ClientPluginContext) => void | Promise<void>
+
+  /** 客户端挂载完成 */
+  onClientMounted?: (ctx: ClientPluginContext) => void | Promise<void>
+
+  /** 客户端更新（页面切换后） */
+  onClientUpdated?: (ctx: ClientPluginContext) => void | Promise<void>
+
+  // ============== UI 注入系统 ==============
 
   /**
    * 注入到预定义 Slot 位置的组件
    * 无需主题支持，框架自动渲染
    */
-  slots?: PluginSlots
+  slots?: PluginSlots | ((ctx: ClientPluginContext) => PluginSlots)
 
   /**
    * 注册全局组件
@@ -382,13 +428,203 @@ export interface LDocPlugin {
    */
   globalComponents?: PluginGlobalComponent[]
 
-  // 客户端代码注入（增强）
+  /**
+   * 注册全局指令
+   */
+  globalDirectives?: PluginGlobalDirective[]
+
+  // ============== 客户端代码注入 ==============
+
+  /** 客户端配置文件内容（字符串）或文件路径 */
   clientConfigFile?: string
 
-  // 热更新
+  /** 在 head 中注入的脚本 */
+  headScripts?: string[] | ((ctx: TransformContext) => string[])
+
+  /** 在 head 中注入的样式 */
+  headStyles?: string[] | ((ctx: TransformContext) => string[])
+
+  // ============== 热更新 ==============
+
+  /** 处理热更新 */
   handleHotUpdate?: (ctx: HotUpdateContext) => void | Promise<void>
+
+  // ============== 清理 ==============
+
+  /** 插件销毁时调用 */
+  onDestroy?: () => void | Promise<void>
 }
 
+/**
+ * 页面数据扩展上下文
+ */
+export interface PluginPageContext {
+  /** 站点配置 */
+  siteConfig: SiteConfig
+  /** Markdown 源内容 */
+  content: string
+  /** 文件路径 */
+  filePath: string
+  /** 相对路径 */
+  relativePath: string
+}
+
+/**
+ * 页面渲染上下文
+ */
+export interface PageRenderContext {
+  /** 页面数据 */
+  pageData: PageData
+  /** 站点配置 */
+  siteConfig: SiteConfig
+  /** 渲染后的 HTML（仅 onAfterPageRender 可用） */
+  html?: string
+}
+
+/**
+ * 客户端插件上下文
+ */
+export interface ClientPluginContext {
+  /** Vue 应用实例 */
+  app: unknown
+  /** Vue Router 实例 */
+  router: unknown
+  /** 站点数据（响应式） */
+  siteData: SiteData
+  /** 当前页面数据（响应式） */
+  pageData: PageData
+  /** 路由工具 */
+  route: ClientRouteUtils
+  /** 数据工具 */
+  data: ClientDataUtils
+  /** UI 工具 */
+  ui: ClientUIUtils
+  /** 存储工具 */
+  storage: ClientStorageUtils
+  /** 事件总线 */
+  events: ClientEventBus
+}
+
+/**
+ * 客户端路由工具
+ */
+export interface ClientRouteUtils {
+  /** 当前路由路径 */
+  path: string
+  /** 当前路由 hash */
+  hash: string
+  /** 当前路由查询参数 */
+  query: Record<string, string>
+  /** 导航到指定路径 */
+  go: (path: string) => void
+  /** 替换当前路由 */
+  replace: (path: string) => void
+  /** 后退 */
+  back: () => void
+  /** 前进 */
+  forward: () => void
+  /** 滚动到锚点 */
+  scrollToAnchor: (hash: string) => void
+}
+
+/**
+ * 客户端数据工具
+ */
+export interface ClientDataUtils {
+  /** 获取页面数据 */
+  getPageData: () => PageData
+  /** 获取站点数据 */
+  getSiteData: () => SiteData
+  /** 获取主题配置 */
+  getThemeConfig: () => ThemeConfig
+  /** 获取 frontmatter */
+  getFrontmatter: () => Record<string, unknown>
+  /** 获取标题列表 */
+  getHeaders: () => Header[]
+  /** 获取当前语言 */
+  getLang: () => string
+  /** 是否暗色模式 */
+  isDark: () => boolean
+}
+
+/**
+ * 客户端 UI 工具
+ */
+export interface ClientUIUtils {
+  /** 显示 Toast 消息 */
+  showToast: (message: string, options?: ToastOptions) => void
+  /** 显示加载状态 */
+  showLoading: (message?: string) => void
+  /** 隐藏加载状态 */
+  hideLoading: () => void
+  /** 显示模态框 */
+  showModal: (options: ModalOptions) => Promise<boolean>
+  /** 复制文本到剪贴板 */
+  copyToClipboard: (text: string) => Promise<boolean>
+}
+
+/**
+ * Toast 选项
+ */
+export interface ToastOptions {
+  type?: 'success' | 'error' | 'warning' | 'info'
+  duration?: number
+  position?: 'top' | 'bottom' | 'center'
+}
+
+/**
+ * 模态框选项
+ */
+export interface ModalOptions {
+  title?: string
+  content: string | unknown
+  confirmText?: string
+  cancelText?: string
+  showCancel?: boolean
+}
+
+/**
+ * 客户端存储工具
+ */
+export interface ClientStorageUtils {
+  /** 获取存储值 */
+  get: <T>(key: string, defaultValue?: T) => T | null
+  /** 设置存储值 */
+  set: <T>(key: string, value: T) => void
+  /** 删除存储值 */
+  remove: (key: string) => void
+  /** 清空存储 */
+  clear: () => void
+}
+
+/**
+ * 客户端事件总线
+ */
+export interface ClientEventBus {
+  /** 监听事件 */
+  on: <T = unknown>(event: string, callback: (data: T) => void) => void
+  /** 取消监听 */
+  off: (event: string, callback?: (data: unknown) => void) => void
+  /** 触发事件 */
+  emit: <T = unknown>(event: string, data?: T) => void
+  /** 监听一次 */
+  once: <T = unknown>(event: string, callback: (data: T) => void) => void
+}
+
+/**
+ * 全局指令定义
+ */
+export interface PluginGlobalDirective {
+  /** 指令名称 */
+  name: string
+  /** 指令实现 */
+  directive: unknown
+}
+
+/**
+ * 旧版插件上下文（兼容）
+ * @deprecated 请使用 ClientPluginContext
+ */
 export interface PluginContext {
   siteConfig: SiteConfig
   pageData?: PageData
