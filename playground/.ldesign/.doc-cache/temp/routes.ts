@@ -242,6 +242,14 @@ export const routes = [
     }
   },
   {
+    path: '/plugins/theme-dev',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/theme-dev.md'),
+    meta: { 
+      title: 'theme-dev',
+      frontmatter: {}
+    }
+  },
+  {
     path: '/plugins/using',
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/using.md'),
     meta: { 
@@ -251,6 +259,6 @@ export const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    component: () => import('@theme/NotFound.vue')
+    component: () => import('@theme').then(m => m.default?.NotFound || m.NotFound)
   }
 ]

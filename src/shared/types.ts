@@ -69,7 +69,7 @@ export interface UserConfig {
   framework?: Framework
 
   // 主题配置
-  theme?: string | ThemeConfig
+  theme?: string | Theme | ThemeConfig
   themeConfig?: ThemeConfig
 
   // 多语言配置
@@ -105,6 +105,12 @@ export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins
   tempDir: string
   cacheDir: string
   userPlugins: LDocPlugin[]
+
+  /** 主题 npm 包名（如果从 npm 包解析） */
+  themePkg?: string
+
+  /** 解析后的主题对象（如果用户直接传入 Theme 对象） */
+  theme?: Theme
 
   // 可选的扩展钩子
   transformHead?: (ctx: TransformContext) => Promise<HeadConfig[]> | HeadConfig[]

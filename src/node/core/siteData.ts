@@ -113,6 +113,26 @@ export async function generateRoutes(config: SiteConfig): Promise<RouteData[]> {
 }
 
 /**
+ * 从 PageData 数组转换为 RouteData 数组
+ * 用于 build 模式，保留插件扩展的 frontmatter 数据
+ */
+export function pageDataToRoutes(pages: PageData[]): RouteData[] {
+  return pages.map(page => ({
+    path: '/' + page.relativePath.replace(/\.md$/, '').replace(/\/index$/, '').replace(/^index$/, ''),
+    filePath: page.filePath,
+    title: page.title,
+    frontmatter: page.frontmatter
+  })).map(r => ({
+    ...r,
+    path: r.path === '' ? '/' : r.path
+  })).sort((a, b) => {
+    if (a.path === '/') return -1
+    if (b.path === '/') return 1
+    return a.path.localeCompare(b.path)
+  })
+}
+
+/**
  * 生成路由代码
  */
 export function generateRoutesCode(routes: RouteData[], mode: 'dev' | 'build'): string {
@@ -131,7 +151,7 @@ ${routes.map(r => `  {
   }`).join(',\n')},
   {
     path: '/:pathMatch(.*)*',
-    component: () => import('@theme/NotFound.vue')
+    component: () => import('@theme').then(m => m.default?.NotFound || m.NotFound)
   }
 ]
 `
@@ -140,7 +160,8 @@ ${routes.map(r => `  {
     return `
 // Auto-generated routes
 ${routes.map((r, i) => `import Page${i} from '${r.filePath.replace(/\\/g, '/')}'`).join('\n')}
-import NotFound from '@theme/NotFound.vue'
+import theme from '@theme'
+const NotFound = theme.NotFound
 
 export const routes = [
 ${routes.map((r, i) => `  {
@@ -186,10 +207,12 @@ import { createApp, ref, provide, h, Transition } from 'vue'
 import { createRouter, createWebHistory, RouterView } from 'vue-router'
 import { routes } from './routes'
 import { siteData } from './siteData'
-import Layout from '@theme/Layout.vue'
+// 从虚拟模块导入主题（支持 npm 包和本地主题）
+import theme from '@theme'
+const Layout = theme.Layout
 
 // 导入主题样式
-import '@theme/styles/index.css'
+import '@theme-styles'
 
 // 导入插件系统
 import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from '@ldesign/doc/client'

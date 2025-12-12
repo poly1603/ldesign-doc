@@ -44,6 +44,10 @@ const external = [
   'debug',
   'defu',
   'ufo',
+  // 评论插件可选依赖
+  '@waline/client',
+  'gitalk',
+  'twikoo',
   /^node:/,
   'fs',
   'path',

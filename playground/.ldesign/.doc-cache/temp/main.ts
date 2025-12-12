@@ -3,10 +3,12 @@ import { createApp, ref, provide, h, Transition } from 'vue'
 import { createRouter, createWebHistory, RouterView } from 'vue-router'
 import { routes } from './routes'
 import { siteData } from './siteData'
-import Layout from '@theme/Layout.vue'
+// 从虚拟模块导入主题（支持 npm 包和本地主题）
+import theme from '@theme'
+const Layout = theme.Layout
 
 // 导入主题样式
-import '@theme/styles/index.css'
+import '@theme-styles'
 
 // 导入插件系统
 import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from '@ldesign/doc/client'

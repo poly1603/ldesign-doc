@@ -59,9 +59,15 @@ export function createPluginContainer(config: SiteConfig): PluginContainer {
     },
 
     async callHook(name, ...args) {
+      if (name === 'extendPageData') {
+        console.log(`[ldoc] Calling extendPageData on ${plugins.length} plugins`)
+      }
       for (const plugin of plugins) {
         const hook = plugin[name as keyof LDocPlugin]
         if (typeof hook === 'function') {
+          if (name === 'extendPageData') {
+            console.log(`[ldoc] Calling ${name} on plugin: ${plugin.name}`)
+          }
           await (hook as (...args: unknown[]) => unknown)(...args)
         }
       }

@@ -53,7 +53,9 @@ export async function createLDoc(
   const pluginContainer = createPluginContainer(config)
 
   // 应用用户插件
+  console.log(`[ldoc] Registering ${config.userPlugins.length} user plugins...`)
   for (const plugin of config.userPlugins) {
+    console.log(`[ldoc] Registering plugin: ${plugin.name}, has extendPageData: ${typeof plugin.extendPageData === 'function'}`)
     await pluginContainer.register(plugin)
   }
 

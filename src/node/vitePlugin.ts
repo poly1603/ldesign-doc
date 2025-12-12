@@ -240,9 +240,24 @@ console.log('[ldoc] Client plugins loaded:', plugins.map(p => p.name));
 export { plugins };
 export default plugins;
 `,
-    '@theme': `
+    '@theme': config.themePkg
+      ? `
+export { default } from '${config.themePkg}'
+export * from '${config.themePkg}'
+`
+      : `
 export { default } from '${normalizePath(config.themeDir)}/index'
 export * from '${normalizePath(config.themeDir)}/index'
+`,
+    // 主题样式虚拟模块 - npm 包主题样式在包内部导入，本地主题需要显式导入
+    '@theme-styles': config.themePkg
+      ? `
+// npm 包主题的样式在包的入口文件中已导入
+// 如果需要额外样式，可以从包导入
+import '${config.themePkg}/styles'
+`
+      : `
+import '${normalizePath(config.themeDir)}/styles/index.css'
 `
   }
 

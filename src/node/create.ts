@@ -370,6 +370,10 @@ async function createThemeProject(
     'src/components',
     'src/styles',
     'src/composables',
+    'dev',
+    'dev/docs',
+    'dev/docs/guide',
+    'dev/docs/public',
     'dist'
   ]
   for (const dir of dirs) {
@@ -390,11 +394,14 @@ async function createThemeProject(
         types: './dist/index.d.ts',
         import: './dist/index.js'
       },
-      './styles': './dist/styles/index.css'
+      './styles': './dist/styles/index.css',
+      './package.json': './package.json'
     },
     files: ['dist'],
     scripts: {
-      dev: 'vite build --watch',
+      dev: 'concurrently "vite build --watch" "pnpm preview"',
+      'dev:build': 'vite build --watch',
+      preview: 'ldoc dev dev',
       build: 'vite build && vue-tsc --declaration --emitDeclarationOnly',
       prepublishOnly: 'pnpm build'
     },
@@ -408,6 +415,7 @@ async function createThemeProject(
     devDependencies: {
       '@ldesign/doc': '^1.0.0',
       '@vitejs/plugin-vue': '^5.0.0',
+      'concurrently': '^8.0.0',
       'typescript': '^5.0.0',
       'vite': '^5.0.0',
       'vue': '^3.4.0',
@@ -1010,6 +1018,253 @@ declare module '*.vue' {
 
   writeFileSync(join(targetDir, 'env.d.ts'), envDts)
   console.log(pc.gray('  Created: env.d.ts'))
+
+  // ===== 开发预览文档 =====
+
+  // dev/doc.config.ts - 开发预览配置
+  const devConfig = `import { defineConfig } from '@ldesign/doc'
+import theme from '../dist/index.js'
+
+export default defineConfig({
+  title: '${toPascalCase(themeName)} Theme Preview',
+  description: '主题开发预览',
+  lang: 'zh-CN',
+  srcDir: 'docs',
+  
+  // 使用本地开发的主题
+  theme,
+  
+  themeConfig: {
+    logo: '/logo.svg',
+    siteTitle: '${toPascalCase(themeName)} Theme',
+    
+    nav: [
+      { text: '首页', link: '/' },
+      { text: '指南', link: '/guide/' },
+      { text: '组件', link: '/guide/components' }
+    ],
+    
+    sidebar: {
+      '/guide/': [
+        {
+          text: '开始使用',
+          items: [
+            { text: '介绍', link: '/guide/' },
+            { text: '组件', link: '/guide/components' }
+          ]
+        }
+      ]
+    },
+    
+    footer: {
+      message: '主题开发预览',
+      copyright: 'Copyright © 2024'
+    }
+  }
+})
+`
+
+  writeFileSync(join(targetDir, 'dev/doc.config.ts'), devConfig)
+  console.log(pc.gray('  Created: dev/doc.config.ts'))
+
+  // dev/docs/index.md - 首页
+  const devIndex = `---
+layout: home
+hero:
+  name: ${toPascalCase(themeName)} Theme
+  text: LDoc 自定义主题
+  tagline: 现代化文档主题开发预览
+  actions:
+    - theme: brand
+      text: 开始使用
+      link: /guide/
+    - theme: alt
+      text: 组件预览
+      link: /guide/components
+features:
+  - icon: 🎨
+    title: 自定义设计
+    details: 完全自定义的主题设计
+  - icon: 🌙
+    title: 暗色模式
+    details: 支持亮色/暗色主题切换
+  - icon: 📱
+    title: 响应式布局
+    details: 适配各种屏幕尺寸
+---
+`
+
+  writeFileSync(join(targetDir, 'dev/docs/index.md'), devIndex)
+  console.log(pc.gray('  Created: dev/docs/index.md'))
+
+  // dev/docs/guide/index.md - 指南首页
+  const devGuide = `# 介绍
+
+欢迎使用 ${toPascalCase(themeName)} 主题！
+
+## 安装
+
+\`\`\`bash
+pnpm add ${packageName}
+\`\`\`
+
+## 配置
+
+\`\`\`ts
+import { defineConfig } from '@ldesign/doc'
+import theme from '${packageName}'
+
+export default defineConfig({
+  theme
+})
+\`\`\`
+
+## 主题特性
+
+### 响应式设计
+
+主题默认支持响应式布局，适配各种屏幕尺寸。
+
+### 暗色模式
+
+点击右上角的主题切换按钮体验暗色模式。
+
+### 代码高亮
+
+支持语法高亮的代码块：
+
+\`\`\`ts
+function hello() {
+  console.log('Hello, World!')
+}
+\`\`\`
+
+### 引用块
+
+> 这是一个引用块示例
+
+### 表格
+
+| 功能 | 支持 |
+|------|------|
+| 暗色模式 | ✅ |
+| 响应式 | ✅ |
+| 代码高亮 | ✅ |
+`
+
+  writeFileSync(join(targetDir, 'dev/docs/guide/index.md'), devGuide)
+  console.log(pc.gray('  Created: dev/docs/guide/index.md'))
+
+  // dev/docs/guide/components.md - 组件预览
+  const devComponents = `# 组件预览
+
+本页展示主题的各种组件效果。
+
+## 标题
+
+# 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题
+
+## 文本样式
+
+这是普通文本。**这是加粗文本**。*这是斜体文本*。~~这是删除线文本~~。
+
+## 链接
+
+这是一个 [内部链接](/guide/)。
+
+这是一个 [外部链接](https://github.com)。
+
+## 列表
+
+### 无序列表
+
+- 项目一
+- 项目二
+  - 子项目
+  - 子项目
+- 项目三
+
+### 有序列表
+
+1. 第一步
+2. 第二步
+3. 第三步
+
+## 代码
+
+行内代码：\`const foo = 'bar'\`
+
+代码块：
+
+\`\`\`ts
+interface Theme {
+  Layout: Component
+  NotFound?: Component
+  enhanceApp?: (ctx: EnhanceAppContext) => void
+}
+
+export function defineTheme(theme: Theme): Theme {
+  return theme
+}
+\`\`\`
+
+## 提示块
+
+::: tip 提示
+这是一个提示信息。
+:::
+
+::: warning 警告
+这是一个警告信息。
+:::
+
+::: danger 危险
+这是一个危险提示。
+:::
+
+::: info 信息
+这是一个普通信息。
+:::
+
+## 表格
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| \`Layout\` | \`Component\` | - | 布局组件 |
+| \`NotFound\` | \`Component\` | - | 404 页面 |
+| \`enhanceApp\` | \`Function\` | - | 增强函数 |
+
+## 图片
+
+![占位图片](https://via.placeholder.com/600x300/3b82f6/ffffff?text=Theme+Preview)
+
+## 分割线
+
+---
+
+## 引用
+
+> 好的设计是让产品变得有用。
+> 
+> — Dieter Rams
+`
+
+  writeFileSync(join(targetDir, 'dev/docs/guide/components.md'), devComponents)
+  console.log(pc.gray('  Created: dev/docs/guide/components.md'))
+
+  // dev/docs/public/logo.svg - Logo
+  const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#3b82f6"/>
+  <text x="64" y="80" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="system-ui">T</text>
+</svg>`
+
+  writeFileSync(join(targetDir, 'dev/docs/public/logo.svg'), logoSvg)
+  console.log(pc.gray('  Created: dev/docs/public/logo.svg'))
 }
 
 // 工具函数

@@ -11,7 +11,7 @@ import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
 import { createVitePlugins } from './vitePlugin'
 import { scanPages } from './pages'
-import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate } from './core/siteData'
+import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate, pageDataToRoutes } from './core/siteData'
 import pc from 'picocolors'
 
 export interface BuildOptions {
@@ -43,8 +43,14 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       console.log(pc.gray(`  Found ${pages.length} pages`))
 
       // 调用 extendPageData 钩子，让插件扩展页面数据
+      console.log(pc.gray(`  Extending page data with plugins (${config.userPlugins.length} plugins)...`))
       for (const page of pages) {
         await pluginContainer.callHook('extendPageData', page)
+      }
+      // 验证扩展结果
+      const pagesWithReadingTime = pages.filter(p => p.frontmatter?.readingTime)
+      if (pagesWithReadingTime.length > 0) {
+        console.log(pc.gray(`  ${pagesWithReadingTime.length} pages have reading time data`))
       }
 
       // 确保输出目录存在
@@ -136,7 +142,19 @@ export async function build(root: string = process.cwd()): Promise<void> {
 
   const config = await resolveConfig(root, 'build', 'production')
   const pluginContainer = createPluginContainer(config)
+
+  // 注册用户插件
+  for (const plugin of config.userPlugins) {
+    await pluginContainer.register(plugin)
+  }
+
+  // 调用 configResolved 钩子
+  await pluginContainer.callHook('configResolved', config)
+
   const md = await createMarkdownRenderer(config)
+
+  // 扩展 Markdown
+  await pluginContainer.callHook('extendMarkdown', md)
 
   const builder = createBuilder(config, { md, pluginContainer })
   await builder.build()
@@ -153,8 +171,8 @@ async function generateTempFiles(config: SiteConfig, pages: PageData[]): Promise
     mkdirSync(tempDir, { recursive: true })
   }
 
-  // 使用统一的路由生成
-  const routes = await generateRoutes(config)
+  // 使用已扩展的 pages 数据生成路由（保留插件添加的 frontmatter 数据）
+  const routes = pageDataToRoutes(pages)
 
   // 写入路由文件 - build 模式使用静态导入
   const routesCode = generateRoutesCode(routes, 'build')

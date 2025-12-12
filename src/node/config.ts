@@ -6,7 +6,7 @@ import { resolve, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 import { createRequire } from 'module'
-import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin } from '../shared/types'
+import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin, Theme } from '../shared/types'
 import { deepMerge, normalizePath } from '../shared/utils'
 
 const require = createRequire(import.meta.url)
@@ -109,8 +109,14 @@ export async function resolveConfig(
   const tempDir = resolve(root, '.ldesign/.doc-cache/temp')
   const cacheDir = resolve(root, '.ldesign/.doc-cache')
 
-  // 解析主题目录
-  const themeDir = await resolveThemeDir(root, mergedConfig.theme)
+  // 解析主题
+  const { themeDir, themePkg } = await resolveTheme(root, mergedConfig.theme)
+
+  // 检测是否直接传入 Theme 对象
+  const themeObject = isThemeObject(mergedConfig.theme) ? mergedConfig.theme : undefined
+  if (themeObject) {
+    console.log(`[ldoc] Using custom theme object`)
+  }
 
   // 构建最终配置
   const siteConfig: SiteConfig = {
@@ -135,9 +141,11 @@ export async function resolveConfig(
     configPath,
     configDeps,
     themeDir: normalizePath(themeDir),
+    themePkg,
     tempDir: normalizePath(tempDir),
     cacheDir: normalizePath(cacheDir),
     userPlugins: mergedConfig.plugins || [],
+    theme: themeObject,
 
     // 钩子函数
     transformHead: mergedConfig.transformHead,
@@ -189,15 +197,36 @@ async function loadConfigFile(configPath: string): Promise<UserConfig> {
 }
 
 /**
+ * 检测是否为 Theme 对象（包含 Layout 组件）
+ */
+function isThemeObject(theme: unknown): theme is Theme {
+  return (
+    typeof theme === 'object' &&
+    theme !== null &&
+    'Layout' in theme &&
+    typeof (theme as Theme).Layout !== 'undefined'
+  )
+}
+
+/**
+ * 主题解析结果
+ */
+interface ThemeResolveResult {
+  themeDir: string
+  themePkg?: string  // npm 包名（如果是从包解析的）
+}
+
+/**
  * 解析主题目录
  * 支持的格式：
+ * - Theme 对象 - 直接使用主题对象
  * - 'ldoc-theme-xxx' - npm 包名
  * - '@scope/ldoc-theme-xxx' - 带 scope 的 npm 包名
  * - './path/to/theme' - 相对路径
  * - '/absolute/path' - 绝对路径
  * - 'xxx' - 简写，自动尝试 ldoc-theme-xxx
  */
-async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Promise<string> {
+async function resolveTheme(root: string, theme?: string | Theme | ThemeConfig): Promise<ThemeResolveResult> {
   // 获取当前模块所在目录
   const currentDir = dirname(fileURLToPath(import.meta.url))
 
@@ -206,16 +235,16 @@ async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Prom
     // 检查本地 .ldesign/doc-theme 目录
     const localThemeDir = resolve(root, '.ldesign/doc-theme')
     if (existsSync(localThemeDir)) {
-      return localThemeDir
+      return { themeDir: localThemeDir }
     }
 
     // 使用内置默认主题
-    return resolve(currentDir, '../theme-default')
+    return { themeDir: resolve(currentDir, '../theme-default') }
   }
 
   // 如果是字符串，尝试解析为包名或路径
   if (theme.startsWith('.') || theme.startsWith('/')) {
-    return resolve(root, theme)
+    return { themeDir: resolve(root, theme) }
   }
 
   // 尝试解析为 npm 包
@@ -227,16 +256,16 @@ async function resolveThemeDir(root: string, theme?: string | ThemeConfig): Prom
 
   for (const pkgName of packageNames) {
     try {
-      const themePkg = require.resolve(`${pkgName}/package.json`, { paths: [root] })
+      const themePkgPath = require.resolve(`${pkgName}/package.json`, { paths: [root] })
       console.log(`[ldoc] Using theme: ${pkgName}`)
-      return dirname(themePkg)
+      return { themeDir: dirname(themePkgPath), themePkg: pkgName }
     } catch {
       // 继续尝试下一个包名
     }
   }
 
   console.warn(`[ldoc] Theme "${theme}" not found, using default theme`)
-  return resolve(currentDir, '../theme-default')
+  return { themeDir: resolve(currentDir, '../theme-default') }
 }
 
 /**

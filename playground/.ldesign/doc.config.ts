@@ -7,6 +7,10 @@ export default defineConfig({
   lang: 'zh-CN',
   // srcDir 已自动设置为 .ldesign/docs
 
+  // 主题配置（可选）
+  // 使用 npm 包主题: theme: 'ldoc-theme-xxx'
+  // 使用默认主题: 不设置 theme
+
   // 使用阅读时间插件
   plugins: [
     readingTimePlugin({
@@ -105,6 +109,12 @@ export default defineConfig({
           items: [
             { text: '插件开发指南', link: '/plugins/development' },
             { text: '插件 API', link: '/plugins/api' }
+          ]
+        },
+        {
+          text: '开发主题',
+          items: [
+            { text: '主题开发指南', link: '/plugins/theme-dev' }
           ]
         }
       ]
