@@ -5,6 +5,9 @@
 import Layout from './Layout.vue'
 import NotFound from './NotFound.vue'
 
+// 导入默认主题样式（供继承的主题使用）
+import './styles/index.css'
+
 // Markdown 全局组件
 import Demo from './components/Demo.vue'
 import CodeGroup from './components/CodeGroup.vue'

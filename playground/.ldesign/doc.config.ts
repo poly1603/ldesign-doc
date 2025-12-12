@@ -1,5 +1,6 @@
 import { defineConfig } from '@ldesign/doc'
 import readingTimePlugin from 'ldoc-plugin-reading-time'
+import wordCountPlugin from 'ldoc-plugin-word-count'
 
 export default defineConfig({
   title: 'LDoc 演示站点',
@@ -7,15 +8,17 @@ export default defineConfig({
   lang: 'zh-CN',
   // srcDir 已自动设置为 .ldesign/docs
 
-  // 主题配置（可选）
-  // 使用 npm 包主题: theme: 'ldoc-theme-xxx'
-  // 使用默认主题: 不设置 theme
+  // 主题配置 - 使用自定义主题
+  theme: 'ldoc-theme-clean',
 
-  // 使用阅读时间插件
+  // 使用插件
   plugins: [
     readingTimePlugin({
       wordsPerMinute: 300,
       includeCode: true
+    }),
+    wordCountPlugin({
+      enabled: true
     })
   ],
 

@@ -250,9 +250,10 @@ export { default } from '${normalizePath(config.themeDir)}/index'
 export * from '${normalizePath(config.themeDir)}/index'
 `,
     // 主题样式虚拟模块
+    // 始终导入默认主题的基础样式，因为大多数自定义主题都继承默认主题
+    // npm 包主题的自定义样式会在其入口文件中导入
     '@theme-styles': config.themePkg
-      ? `// npm 包主题的样式在包入口中导入，这里尝试导入额外样式
-try { import('${config.themePkg}/styles') } catch(e) {}`
+      ? `import '@ldesign/doc/theme-default/styles/index.css'`
       : `import '${normalizePath(config.themeDir)}/styles/index.css'`
   }
 

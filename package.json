@@ -21,6 +21,7 @@
       "types": "./dist/types/theme-default/index.d.ts",
       "import": "./dist/es/theme-default/index.js"
     },
+    "./theme-default/styles/*": "./dist/es/theme-default/styles/*",
     "./plugin-vue": {
       "types": "./dist/types/plugins/vue/index.d.ts",
       "import": "./dist/es/plugins/vue/index.js"

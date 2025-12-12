@@ -329,6 +329,8 @@ pnpm dev
 pnpm build
 \`\`\`
 
+详细开发指南请查看 [DEVELOPMENT.md](./DEVELOPMENT.md)。
+
 ## License
 
 MIT
@@ -336,6 +338,160 @@ MIT
 
   writeFileSync(join(targetDir, 'README.md'), readme)
   console.log(pc.gray('  Created: README.md'))
+
+  // DEVELOPMENT.md - 插件开发指南
+  const pluginDevGuide = `# ${packageName} 开发指南
+
+本文档介绍如何开发、调试、打包和发布此插件。
+
+## 项目结构
+
+\`\`\`
+src/
+├── index.ts      # 插件入口（Node 端）
+└── client.ts     # 客户端代码（可选）
+\`\`\`
+
+## 开发流程
+
+### 1. 安装依赖
+
+\`\`\`bash
+pnpm install
+\`\`\`
+
+### 2. 开发模式
+
+\`\`\`bash
+pnpm dev
+\`\`\`
+
+### 3. 在其他项目测试
+
+\`\`\`bash
+# 在插件目录
+pnpm link --global
+
+# 在测试项目
+pnpm link --global ${packageName}
+\`\`\`
+
+## 插件开发要点
+
+### 插件入口 (index.ts)
+
+\`\`\`ts
+import type { LDocPlugin, PageData } from '@ldesign/doc'
+
+export interface PluginOptions {
+  enabled?: boolean
+}
+
+export function ${toCamelCase(pluginName)}(options: PluginOptions = {}): LDocPlugin {
+  return {
+    name: '${packageName}',
+    
+    // 客户端配置文件（如果有）
+    clientConfigFile: '${packageName}/client',
+    
+    // 扩展页面数据
+    async extendPageData(pageData: PageData) {
+      // 修改 pageData.frontmatter
+    },
+    
+    // 构建开始
+    buildStart() {
+      console.log('[plugin] 插件已启用')
+    }
+  }
+}
+
+export default ${toCamelCase(pluginName)}
+\`\`\`
+
+### 客户端代码 (client.ts)
+
+\`\`\`ts
+import { defineComponent, h } from 'vue'
+import type { PluginSlots } from '@ldesign/doc'
+
+// 自定义组件
+export const MyComponent = defineComponent({
+  setup() {
+    return () => h('div', 'Hello from plugin')
+  }
+})
+
+// 导出 slots（注入到主题的指定位置）
+export const slots: PluginSlots = {
+  'doc-top': MyComponent
+}
+
+// 导出全局组件
+export const globalComponents = {
+  MyComponent
+}
+\`\`\`
+
+### 可用的生命周期钩子
+
+\`\`\`ts
+{
+  // Node 端
+  config(config, env)           // 修改配置
+  configResolved(config)        // 配置解析完成
+  extendMarkdown(md)            // 扩展 Markdown
+  extendPageData(pageData)      // 扩展页面数据
+  buildStart(config)            // 构建开始
+  buildEnd(config)              // 构建结束
+  
+  // 客户端
+  slots                         // 注入 UI 到主题
+  globalComponents              // 注册全局组件
+  enhanceApp(ctx)               // 增强 Vue 应用
+}
+\`\`\`
+
+## 调试技巧
+
+1. 使用 \`console.log\` 在 Node 端调试
+2. 使用 Vue DevTools 调试客户端组件
+3. 检查浏览器控制台查看错误
+
+## 打包构建
+
+\`\`\`bash
+pnpm build
+\`\`\`
+
+## 发布到 npm
+
+\`\`\`bash
+npm login
+pnpm publish
+\`\`\`
+
+### 版本管理
+
+\`\`\`bash
+npm version patch  # 1.0.0 -> 1.0.1
+npm version minor  # 1.0.0 -> 1.1.0
+npm version major  # 1.0.0 -> 2.0.0
+\`\`\`
+
+## 注意事项
+
+1. **exports 配置** - package.json 需要正确配置 exports
+2. **客户端代码** - 如有客户端代码需要单独导出
+3. **类型导出** - 导出 TypeScript 类型供用户使用
+
+## 许可证
+
+MIT
+`
+
+  writeFileSync(join(targetDir, 'DEVELOPMENT.md'), pluginDevGuide)
+  console.log(pc.gray('  Created: DEVELOPMENT.md'))
 
   // .gitignore
   const gitignore = `node_modules
@@ -468,7 +624,7 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['vue', '@ldesign/doc', 'vue-router'],
+      external: ['vue', '@ldesign/doc', '@ldesign/doc/theme-default', '@ldesign/doc/client', 'vue-router'],
       output: {
         globals: {
           vue: 'Vue'
@@ -484,48 +640,20 @@ export default defineConfig({
   writeFileSync(join(targetDir, 'vite.config.ts'), viteConfig)
   console.log(pc.gray('  Created: vite.config.ts'))
 
-  // src/index.ts - 主题入口
+  // src/index.ts - 主题入口（继承默认主题）
   const indexTs = `/**
  * ${packageName}
  * ${description || `LDoc theme - ${themeName}`}
+ * 
+ * 基于 LDoc 默认主题，添加自定义样式和功能
  */
 
-import type { Theme, EnhanceAppContext } from '@ldesign/doc'
+import type { Theme } from '@ldesign/doc'
 import Layout from './Layout.vue'
 import NotFound from './NotFound.vue'
 
-// 导入样式
+// 导入自定义样式（覆盖默认主题样式）
 import './styles/index.css'
-
-/**
- * 主题配置选项
- */
-export interface ${toPascalCase(themeName)}ThemeOptions {
-  /**
-   * 主色调
-   */
-  primaryColor?: string
-}
-
-/**
- * 创建主题
- */
-export function create${toPascalCase(themeName)}Theme(options: ${toPascalCase(themeName)}ThemeOptions = {}): Theme {
-  return {
-    Layout,
-    NotFound,
-    
-    enhanceApp({ app, router, siteData }: EnhanceAppContext) {
-      // 注册全局组件
-      // app.component('CustomComponent', CustomComponent)
-      
-      // 设置主色调
-      if (options.primaryColor && typeof document !== 'undefined') {
-        document.documentElement.style.setProperty('--theme-primary', options.primaryColor)
-      }
-    }
-  }
-}
 
 // 导出默认主题
 export const theme: Theme = {
@@ -542,189 +670,68 @@ export default theme
   writeFileSync(join(targetDir, 'src/index.ts'), indexTs)
   console.log(pc.gray('  Created: src/index.ts'))
 
-  // src/Layout.vue - 主布局组件
+  // src/Layout.vue - 继承默认主题，添加自定义 Banner
   const layoutVue = `<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+/**
+ * 自定义主题 Layout
+ * 继承默认主题，只添加一个顶部标识 banner
+ * 
+ * 你可以在这里：
+ * 1. 修改 banner 的样式和内容
+ * 2. 添加更多自定义组件
+ * 3. 覆盖默认主题的部分功能
+ */
 
-// 可以从 @ldesign/doc/client 导入内置 composables
-// import { usePageData, useSiteData, useRoute } from '@ldesign/doc/client'
-
-const isDark = ref(false)
-
-onMounted(() => {
-  // 检测系统主题
-  isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-})
-
-function toggleDark() {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-}
+// 导入默认主题的 Layout 组件
+import { Layout as DefaultLayout } from '@ldesign/doc/theme-default'
 </script>
 
 <template>
-  <div class="theme-${themeName}" :class="{ dark: isDark }">
-    <!-- 头部 -->
-    <header class="theme-header">
-      <div class="header-content">
-        <a href="/" class="logo">
-          <span class="logo-text">LDoc Theme</span>
-        </a>
-        
-        <nav class="nav">
-          <a href="/">首页</a>
-          <a href="/guide/">指南</a>
-        </nav>
-        
-        <div class="header-actions">
-          <button @click="toggleDark" class="theme-toggle">
-            {{ isDark ? '🌙' : '☀️' }}
-          </button>
-        </div>
-      </div>
-    </header>
+  <div class="custom-theme-wrapper">
+    <!-- 🎨 自定义顶部标识 Banner - 你可以修改这里 -->
+    <div class="custom-theme-banner">
+      <span class="banner-icon">🎨</span>
+      <span class="banner-text">自定义主题 - ${packageName}</span>
+    </div>
     
-    <!-- 主内容区 -->
-    <main class="theme-main">
-      <div class="content-wrapper">
-        <!-- 侧边栏 -->
-        <aside class="sidebar">
-          <slot name="sidebar" />
-        </aside>
-        
-        <!-- 内容 -->
-        <article class="content">
-          <!-- Vue Router 视图 -->
-          <router-view />
-        </article>
-        
-        <!-- 大纲 -->
-        <aside class="outline">
-          <slot name="outline" />
-        </aside>
-      </div>
-    </main>
-    
-    <!-- 页脚 -->
-    <footer class="theme-footer">
-      <p>Built with LDoc</p>
-    </footer>
+    <!-- 使用默认主题的 Layout（包含导航栏、侧边栏、内容区、页脚等） -->
+    <DefaultLayout />
   </div>
 </template>
 
 <style scoped>
-.theme-${themeName} {
+/* 自定义主题包装器 */
+.custom-theme-wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.theme-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--theme-bg, #fff);
-  border-bottom: 1px solid var(--theme-border, #e5e7eb);
-  padding: 0 24px;
-  height: 64px;
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  height: 100%;
+/* 🎨 自定义顶部标识 Banner - 你可以修改这里的样式 */
+.custom-theme-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
-  text-decoration: none;
-  color: var(--theme-text, #1f2937);
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.nav {
-  display: flex;
-  gap: 24px;
-}
-
-.nav a {
-  color: var(--theme-text-secondary, #6b7280);
-  text-decoration: none;
   font-size: 14px;
-  transition: color 0.2s;
+  font-weight: 500;
+  z-index: 1000;
 }
 
-.nav a:hover {
-  color: var(--theme-primary, #3b82f6);
+.banner-icon {
+  font-size: 16px;
 }
 
-.theme-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 4px;
+.banner-text {
+  letter-spacing: 0.5px;
 }
 
-.theme-main {
-  flex: 1;
-  padding: 24px;
-}
-
-.content-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 260px 1fr 220px;
-  gap: 32px;
-}
-
-.sidebar {
-  position: sticky;
-  top: 88px;
-  height: fit-content;
-}
-
-.content {
-  min-width: 0;
-}
-
-.outline {
-  position: sticky;
-  top: 88px;
-  height: fit-content;
-}
-
-.theme-footer {
-  border-top: 1px solid var(--theme-border, #e5e7eb);
-  padding: 24px;
-  text-align: center;
-  color: var(--theme-text-secondary, #6b7280);
-  font-size: 14px;
-}
-
-/* 暗色模式 */
-.dark {
-  --theme-bg: #1f2937;
-  --theme-text: #f9fafb;
-  --theme-text-secondary: #9ca3af;
-  --theme-border: #374151;
-}
-
-/* 响应式 */
-@media (max-width: 1200px) {
-  .content-wrapper {
-    grid-template-columns: 1fr;
-  }
-  
-  .sidebar,
-  .outline {
+/* 响应式：移动端隐藏 banner 文字 */
+@media (max-width: 640px) {
+  .banner-text {
     display: none;
   }
 }
@@ -734,176 +741,79 @@ function toggleDark() {
   writeFileSync(join(targetDir, 'src/Layout.vue'), layoutVue)
   console.log(pc.gray('  Created: src/Layout.vue'))
 
-  // src/NotFound.vue - 404 页面
+  // src/NotFound.vue - 直接使用默认主题的 404 页面
   const notFoundVue = `<script setup lang="ts">
+/**
+ * 自定义主题 NotFound
+ * 直接使用默认主题的 NotFound 组件
+ * 
+ * 如果你需要自定义 404 页面，可以：
+ * 1. 取消注释下面的自定义模板
+ * 2. 或者完全重写这个组件
+ */
+import { NotFound as DefaultNotFound } from '@ldesign/doc/theme-default'
 </script>
 
 <template>
+  <!-- 使用默认主题的 404 页面 -->
+  <DefaultNotFound />
+  
+  <!-- 
+  如果你想自定义 404 页面，可以取消下面的注释并删除上面的 DefaultNotFound：
+  
   <div class="not-found">
     <h1>404</h1>
     <p>页面未找到</p>
     <a href="/">返回首页</a>
   </div>
+  -->
 </template>
-
-<style scoped>
-.not-found {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  text-align: center;
-}
-
-.not-found h1 {
-  font-size: 72px;
-  font-weight: 700;
-  color: var(--theme-primary, #3b82f6);
-  margin: 0;
-}
-
-.not-found p {
-  font-size: 18px;
-  color: var(--theme-text-secondary, #6b7280);
-  margin: 16px 0 24px;
-}
-
-.not-found a {
-  display: inline-flex;
-  align-items: center;
-  padding: 12px 24px;
-  background: var(--theme-primary, #3b82f6);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: background 0.2s;
-}
-
-.not-found a:hover {
-  background: var(--theme-primary-dark, #2563eb);
-}
-</style>
 `
 
   writeFileSync(join(targetDir, 'src/NotFound.vue'), notFoundVue)
   console.log(pc.gray('  Created: src/NotFound.vue'))
 
-  // src/styles/index.css - 主题样式
+  // src/styles/index.css - 自定义主题样式（覆盖默认主题）
   const stylesCSS = `/**
- * ${packageName} - 主题样式
+ * ${packageName} - 自定义主题样式
+ * 
+ * 这个文件用于覆盖默认主题的样式
+ * 默认主题已经包含了完整的样式，你只需要修改你想要改变的部分
  */
 
-/* CSS 变量 */
+/* 
+ * 🎨 自定义 CSS 变量 - 修改这里来改变主题颜色
+ * 取消注释并修改你想要的颜色
+ */
+/*
 :root {
-  --theme-primary: #3b82f6;
-  --theme-primary-dark: #2563eb;
-  --theme-bg: #ffffff;
-  --theme-text: #1f2937;
-  --theme-text-secondary: #6b7280;
-  --theme-border: #e5e7eb;
-  --theme-code-bg: #f3f4f6;
+  --vp-c-brand-1: #667eea;
+  --vp-c-brand-2: #764ba2;
+  --vp-c-brand-3: #5a4fcf;
 }
+*/
 
-.dark {
-  --theme-primary: #60a5fa;
-  --theme-primary-dark: #3b82f6;
-  --theme-bg: #1f2937;
-  --theme-text: #f9fafb;
-  --theme-text-secondary: #9ca3af;
-  --theme-border: #374151;
-  --theme-code-bg: #111827;
+/*
+ * 🎨 自定义样式示例 - 你可以在这里添加自己的样式
+ */
+
+/* 示例：自定义链接颜色 */
+/*
+a {
+  color: #667eea;
 }
-
-/* 基础样式 */
-* {
-  box-sizing: border-box;
+a:hover {
+  color: #764ba2;
 }
+*/
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background: var(--theme-bg);
-  color: var(--theme-text);
-  line-height: 1.6;
+/* 示例：自定义代码块样式 */
+/*
+pre {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
 }
-
-/* Markdown 内容样式 */
-.content h1,
-.content h2,
-.content h3,
-.content h4,
-.content h5,
-.content h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.content h1 { font-size: 2em; }
-.content h2 { font-size: 1.5em; }
-.content h3 { font-size: 1.25em; }
-
-.content p {
-  margin: 16px 0;
-}
-
-.content a {
-  color: var(--theme-primary);
-  text-decoration: none;
-}
-
-.content a:hover {
-  text-decoration: underline;
-}
-
-.content code {
-  background: var(--theme-code-bg);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  font-family: 'Fira Code', 'Consolas', monospace;
-}
-
-.content pre {
-  background: var(--theme-code-bg);
-  padding: 16px;
-  border-radius: 8px;
-  overflow-x: auto;
-}
-
-.content pre code {
-  background: transparent;
-  padding: 0;
-}
-
-.content blockquote {
-  margin: 16px 0;
-  padding: 12px 16px;
-  border-left: 4px solid var(--theme-primary);
-  background: var(--theme-code-bg);
-  border-radius: 0 8px 8px 0;
-}
-
-.content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-}
-
-.content th,
-.content td {
-  padding: 12px;
-  border: 1px solid var(--theme-border);
-  text-align: left;
-}
-
-.content th {
-  background: var(--theme-code-bg);
-  font-weight: 600;
-}
+*/
 `
 
   writeFileSync(join(targetDir, 'src/styles/index.css'), stylesCSS)
@@ -985,7 +895,9 @@ ${packageName}/
 │   └── styles/
 │       └── index.css     # 主题样式
 ├── package.json
-└── README.md
+├── README.md
+├── DEVELOPMENT.md  # 开发指南
+└── .gitignore
 \`\`\`
 
 ## License
@@ -995,6 +907,161 @@ MIT
 
   writeFileSync(join(targetDir, 'README.md'), readme)
   console.log(pc.gray('  Created: README.md'))
+
+  // DEVELOPMENT.md - 详细开发指南
+  const developmentGuide = `# ${packageName} 开发指南
+
+本文档详细介绍如何开发、调试、打包和发布此主题。
+
+## 项目结构
+
+\`\`\`
+src/
+├── index.ts              # 主题入口（必须导出 theme 对象）
+├── Layout.vue            # 主布局组件（必须）
+├── NotFound.vue          # 404 页面（必须）
+├── components/           # 自定义组件
+└── styles/index.css      # 主题样式
+dev/                      # 开发预览
+├── doc.config.ts         # 预览配置
+└── docs/                 # 预览文档
+\`\`\`
+
+## 开发流程
+
+### 1. 安装依赖
+
+\`\`\`bash
+pnpm install
+\`\`\`
+
+### 2. 启动开发模式
+
+\`\`\`bash
+pnpm dev
+\`\`\`
+
+这会同时运行：
+- \\\`vite build --watch\\\` - 监听源码变化自动构建
+- \\\`ldoc dev dev\\\` - 启动预览服务
+
+打开 http://localhost:5173 查看效果。
+
+### 3. 修改代码
+
+编辑 \\\`src/\\\` 目录下的文件，保存后自动重新构建和刷新。
+
+## 主题开发要点
+
+### 必须导出的内容
+
+\`\`\`ts
+// src/index.ts
+import type { Theme } from '@ldesign/doc'
+import Layout from './Layout.vue'
+import NotFound from './NotFound.vue'
+import './styles/index.css'
+
+export const theme: Theme = {
+  Layout,      // 主布局组件（必须）
+  NotFound,    // 404 页面
+}
+
+export default theme
+\`\`\`
+
+### Layout 组件要求
+
+\`\`\`vue
+<script setup lang="ts">
+import { useData } from '@ldesign/doc/client'
+const { site, page, frontmatter } = useData()
+</script>
+
+<template>
+  <div class="layout">
+    <header>{{ site.title }}</header>
+    <main>
+      <!-- 必须包含 router-view -->
+      <router-view />
+    </main>
+  </div>
+</template>
+\`\`\`
+
+### 可用的 Composables
+
+\`\`\`ts
+import {
+  useData,         // 站点和页面数据
+  useRoute,        // 当前路由
+  useSidebarItems, // 侧边栏数据
+  useThemeConfig   // 主题配置
+} from '@ldesign/doc/client'
+\`\`\`
+
+### CSS 变量规范
+
+\`\`\`css
+:root {
+  --theme-primary: #3b82f6;
+  --theme-bg: #ffffff;
+  --theme-text: #1f2937;
+  --theme-border: #e5e7eb;
+}
+
+.dark {
+  --theme-bg: #1f2937;
+  --theme-text: #f9fafb;
+}
+\`\`\`
+
+## 调试技巧
+
+1. **Vue DevTools** - 查看组件树和状态
+2. **打印数据** - \\\`console.log(useData())\\\`
+3. **热更新失效** - 硬刷新或重启服务
+
+## 打包构建
+
+\`\`\`bash
+pnpm build
+\`\`\`
+
+输出到 \\\`dist/\\\` 目录。
+
+## 发布到 npm
+
+\`\`\`bash
+# 登录
+npm login
+
+# 发布
+pnpm publish
+\`\`\`
+
+### 版本管理
+
+\`\`\`bash
+npm version patch  # 1.0.0 -> 1.0.1
+npm version minor  # 1.0.0 -> 1.1.0  
+npm version major  # 1.0.0 -> 2.0.0
+\`\`\`
+
+## 注意事项
+
+1. **package.json exports** - 必须导出 \\\`./package.json\\\`
+2. **样式导入** - 在 index.ts 中导入样式文件
+3. **router-view** - Layout 必须包含 router-view
+4. **响应式设计** - 适配移动端和桌面端
+
+## 许可证
+
+MIT
+`
+
+  writeFileSync(join(targetDir, 'DEVELOPMENT.md'), developmentGuide)
+  console.log(pc.gray('  Created: DEVELOPMENT.md'))
 
   // .gitignore
   const gitignore = `node_modules

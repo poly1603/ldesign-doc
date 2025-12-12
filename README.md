@@ -74,7 +74,7 @@ export default defineConfig({
     
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024'
+      copyright: 'Copyright 2024'
     }
   }
 })
@@ -94,6 +94,12 @@ ldoc preview [root]
 
 # 初始化新项目
 ldoc init [root]
+
+# 创建插件项目
+ldoc create plugin <name>
+
+# 创建主题项目
+ldoc create theme <name>
 ```
 
 ## 配置
@@ -234,6 +240,34 @@ export default defineConfig({
 ```
 
 ### 内置插件
+
+LDoc 提供多个开箱即用的内置插件：
+
+| 插件 | 功能 | 使用方式 |
+|------|------|----------|
+| `readingTimePlugin` | 显示文章阅读时间 | `readingTimePlugin({ wordsPerMinute: 300 })` |
+| `lastUpdatedPlugin` | 显示最后更新时间 | `lastUpdatedPlugin({ format: 'YYYY-MM-DD' })` |
+| `copyCodePlugin` | 代码块复制按钮 | `copyCodePlugin()` |
+| `imageViewerPlugin` | 图片预览放大 | `imageViewerPlugin({ zoom: true })` |
+| `progressPlugin` | 阅读进度条 | `progressPlugin({ color: '#3b82f6' })` |
+| `commentPlugin` | 评论系统 | `commentPlugin({ provider: 'giscus' })` |
+| `searchPlugin` | 全文搜索 | `searchPlugin()` |
+
+#### 使用示例
+
+```ts
+import { defineConfig } from '@ldesign/doc'
+import readingTimePlugin from 'ldoc-plugin-reading-time'
+
+export default defineConfig({
+  plugins: [
+    readingTimePlugin({
+      wordsPerMinute: 300,
+      includeCode: true
+    })
+  ]
+})
+```
 
 #### Vue 组件演示
 

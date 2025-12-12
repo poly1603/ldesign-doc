@@ -11,7 +11,9 @@
   "devDependencies": {
     "@ldesign/doc": "workspace:*",
     "ldoc-plugin-reading-time": "workspace:*",
+    "ldoc-plugin-word-count": "file:../test/word-count",
     "ldoc-theme-minimal": "workspace:*",
+    "ldoc-theme-clean": "file:../test/clean",
     "ldoc-theme-test-theme": "file:../test/test-theme"
   }
 }
