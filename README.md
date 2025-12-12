@@ -293,6 +293,49 @@ export default defineConfig({
 })
 ```
 
+## 一键部署
+
+LDoc 支持一键部署到多个静态托管平台。
+
+### 支持平台
+
+- **Netlify** - 最流行的静态托管
+- **Vercel** - 前端首选
+- **GitHub Pages** - GitHub 集成
+- **Cloudflare Pages** - 全球 CDN
+- **Surge** - 简单快速
+
+### 配置示例
+
+```ts
+import { defineConfig } from '@ldesign/doc'
+
+export default defineConfig({
+  deploy: {
+    platform: 'surge',
+    surge: {
+      domain: 'my-docs.surge.sh'
+    }
+  }
+})
+```
+
+### 部署命令
+
+```bash
+# 构建并部署
+ldoc build
+ldoc deploy
+
+# 指定平台
+ldoc deploy --platform netlify
+
+# 预览部署（不覆盖生产环境）
+ldoc deploy --preview
+```
+
+> 📖 详细配置请参考 [部署指南](./docs/deploy.md)
+
 ## 认证系统
 
 ### 启用认证

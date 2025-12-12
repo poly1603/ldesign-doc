@@ -145,6 +145,37 @@ cli
     }
   })
 
+// deploy 命令 - 一键部署到静态托管平台
+cli
+  .command('deploy [root]', 'Deploy to static hosting platform')
+  .option('-p, --platform <platform>', 'Deploy platform (netlify, vercel, github-pages, cloudflare, surge)')
+  .option('--preview', 'Preview deployment (not production)')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { resolveConfig } = await import('./config')
+      const { deploy } = await import('./deploy')
+
+      console.log(pc.cyan('\n  LDoc') + pc.green(` v${version}`))
+
+      // 加载配置
+      const config = await resolveConfig(root, 'build', 'production')
+
+      // 执行部署
+      const result = await deploy(config, {
+        platform: options.platform as any,
+        preview: options.preview as boolean
+      })
+
+      if (!result.success) {
+        process.exit(1)
+      }
+    } catch (error) {
+      console.error(pc.red('\n  Deployment failed:\n'))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
 // 帮助信息
 cli.help()
 

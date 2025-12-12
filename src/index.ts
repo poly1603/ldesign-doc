@@ -12,6 +12,7 @@ export { defineConfig, defineConfigWithTheme, resolvePlugins } from './node/conf
 export { createLDoc } from './node/createLDoc'
 export { build } from './node/build'
 export { serve } from './node/serve'
+export { deploy, getSupportedPlatforms, getPlatformDisplayName } from './node/deploy'
 
 // 导出主题 API
 export { defineTheme, defineThemeFactory } from './theme/defineTheme'

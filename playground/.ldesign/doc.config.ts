@@ -160,5 +160,13 @@ export default defineConfig({
       host: true,
       open: true
     }
+  },
+
+  // 部署配置示例
+  deploy: {
+    platform: 'surge',
+    surge: {
+      domain: 'ldoc-playground.surge.sh'
+    }
   }
 })

@@ -90,6 +90,9 @@ export interface UserConfig {
   // 认证配置
   auth?: AuthConfig
 
+  // 部署配置
+  deploy?: DeployConfig
+
   // 扩展钩子
   transformHead?: (ctx: TransformContext) => Promise<HeadConfig[]> | HeadConfig[]
   transformHtml?: (code: string, id: string, ctx: TransformContext) => Promise<string> | string
@@ -97,7 +100,7 @@ export interface UserConfig {
   buildEnd?: (siteConfig: SiteConfig) => Promise<void> | void
 }
 
-export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins' | 'transformHead' | 'transformHtml' | 'transformPageData' | 'buildEnd'>> {
+export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins' | 'deploy' | 'transformHead' | 'transformHtml' | 'transformPageData' | 'buildEnd'>> {
   root: string
   configPath: string | undefined
   configDeps: string[]
@@ -111,6 +114,9 @@ export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins
 
   /** 解析后的主题对象（如果用户直接传入 Theme 对象） */
   theme?: Theme
+
+  /** 部署配置 */
+  deploy?: DeployConfig
 
   // 可选的扩展钩子
   transformHead?: (ctx: TransformContext) => Promise<HeadConfig[]> | HeadConfig[]
@@ -745,6 +751,74 @@ export interface BuildConfig {
 
   // MPA 模式
   mpa?: boolean
+}
+
+// ============== 部署配置 ==============
+
+/**
+ * 支持的部署平台
+ */
+export type DeployPlatform = 'netlify' | 'vercel' | 'github-pages' | 'cloudflare' | 'surge'
+
+/**
+ * 部署配置
+ */
+export interface DeployConfig {
+  /** 部署平台 */
+  platform: DeployPlatform
+
+  /** 构建输出目录，默认 .ldesign/dist */
+  outDir?: string
+
+  /** Netlify 配置 */
+  netlify?: {
+    /** 站点 ID（可选，首次部署会创建新站点） */
+    siteId?: string
+    /** API Token（建议使用环境变量 NETLIFY_AUTH_TOKEN） */
+    token?: string
+    /** 生产环境部署，默认 true */
+    prod?: boolean
+  }
+
+  /** Vercel 配置 */
+  vercel?: {
+    /** 项目名称 */
+    projectName?: string
+    /** 组织 ID */
+    orgId?: string
+    /** API Token（建议使用环境变量 VERCEL_TOKEN） */
+    token?: string
+    /** 生产环境部署，默认 true */
+    prod?: boolean
+  }
+
+  /** GitHub Pages 配置 */
+  githubPages?: {
+    /** 仓库名 (格式: username/repo) */
+    repo?: string
+    /** 部署分支，默认 gh-pages */
+    branch?: string
+    /** CNAME 自定义域名 */
+    cname?: string
+  }
+
+  /** Cloudflare Pages 配置 */
+  cloudflare?: {
+    /** 项目名称 */
+    projectName?: string
+    /** 账户 ID（建议使用环境变量 CLOUDFLARE_ACCOUNT_ID） */
+    accountId?: string
+    /** API Token（建议使用环境变量 CLOUDFLARE_API_TOKEN） */
+    apiToken?: string
+  }
+
+  /** Surge 配置 */
+  surge?: {
+    /** 域名 (格式: xxx.surge.sh) */
+    domain: string
+    /** Token（建议使用环境变量 SURGE_TOKEN） */
+    token?: string
+  }
 }
 
 // ============== 认证系统类型 ==============

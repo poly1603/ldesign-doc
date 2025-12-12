@@ -2,9 +2,10 @@
  * 构建系统
  */
 
-import { resolve, join } from 'path'
+import { resolve, join, dirname } from 'path'
 import { existsSync, mkdirSync, writeFileSync, copyFileSync, readdirSync, statSync } from 'fs'
 import { build as viteBuild, type InlineConfig } from 'vite'
+import { fileURLToPath } from 'url'
 import type { SiteConfig, PageData } from '../shared/types'
 import type { MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
@@ -13,6 +14,14 @@ import { createVitePlugins } from './vitePlugin'
 import { scanPages } from './pages'
 import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate, pageDataToRoutes } from './core/siteData'
 import pc from 'picocolors'
+
+// 获取当前包的根目录
+const __dirname = dirname(fileURLToPath(import.meta.url))
+// 构建后目录结构是 dist/es/node/build.js，需要向上 3 层
+// 开发时是 src/node/build.ts，向上 2 层
+const LDOC_PKG_ROOT = __dirname.includes('dist')
+  ? resolve(__dirname, '../../..')
+  : resolve(__dirname, '../..')
 
 export interface BuildOptions {
   md: MarkdownRenderer
@@ -92,7 +101,11 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
         resolve: {
           alias: {
             '@theme': config.themeDir,
-            '@': config.srcDir
+            '@': config.srcDir,
+            // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
+            '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
+            '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
+            '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es')
           }
         }
       }
@@ -213,7 +226,11 @@ async function buildSSR(config: SiteConfig, vitePlugins: unknown[]): Promise<voi
     resolve: {
       alias: {
         '@theme': config.themeDir,
-        '@': config.srcDir
+        '@': config.srcDir,
+        // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
+        '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
+        '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
+        '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es')
       }
     }
   }

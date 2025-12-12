@@ -136,6 +136,7 @@ export async function resolveConfig(
     vite: mergedConfig.vite || {},
     build: mergedConfig.build || {},
     auth: mergedConfig.auth || { enabled: false },
+    deploy: mergedConfig.deploy,
 
     // 内部使用
     configPath,
