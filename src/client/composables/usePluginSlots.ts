@@ -112,9 +112,12 @@ export function collectPluginSlots(
   context: PluginSlotsContext
 ) {
   for (const plugin of plugins) {
-    // 注册 slots
+    // 注册 slots（支持对象或工厂函数）
     if (plugin.slots) {
-      context.registerPluginSlots(plugin.name, plugin.slots)
+      const slots = typeof plugin.slots === 'function'
+        ? plugin.slots({} as never) // 工厂函数，传入空上下文（后续可以完善）
+        : plugin.slots
+      context.registerPluginSlots(plugin.name, slots)
     }
 
     // 注册全局组件
