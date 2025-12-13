@@ -439,19 +439,25 @@ defineExpose({ frontmatter })
 <style>
 .ldoc-demo {
   border: 1px solid var(--vp-c-divider, #e5e7eb);
-  border-radius: 8px;
-  margin: 16px 0;
+  border-radius: 12px;
+  margin: 20px 0;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 .ldoc-demo-preview {
-  padding: 24px;
+  padding: 32px 24px;
   background: var(--vp-c-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
 }
 .ldoc-demo-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 10px 16px;
   border-top: 1px solid var(--vp-c-divider, #e5e7eb);
   background: var(--vp-c-bg-soft, #f9fafb);
 }
@@ -465,41 +471,56 @@ defineExpose({ frontmatter })
   background: transparent;
   color: var(--vp-c-text-2, #6b7280);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 .ldoc-demo-btn:hover {
   background: var(--vp-c-bg-mute, #f3f4f6);
-  color: var(--vp-c-text-1, #1f2937);
+  color: var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6));
 }
 .ldoc-demo-code {
-  border-top: 1px solid var(--vp-c-divider, #e5e7eb);
-  background: #1e1e1e;
+  background: #1a1a1a;
   max-height: 400px;
   overflow: auto;
+  position: relative;
+}
+.ldoc-demo-code::before {
+  content: 'Vue';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .ldoc-demo-code pre {
   margin: 0;
-  padding: 16px;
+  padding: 20px;
+  padding-top: 32px;
 }
 .ldoc-demo-code code {
-  font-family: var(--vp-font-family-mono, 'Consolas', 'Monaco', 'Andale Mono', monospace);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
   font-size: 13px;
-  line-height: 1.7;
-  color: #d4d4d4;
+  line-height: 1.75;
+  color: #e1e1e1;
   white-space: pre;
   display: block;
+  tab-size: 2;
 }
-/* 语法高亮 */
-.ldoc-demo-code .hl-tag { color: #569cd6; }
-.ldoc-demo-code .hl-attr { color: #9cdcfe; }
-.ldoc-demo-code .hl-string { color: #ce9178; }
-.ldoc-demo-code .hl-keyword { color: #c586c0; }
-.ldoc-demo-code .hl-function { color: #dcdcaa; }
-.ldoc-demo-code .hl-variable { color: #9cdcfe; }
-.ldoc-demo-code .hl-number { color: #b5cea8; }
-.ldoc-demo-code .hl-comment { color: #6a9955; font-style: italic; }
-.ldoc-demo-code .hl-punctuation { color: #808080; }
-.ldoc-demo-code .hl-operator { color: #d4d4d4; }
+/* 滚动条样式 */
+.ldoc-demo-code::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.ldoc-demo-code::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+.ldoc-demo-code::-webkit-scrollbar-track {
+  background: transparent;
+}
 </style>
 `
 }

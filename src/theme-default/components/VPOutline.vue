@@ -277,16 +277,21 @@ const scrollToHeader = (slug: string) => {
 
 <style scoped>
 .vp-outline {
-  position: fixed;
+  position: sticky;
   top: calc(var(--ldoc-nav-height, 64px) + 24px);
   right: 0;
   width: var(--ldoc-outline-width, 220px);
   max-height: calc(100vh - var(--ldoc-nav-height, 64px) - 48px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--ldoc-c-divider) transparent;
+  scrollbar-color: transparent transparent;
   padding-right: 24px;
   box-sizing: border-box;
+  transition: transform 0.3s ease;
+}
+
+.vp-outline:hover {
+  scrollbar-color: var(--ldoc-c-divider) transparent;
 }
 
 .vp-outline::-webkit-scrollbar {
@@ -294,8 +299,12 @@ const scrollToHeader = (slug: string) => {
 }
 
 .vp-outline::-webkit-scrollbar-thumb {
-  background: var(--ldoc-c-divider);
+  background: transparent;
   border-radius: 2px;
+}
+
+.vp-outline:hover::-webkit-scrollbar-thumb {
+  background: var(--ldoc-c-divider);
 }
 
 .vp-outline::-webkit-scrollbar-track {

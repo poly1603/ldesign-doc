@@ -93,6 +93,7 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
           outDir: config.outDir,
           emptyOutDir: true,
           minify: config.build.minify,
+          target: 'esnext', // 支持 top-level await
           sourcemap: config.build.sourcemap,
           rollupOptions: {
             input: resolve(config.tempDir, 'index.html'),

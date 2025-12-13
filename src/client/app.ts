@@ -99,7 +99,13 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
         return savedPosition
       }
       if (to.hash) {
-        return { el: to.hash, behavior: 'smooth' }
+        // 获取导航栏高度，默认为 64px
+        // 加上额外的缓冲空间
+        return {
+          el: to.hash,
+          top: 80, // Header (64px) + Padding (16px)
+          behavior: 'smooth'
+        }
       }
       return { top: 0 }
     }

@@ -39,9 +39,30 @@ const ImageViewer = defineComponent({
     let startPos = { x: 0, y: 0 }
     let startOffset = { x: 0, y: 0 }
 
+    const imageList = ref<{ src: string; alt: string }[]>([])
+    const currentIndex = ref(0)
+
+    const updateImageList = () => {
+      const images = Array.from(document.querySelectorAll('.ldoc-content img:not(.no-preview)')) as HTMLImageElement[]
+      imageList.value = images.map(img => ({
+        src: img.src,
+        alt: img.alt || ''
+      }))
+    }
+
     const open = (src: string, alt = '') => {
-      currentSrc.value = src
-      currentAlt.value = alt
+      updateImageList()
+      const index = imageList.value.findIndex(img => img.src === src)
+      if (index !== -1) {
+        currentIndex.value = index
+        currentSrc.value = src
+        currentAlt.value = alt
+      } else {
+        // Fallback if image not found in list (e.g. dynamic content)
+        currentSrc.value = src
+        currentAlt.value = alt
+        currentIndex.value = -1
+      }
       scale.value = 1
       position.value = { x: 0, y: 0 }
       visible.value = true
@@ -51,6 +72,28 @@ const ImageViewer = defineComponent({
     const close = () => {
       visible.value = false
       document.body.style.overflow = ''
+    }
+
+    const prev = () => {
+      if (currentIndex.value > 0) {
+        currentIndex.value--
+        const img = imageList.value[currentIndex.value]
+        currentSrc.value = img.src
+        currentAlt.value = img.alt
+        scale.value = 1
+        position.value = { x: 0, y: 0 }
+      }
+    }
+
+    const next = () => {
+      if (currentIndex.value < imageList.value.length - 1 && currentIndex.value !== -1) {
+        currentIndex.value++
+        const img = imageList.value[currentIndex.value]
+        currentSrc.value = img.src
+        currentAlt.value = img.alt
+        scale.value = 1
+        position.value = { x: 0, y: 0 }
+      }
     }
 
     const handleWheel = (e: WheelEvent) => {
@@ -79,9 +122,10 @@ const ImageViewer = defineComponent({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && visible.value) {
-        close()
-      }
+      if (!visible.value) return
+      if (e.key === 'Escape') close()
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
     }
 
     onMounted(() => {
@@ -120,20 +164,55 @@ const ImageViewer = defineComponent({
             onMouseup: handleMouseUp,
             onMouseleave: handleMouseUp
           }),
+          // 关闭按钮
           h('button', {
             class: 'ldoc-image-viewer__close',
-            onClick: close
-          }, '×'),
-          currentAlt.value && h('div', {
-            class: 'ldoc-image-viewer__info'
-          }, currentAlt.value),
+            onClick: close,
+            title: '关闭 (Esc)'
+          }, h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+            h('line', { x1: 18, y1: 6, x2: 6, y2: 18 }),
+            h('line', { x1: 6, y1: 6, x2: 18, y2: 18 })
+          ])),
+          // 上一张按钮
+          imageList.value.length > 1 && h('button', {
+            class: 'ldoc-image-viewer__prev',
+            onClick: (e: Event) => { e.stopPropagation(); prev() },
+            disabled: currentIndex.value <= 0,
+            title: '上一张 (←)'
+          }, h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+            h('polyline', { points: '15 18 9 12 15 6' })
+          ])),
+          // 下一张按钮
+          imageList.value.length > 1 && h('button', {
+            class: 'ldoc-image-viewer__next',
+            onClick: (e: Event) => { e.stopPropagation(); next() },
+            disabled: currentIndex.value >= imageList.value.length - 1,
+            title: '下一张 (→)'
+          }, h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+            h('polyline', { points: '9 18 15 12 9 6' })
+          ])),
+          // 底部信息栏
           h('div', {
-            class: 'ldoc-image-viewer__controls'
+            class: 'ldoc-image-viewer__footer',
+            onClick: (e: Event) => e.stopPropagation()
           }, [
-            h('button', { onClick: (e: Event) => { e.stopPropagation(); scale.value = Math.max(0.5, scale.value - 0.25) } }, '−'),
-            h('span', {}, `${Math.round(scale.value * 100)}%`),
-            h('button', { onClick: (e: Event) => { e.stopPropagation(); scale.value = Math.min(5, scale.value + 0.25) } }, '+'),
-            h('button', { onClick: (e: Event) => { e.stopPropagation(); scale.value = 1; position.value = { x: 0, y: 0 } } }, '⟲')
+            // 图片描述
+            currentAlt.value && h('div', {
+              class: 'ldoc-image-viewer__caption'
+            }, currentAlt.value),
+            // 计数器
+            imageList.value.length > 1 && h('div', {
+              class: 'ldoc-image-viewer__count'
+            }, `${currentIndex.value + 1} / ${imageList.value.length}`),
+            // 控制工具栏
+            h('div', {
+              class: 'ldoc-image-viewer__toolbar'
+            }, [
+              h('button', { onClick: () => scale.value = Math.max(0.5, scale.value - 0.25), title: '缩小' }, '−'),
+              h('span', `${Math.round(scale.value * 100)}%`),
+              h('button', { onClick: () => scale.value = Math.min(5, scale.value + 0.25), title: '放大' }, '+'),
+              h('button', { onClick: () => { scale.value = 1; position.value = { x: 0, y: 0 } }, title: '重置' }, '⟲')
+            ])
           ])
         ]) : null
       )
@@ -232,58 +311,111 @@ export function imageViewerPlugin(options: ImageViewerPluginOptions = {}): LDocP
       .ldoc-image-viewer__close:hover {
         background: rgba(255, 255, 255, 0.2);
       }
-      .ldoc-image-viewer__info {
+      .ldoc-image-viewer__prev,
+      .ldoc-image-viewer__next {
         position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 8px 16px;
-        background: rgba(0, 0, 0, 0.6);
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
-        font-size: 14px;
-        border-radius: 4px;
-        max-width: 80%;
-        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .ldoc-image-viewer__controls {
+      .ldoc-image-viewer__prev:hover,
+      .ldoc-image-viewer__next:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-50%) scale(1.1);
+      }
+      .ldoc-image-viewer__prev:disabled,
+      .ldoc-image-viewer__next:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .ldoc-image-viewer__prev {
+        left: 20px;
+      }
+      .ldoc-image-viewer__next {
+        right: 20px;
+      }
+      .ldoc-image-viewer__footer {
         position: absolute;
-        bottom: 60px;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        color: #fff;
+      }
+      .ldoc-image-viewer__caption {
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+        max-width: 80%;
+      }
+      .ldoc-image-viewer__count {
+        font-size: 14px;
+        opacity: 0.8;
+        font-variant-numeric: tabular-nums;
+      }
+      .ldoc-image-viewer__toolbar {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        backdrop-filter: blur(4px);
       }
-      .ldoc-image-viewer__controls button {
+      .ldoc-image-viewer__toolbar button {
         width: 32px;
         height: 32px;
         border: none;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        background: transparent;
         color: #fff;
         font-size: 18px;
         cursor: pointer;
         transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .ldoc-image-viewer__controls button:hover {
+      .ldoc-image-viewer__toolbar button:hover {
         background: rgba(255, 255, 255, 0.2);
       }
-      .ldoc-image-viewer__controls span {
+      .ldoc-image-viewer__toolbar span {
         color: #fff;
         font-size: 14px;
-        min-width: 60px;
+        min-width: 50px;
         text-align: center;
+        font-variant-numeric: tabular-nums;
       }
       .ldoc-image-viewer-enter-active,
       .ldoc-image-viewer-leave-active {
-        transition: opacity 0.2s ease;
+        transition: opacity 0.3s ease;
       }
       .ldoc-image-viewer-enter-from,
       .ldoc-image-viewer-leave-to {
         opacity: 0;
+      }
+      .ldoc-image-viewer-enter-active .ldoc-image-viewer__image,
+      .ldoc-image-viewer-leave-active .ldoc-image-viewer__image {
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .ldoc-image-viewer-enter-from .ldoc-image-viewer__image,
+      .ldoc-image-viewer-leave-to .ldoc-image-viewer__image {
+        transform: scale(0.9);
       }
       `
     ]

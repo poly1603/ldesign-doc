@@ -195,12 +195,16 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* 确保没有 overflow 设置，确保 sticky 生效 */
+  overflow: visible;
+  width: 100%;
 }
 
 .ldoc-layout-content {
   display: flex;
   flex: 1;
+  /* 确保 flex 容器允许子元素 sticky */
+  overflow: visible;
 }
 
 .ldoc-main {
@@ -212,6 +216,7 @@ onUnmounted(() => {
 /* 首页样式 */
 .ldoc-layout.is-home .ldoc-main {
   padding: 0;
+  /* 首页内容通常包含全宽元素，可能需要隐藏溢出，但不影响 Nav 的 sticky */
   overflow-x: hidden;
 }
 
@@ -304,20 +309,25 @@ onUnmounted(() => {
 }
 
 /* 有侧边栏时的布局 */
+.ldoc-layout.has-sidebar .ldoc-layout-content {
+  /* 使用 Flexbox 布局，Sidebar 占据空间 */
+  align-items: flex-start;
+}
+
 .ldoc-layout.has-sidebar .ldoc-main {
-  margin-left: var(--ldoc-sidebar-width, 260px);
-  /* 右侧留出和TOC一样的空间 */
-  margin-right: var(--ldoc-outline-width, 220px);
+  /* 移除 margin，由 Sidebar 占据空间 */
+  margin-left: 0;
+  margin-right: 0;
   /* 使用配置的间距 */
   padding-left: var(--ldoc-content-gap, 32px);
   padding-right: var(--ldoc-content-gap, 32px);
+  /* 确保 main 有最小宽度 */
+  min-width: 0;
 }
 
 @media (max-width: 1280px) {
-
-  /* 当TOC隐藏时移除右侧margin */
+  /* 当TOC隐藏时，main 仍然自适应 */
   .ldoc-layout.has-sidebar .ldoc-main {
-    margin-right: 0;
     padding-left: var(--ldoc-content-gap, 32px);
     padding-right: var(--ldoc-content-gap, 32px);
   }
@@ -325,24 +335,16 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .ldoc-layout.has-sidebar .ldoc-main {
-    margin-left: 0;
-    margin-right: 0;
     padding: 16px;
   }
 }
 
 /* 404页面布局 - 居中显示 */
 .ldoc-layout.is-404 .ldoc-main {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.ldoc-layout.is-404.has-sidebar .ldoc-main {
-  margin-left: var(--ldoc-sidebar-width, 260px) !important;
-  margin-right: 0 !important;
+  width: 100%;
 }
 
 /* 打印样式 */

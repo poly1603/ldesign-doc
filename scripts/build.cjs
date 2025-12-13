@@ -107,6 +107,7 @@ async function buildLibrary() {
     configFile: false,
     build: {
       outDir: 'dist/es',
+      target: 'esnext', // 支持 top-level await
       lib: {
         entry: {
           index: resolve(rootDir, 'src/index.ts'),

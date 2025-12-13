@@ -106,20 +106,39 @@ const isActive = (link?: string) => {
 
 <style scoped>
 .vp-sidebar {
-  position: fixed;
+  position: sticky;
   top: var(--ldoc-nav-height, 64px);
-  left: 0;
-  bottom: 0;
   width: var(--ldoc-sidebar-width, 260px);
+  height: calc(100vh - var(--ldoc-nav-height, 64px));
   background: var(--ldoc-c-bg);
   border-right: 1px solid var(--ldoc-c-divider);
   overflow-y: auto;
   z-index: 50;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.vp-sidebar:hover {
+  scrollbar-color: var(--ldoc-c-divider) transparent;
+}
+
+.vp-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.vp-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.vp-sidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--ldoc-c-divider);
 }
 
 .vp-sidebar-container {
-  padding: 24px;
+  padding: 24px 24px 32px;
 }
 
 .vp-sidebar-group {

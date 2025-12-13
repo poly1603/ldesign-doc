@@ -10,6 +10,8 @@ import type { SiteConfig, MarkdownOptions, MarkdownRenderer } from '../shared/ty
 import { slugify } from '../shared/utils'
 import { createCodeHighlighter } from './highlight'
 
+import mathjax3 from 'markdown-it-mathjax3'
+
 /**
  * 创建 Markdown 渲染器
  */
@@ -25,6 +27,9 @@ export async function createMarkdownRenderer(
     typographer: true,
     breaks: false
   })
+
+  // 添加 mathjax3 插件
+  md.use(mathjax3)
 
   // 添加 anchor 插件
   md.use(anchorPlugin, {
@@ -286,6 +291,11 @@ function setupCodeHighlight(
     const info = token.info.trim()
     const lang = info.split(/\s+/)[0] || 'text'
     const code = token.content
+
+    // Mermaid 图表支持
+    if (lang === 'mermaid') {
+      return `<div class="mermaid">${code}</div>`
+    }
 
     // 解析高亮行信息，如 typescript{2,4-5}
     const highlightLines = parseHighlightLines(info)

@@ -4,8 +4,9 @@
  * 这个文件导出所有内置插件的客户端配置（slots、globalComponents 等）
  * 将被虚拟模块导入
  */
-import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport } from 'vue'
+import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport, watch, nextTick } from 'vue'
 import type { PluginSlots, PluginGlobalComponent } from '../shared/types'
+import { useRoute } from 'vue-router'
 
 // ============== 返回顶部按钮 ==============
 
@@ -76,94 +77,230 @@ const BackToTopButton = defineComponent({
   }
 })
 
-// ============== 图片灯箱 ==============
+// ============== 图片灯箱（已禁用，使用 imageViewerPlugin 替代）==============
+// 注意：内置灯箱已禁用以避免与 imageViewerPlugin 冲突
+// 如需图片预览功能，请使用 imageViewerPlugin
 
 const LightboxOverlay = defineComponent({
   name: 'LDocLightbox',
   setup() {
-    const visible = ref(false)
-    const imageSrc = ref('')
-    const scale = ref(1)
+    // 返回空组件，避免与 imageViewerPlugin 冲突
+    return () => null
+  }
+})
 
-    const open = (src: string) => {
-      imageSrc.value = src
-      scale.value = 1
-      visible.value = true
-      document.body.style.overflow = 'hidden'
-    }
+// ============== KaTeX 数学公式渲染 ==============
 
-    const close = () => {
-      visible.value = false
-      document.body.style.overflow = ''
-    }
+const KaTeXRenderer = defineComponent({
+  name: 'LDocKaTeX',
+  setup() {
+    const route = useRoute()
+    let katexLoaded = false
 
-    const handleImageClick = (e: Event) => {
-      const target = e.target as HTMLElement
-      if (target.tagName === 'IMG' && target.closest('.ldoc-content')) {
-        open((target as HTMLImageElement).src)
+    const loadKaTeX = async () => {
+      if (katexLoaded) return
+      // 动态加载 KaTeX
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'
+      document.head.appendChild(link)
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'
+      script.onload = () => {
+        katexLoaded = true
+        renderMath()
       }
+      document.head.appendChild(script)
     }
 
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
+    const renderMath = () => {
+      if (typeof window === 'undefined' || !(window as any).katex) return
+
+      const katex = (window as any).katex
+
+      // 渲染块级公式 $$ ... $$
+      document.querySelectorAll('.ldoc-content p, .ldoc-content div').forEach(el => {
+        const text = el.textContent || ''
+        if (text.includes('$$')) {
+          const html = el.innerHTML
+          const newHtml = html.replace(/\$\$([^$]+)\$\$/g, (_, formula) => {
+            try {
+              return `<div class="katex-block">${katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false })}</div>`
+            } catch { return _ }
+          })
+          if (newHtml !== html) el.innerHTML = newHtml
+        }
+      })
+
+      // 渲染行内公式 $ ... $
+      document.querySelectorAll('.ldoc-content p, .ldoc-content li, .ldoc-content td').forEach(el => {
+        const text = el.textContent || ''
+        if (text.includes('$') && !text.includes('$$')) {
+          const html = el.innerHTML
+          const newHtml = html.replace(/\$([^$\n]+)\$/g, (_, formula) => {
+            try {
+              return katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false })
+            } catch { return _ }
+          })
+          if (newHtml !== html) el.innerHTML = newHtml
+        }
+      })
     }
 
     onMounted(() => {
-      document.addEventListener('click', handleImageClick)
-      document.addEventListener('keydown', handleKeydown)
+      loadKaTeX()
     })
 
-    onUnmounted(() => {
-      document.removeEventListener('click', handleImageClick)
-      document.removeEventListener('keydown', handleKeydown)
+    watch(() => route.path, () => {
+      nextTick(() => {
+        if (katexLoaded) renderMath()
+        else loadKaTeX()
+      })
     })
 
-    return () => {
-      if (!visible.value) return null
+    return () => null
+  }
+})
 
-      return h(Teleport, { to: 'body' }, [
-        h('div', {
-          onClick: close,
-          style: {
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'zoom-out'
-          }
-        }, [
-          h('img', {
-            src: imageSrc.value,
-            onClick: (e: Event) => e.stopPropagation(),
-            style: {
-              maxWidth: '90vw',
-              maxHeight: '90vh',
-              objectFit: 'contain',
-              transform: `scale(${scale.value})`,
-              cursor: 'default'
-            }
-          }),
-          h('button', {
-            onClick: close,
-            style: {
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              width: '40px',
-              height: '40px',
-              border: 'none',
-              background: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              borderRadius: '50%',
-              cursor: 'pointer'
-            }
-          }, '✕')
-        ])
-      ])
+// ============== Mermaid 流程图渲染 ==============
+
+const MermaidRenderer = defineComponent({
+  name: 'LDocMermaid',
+  setup() {
+    const route = useRoute()
+    let mermaidLoaded = false
+
+    const loadMermaid = async () => {
+      if (mermaidLoaded) return
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'
+      script.onload = () => {
+        mermaidLoaded = true
+        const mermaid = (window as any).mermaid
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default'
+        })
+        renderMermaid()
+      }
+      document.head.appendChild(script)
     }
+
+    const renderMermaid = async () => {
+      if (typeof window === 'undefined' || !(window as any).mermaid) return
+
+      const mermaid = (window as any).mermaid
+
+      // 查找所有 mermaid 代码块
+      document.querySelectorAll('.vp-code-block[data-lang="mermaid"]').forEach(async (block, index) => {
+        const codeEl = block.querySelector('code')
+        if (!codeEl || block.classList.contains('mermaid-rendered')) return
+
+        const code = codeEl.textContent || ''
+        if (!code.trim()) return
+
+        try {
+          const id = `mermaid-${Date.now()}-${index}`
+          const { svg } = await mermaid.render(id, code.trim())
+
+          // 替换代码块为渲染的 SVG
+          const container = document.createElement('div')
+          container.className = 'mermaid-container'
+          container.innerHTML = svg
+          container.style.cssText = 'background: var(--vp-c-bg-soft, #f9fafb); padding: 20px; border-radius: 8px; margin: 16px 0; text-align: center; overflow-x: auto;'
+
+          block.parentNode?.replaceChild(container, block)
+        } catch (e) {
+          console.warn('Mermaid render error:', e)
+        }
+      })
+    }
+
+    onMounted(() => {
+      loadMermaid()
+    })
+
+    watch(() => route.path, () => {
+      nextTick(() => {
+        if (mermaidLoaded) renderMermaid()
+        else loadMermaid()
+      })
+    })
+
+    return () => null
+  }
+})
+
+// ============== Tabs 切换组件 ==============
+
+const TabsInitializer = defineComponent({
+  name: 'LDocTabs',
+  setup() {
+    const route = useRoute()
+
+    const initTabs = () => {
+      document.querySelectorAll('.tabs-container').forEach(container => {
+        if (container.classList.contains('tabs-initialized')) return
+        container.classList.add('tabs-initialized')
+
+        const tabs = container.querySelectorAll('.tab-item')
+        if (tabs.length === 0) return
+
+        // 创建标签头
+        const header = document.createElement('div')
+        header.className = 'tabs-header'
+        header.style.cssText = 'display: flex; gap: 0; border-bottom: 1px solid var(--vp-c-divider, #e5e7eb); margin-bottom: 16px;'
+
+        tabs.forEach((tab, index) => {
+          const label = tab.getAttribute('data-label') || `Tab ${index + 1}`
+          const btn = document.createElement('button')
+          btn.className = 'tab-button' + (index === 0 ? ' active' : '')
+          btn.textContent = label
+          btn.style.cssText = 'padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--vp-c-text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;'
+
+          if (index === 0) {
+            btn.style.color = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+            btn.style.borderBottomColor = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+          }
+
+          btn.onclick = () => {
+            // 更新按钮状态
+            header.querySelectorAll('.tab-button').forEach(b => {
+              (b as HTMLElement).style.color = 'var(--vp-c-text-2)'
+                ; (b as HTMLElement).style.borderBottomColor = 'transparent'
+              b.classList.remove('active')
+            })
+            btn.style.color = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+            btn.style.borderBottomColor = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+            btn.classList.add('active')
+
+            // 更新内容显示
+            tabs.forEach((t, i) => {
+              (t as HTMLElement).style.display = i === index ? 'block' : 'none'
+            })
+          }
+
+          header.appendChild(btn)
+
+            // 初始化显示状态
+            ; (tab as HTMLElement).style.display = index === 0 ? 'block' : 'none'
+        })
+
+        container.insertBefore(header, container.firstChild)
+      })
+    }
+
+    onMounted(() => {
+      nextTick(initTabs)
+    })
+
+    watch(() => route.path, () => {
+      nextTick(initTabs)
+    })
+
+    return () => null
   }
 })
 
@@ -255,12 +392,14 @@ export interface BuiltinPluginConfig {
 export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
   const slots: PluginSlots = {}
 
+  // 返回顶部按钮
   if (config.backToTop !== false) {
     slots['layout-bottom'] = [
       { component: BackToTopButton, props: {}, order: 100 }
     ]
   }
 
+  // 图片灯箱（已禁用）
   if (config.lightbox !== false) {
     const existing = slots['layout-bottom'] || []
     slots['layout-bottom'] = [
@@ -269,11 +408,21 @@ export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
     ]
   }
 
+  // 公告栏
   if (config.announcement) {
     slots['layout-top'] = [
       { component: AnnouncementBar, props: config.announcement, order: -100 }
     ]
   }
+
+  // KaTeX 数学公式渲染
+  const bottomSlots = slots['layout-bottom'] || []
+  slots['layout-bottom'] = [
+    ...(Array.isArray(bottomSlots) ? bottomSlots : [bottomSlots]),
+    // KaTeXRenderer 已移除
+    { component: MermaidRenderer, props: {}, order: 301 },
+    { component: TabsInitializer, props: {}, order: 302 }
+  ]
 
   return slots
 }

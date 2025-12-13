@@ -290,13 +290,18 @@ export function useSidebar() {
  */
 export function useThemeColor() {
   const colors = [
-    { name: 'blue', hue: 231, label: '蓝色' },
-    { name: 'purple', hue: 270, label: '紫色' },
-    { name: 'pink', hue: 330, label: '粉色' },
-    { name: 'red', hue: 0, label: '红色' },
-    { name: 'orange', hue: 30, label: '橙色' },
-    { name: 'green', hue: 150, label: '绿色' },
-    { name: 'teal', hue: 180, label: '青色' }
+    { name: 'blue', hue: 217, label: '海蓝', desc: '专业沉稳，科技感' },
+    { name: 'indigo', hue: 231, label: '靛蓝', desc: '深邃典雅，高端大气' },
+    { name: 'purple', hue: 262, label: '紫罗兰', desc: '神秘优雅，创意灵感' },
+    { name: 'pink', hue: 330, label: '樱花粉', desc: '温柔浪漫，活力可爱' },
+    { name: 'rose', hue: 350, label: '玫瑰红', desc: '热情奔放，时尚前卫' },
+    { name: 'red', hue: 0, label: '中国红', desc: '喜庆吉祥，热烈大气' },
+    { name: 'orange', hue: 25, label: '橙韵', desc: '活力四射，温暖阳光' },
+    { name: 'amber', hue: 38, label: '琥珀金', desc: '尊贵典雅，成熟稳重' },
+    { name: 'green', hue: 142, label: '翡翠绿', desc: '清新自然，生机盎然' },
+    { name: 'emerald', hue: 160, label: '祖母绿', desc: '高贵典雅，沉稳大气' },
+    { name: 'teal', hue: 175, label: '青瓷', desc: '清雅脱俗，东方韵味' },
+    { name: 'cyan', hue: 190, label: '天青', desc: '清澈明亮，现代简约' }
   ]
 
   const currentColor = ref('blue')

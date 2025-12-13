@@ -83,10 +83,21 @@
             </svg>
           </button>
           <div class="vp-nav-theme-color-panel">
-            <button v-for="color in themeColors" :key="color.name" class="vp-nav-theme-color-item"
-              :class="{ active: currentThemeColor === color.name }"
-              :style="{ '--color': `hsl(${color.hue}, 80%, 60%)` }" :title="color.label"
-              @click="setThemeColor(color.name)" />
+            <div class="vp-theme-color-header">选择主题色</div>
+            <div class="vp-theme-color-grid">
+              <button v-for="color in themeColors" :key="color.name" class="vp-theme-color-card"
+                :class="{ active: currentThemeColor === color.name }"
+                @click="setThemeColor(color.name)">
+                <span class="vp-theme-color-dot" :style="{ background: `hsl(${color.hue}, 70%, 55%)` }"></span>
+                <span class="vp-theme-color-info">
+                  <span class="vp-theme-color-label">{{ color.label }}</span>
+                  <span class="vp-theme-color-desc">{{ color.desc }}</span>
+                </span>
+                <svg v-if="currentThemeColor === color.name" class="vp-theme-color-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -487,18 +498,19 @@ onUnmounted(() => {
   position: absolute;
   top: 100%;
   right: 0;
-  display: flex;
-  gap: 8px;
-  padding: 12px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0;
   margin-top: 8px;
-  background: var(--ldoc-c-bg-soft);
+  background: var(--ldoc-c-bg);
   border: 1px solid var(--ldoc-c-divider);
   border-radius: 12px;
-  box-shadow: var(--ldoc-shadow-3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
-  transition: all 0.2s ease;
+  transform: translateY(-8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .vp-nav-theme-color:hover .vp-nav-theme-color-panel {
@@ -507,23 +519,73 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-.vp-nav-theme-color-item {
+.vp-theme-color-header {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ldoc-c-text-2);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+}
+
+.vp-theme-color-grid {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vp-theme-color-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.vp-theme-color-card:hover {
+  background: var(--ldoc-c-bg-soft);
+}
+
+.vp-theme-color-card.active {
+  background: var(--ldoc-c-brand-soft);
+  border-color: var(--ldoc-c-brand);
+}
+
+.vp-theme-color-dot {
   width: 24px;
   height: 24px;
-  padding: 0;
-  background: var(--color);
-  border: 2px solid transparent;
   border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.vp-nav-theme-color-item:hover {
-  transform: scale(1.15);
+.vp-theme-color-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.vp-nav-theme-color-item.active {
-  border-color: var(--ldoc-c-text-1);
+.vp-theme-color-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ldoc-c-text-1);
+}
+
+.vp-theme-color-desc {
+  font-size: 12px;
+  color: var(--ldoc-c-text-3);
+}
+
+.vp-theme-color-check {
+  flex-shrink: 0;
+  color: var(--ldoc-c-brand);
 }
 
 /* 暗黑模式切换 */

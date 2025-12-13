@@ -153,6 +153,7 @@ html {
   font-family: var(--ldoc-font-family-base);
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--ldoc-nav-height) + 24px);
+  /* 允许浏览器处理滚动，不要设置 overflow: hidden unless intended for modal */
 }
 
 body {
@@ -162,7 +163,19 @@ body {
   color: var(--ldoc-c-text-1);
   font-size: 16px;
   line-height: 1.6;
-  /* 不要在 body 上设置 transition，View Transition API 会处理主题切换动画 */
+  /* 移除 body 上的 overflow 设置，完全交给 html (viewport) 处理滚动 */
+  overflow: visible;
+}
+
+#app {
+  min-height: 100vh;
+  /* 确保 #app 不会限制 sticky */
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  /* 防止横向溢出 */
+  max-width: 100vw;
+  overflow-x: clip;
 }
 
 /* 链接 */

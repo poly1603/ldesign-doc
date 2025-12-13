@@ -2,7 +2,7 @@
  * 公告栏插件
  */
 import { definePlugin } from '../../plugin/definePlugin'
-import { defineComponent, h, ref, onMounted } from 'vue'
+import { defineComponent, h, ref, onMounted, watch, Transition } from 'vue'
 import type { LDocPlugin } from '../../shared/types'
 
 export interface AnnouncementPluginOptions {
@@ -18,14 +18,16 @@ export interface AnnouncementPluginOptions {
   link?: string
   /** 链接文本 */
   linkText?: string
-  /** 背景色 */
+  /** 背景色（不设置则跟随主题色） */
   backgroundColor?: string
   /** 文字颜色 */
   textColor?: string
+  /** 是否跟随主题色 */
+  followTheme?: boolean
 }
 
 const typeColors = {
-  info: { bg: 'var(--vp-c-brand-soft, #e0f2fe)', text: 'var(--vp-c-brand, #3b82f6)' },
+  info: { bg: 'var(--ldoc-c-brand-soft, var(--vp-c-brand-soft, #e0f2fe))', text: 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))' },
   warning: { bg: '#fef3c7', text: '#d97706' },
   success: { bg: '#d1fae5', text: '#059669' },
   error: { bg: '#fee2e2', text: '#dc2626' }
@@ -48,12 +50,12 @@ const AnnouncementBar = defineComponent({
   },
   setup(props) {
     const visible = ref(true)
+    const closing = ref(false)
     const announcementRef = ref<HTMLElement | null>(null)
 
     // 更新 CSS 变量来控制 header 位置
-    const updateAnnouncementHeight = () => {
+    const updateAnnouncementHeight = (height: number) => {
       if (typeof document !== 'undefined') {
-        const height = visible.value && announcementRef.value ? announcementRef.value.offsetHeight : 0
         document.documentElement.style.setProperty('--ldoc-announcement-height', `${height}px`)
       }
     }
@@ -63,19 +65,29 @@ const AnnouncementBar = defineComponent({
         const closed = localStorage.getItem(`ldoc-announcement-${props.storageKey}`)
         if (closed === 'true') {
           visible.value = false
+          updateAnnouncementHeight(0)
+          return
         }
       }
       // 初始化时更新高度
-      setTimeout(updateAnnouncementHeight, 0)
+      setTimeout(() => {
+        if (announcementRef.value) {
+          updateAnnouncementHeight(announcementRef.value.offsetHeight)
+        }
+      }, 0)
     })
 
     const close = () => {
-      visible.value = false
+      closing.value = true
       if (props.storageKey) {
         localStorage.setItem(`ldoc-announcement-${props.storageKey}`, 'true')
       }
-      // 关闭后更新高度
-      updateAnnouncementHeight()
+
+      // 动画结束后隐藏
+      setTimeout(() => {
+        visible.value = false
+        updateAnnouncementHeight(0)
+      }, 300)
     }
 
     return () => {
@@ -87,58 +99,78 @@ const AnnouncementBar = defineComponent({
 
       return h('div', {
         ref: announcementRef,
-        class: 'ldoc-announcement',
+        class: ['ldoc-announcement', { 'ldoc-announcement-closing': closing.value }],
         style: {
           position: 'relative',
           zIndex: '200',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          padding: '10px 16px',
           backgroundColor: bgColor,
           color: txtColor,
           fontSize: '14px',
           fontWeight: '500',
-          borderBottom: '1px solid rgba(0,0,0,0.05)'
+          borderBottom: closing.value ? 'none' : '1px solid rgba(0,0,0,0.05)',
+          display: 'grid',
+          gridTemplateRows: closing.value ? '0fr' : '1fr',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          opacity: closing.value ? '0' : '1',
         }
       }, [
-        h('span', {
-          innerHTML: props.content
-        }),
-        props.link && h('a', {
-          href: props.link,
-          target: props.link.startsWith('http') ? '_blank' : '_self',
+        h('div', {
           style: {
-            color: txtColor,
-            textDecoration: 'underline',
-            fontWeight: '600'
-          }
-        }, props.linkText),
-        props.closable && h('button', {
-          onClick: close,
-          style: {
-            marginLeft: '8px',
-            padding: '4px',
-            border: 'none',
-            background: 'transparent',
-            color: txtColor,
-            cursor: 'pointer',
-            opacity: '0.7',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            overflow: 'hidden',
+            minHeight: '0',
           }
         }, [
-          h('svg', {
-            width: 16,
-            height: 16,
-            viewBox: '0 0 24 24',
-            fill: 'none',
-            stroke: 'currentColor',
-            'stroke-width': 2,
-            innerHTML: '<path d="M18 6L6 18M6 6l12 12"/>'
-          })
+          h('div', {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              padding: '10px 16px',
+            }
+          }, [
+            h('span', {
+              innerHTML: props.content
+            }),
+            props.link && h('a', {
+              href: props.link,
+              target: props.link.startsWith('http') ? '_blank' : '_self',
+              style: {
+                color: txtColor,
+                textDecoration: 'underline',
+                fontWeight: '600'
+              }
+            }, props.linkText),
+            props.closable && h('button', {
+              onClick: close,
+              style: {
+                marginLeft: '8px',
+                padding: '4px',
+                border: 'none',
+                background: 'transparent',
+                color: txtColor,
+                cursor: 'pointer',
+                opacity: '0.7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'opacity 0.2s',
+                borderRadius: '4px'
+              },
+              onMouseenter: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '1' },
+              onMouseleave: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '0.7' }
+            }, [
+              h('svg', {
+                width: 16,
+                height: 16,
+                viewBox: '0 0 24 24',
+                fill: 'none',
+                stroke: 'currentColor',
+                'stroke-width': 2,
+                innerHTML: '<path d="M18 6L6 18M6 6l12 12"/>'
+              })
+            ])
+          ])
         ])
       ])
     }
