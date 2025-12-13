@@ -441,17 +441,20 @@ defineExpose({ frontmatter })
 .ldoc-demo-code {
   border-top: 1px solid var(--vp-c-divider, #e5e7eb);
   background: #1e1e1e;
+  max-height: 400px;
+  overflow: auto;
 }
 .ldoc-demo-code pre {
   margin: 0;
   padding: 16px;
-  overflow: auto;
 }
 .ldoc-demo-code code {
-  font-family: var(--vp-font-family-mono, 'Consolas', monospace);
-  font-size: 13px;
-  color: #d4d4d4;
+  font-family: var(--vp-font-family-mono, 'Consolas', 'Monaco', 'Andale Mono', monospace);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e6e6e6;
   white-space: pre;
+  display: block;
 }
 </style>
 `

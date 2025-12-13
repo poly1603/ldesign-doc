@@ -7,7 +7,7 @@ import {
 } from '@ldesign/doc/plugins'
 
 export default defineConfig({
-  srcDir: 'src',
+  srcDir: '.ldesign/docs',
   title: 'LDoc 演示站点',
   description: '现代化文档系统演示',
   lang: 'zh-CN',

@@ -1,389 +1,523 @@
-# 插件开发指南
+---
+title: 插件开发
+---
 
-本章介绍如何开发自己的 LDoc 插件。
+# 插件开发
 
-## 快速开始
+本指南将帮助你开发自己的 @ldesign/doc 插件。
 
-### 基础结构
+## 基础结构
+
+一个插件是一个返回 `LDocPlugin` 对象的函数：
 
 ```ts
 import { definePlugin } from '@ldesign/doc'
+import type { LDocPlugin } from '@ldesign/doc'
 
-export const myPlugin = definePlugin({
-  name: 'my-plugin',
-  
-  // 生命周期钩子
-  configResolved(config) {
-    console.log('配置已解析:', config.site.title)
-  }
-})
+export interface MyPluginOptions {
+  // 插件配置项
+  message?: string
+}
+
+export function myPlugin(options: MyPluginOptions = {}): LDocPlugin {
+  const { message = 'Hello' } = options
+
+  return definePlugin({
+    name: 'my-plugin',
+
+    // 生命周期钩子
+    configResolved(config) {
+      console.log(message, config.title)
+    }
+  })
+}
 ```
 
-### 带配置的插件
+## 完整的插件模板
 
 ```ts
-import { definePluginFactory } from '@ldesign/doc'
+import { definePlugin } from '@ldesign/doc'
+import type { 
+  LDocPlugin, 
+  UserConfig, 
+  SiteConfig, 
+  PageData,
+  ClientPluginContext 
+} from '@ldesign/doc'
 
-interface MyPluginOptions {
-  message?: string
+export interface MyPluginOptions {
   enabled?: boolean
 }
 
-export const myPlugin = definePluginFactory<MyPluginOptions>((options = {}) => {
-  const { message = 'Hello', enabled = true } = options
-  
-  return {
-    name: 'my-plugin',
-    
-    configResolved() {
-      if (enabled) {
-        console.log(message)
-      }
-    }
+export function myPlugin(options: MyPluginOptions = {}): LDocPlugin {
+  const { enabled = true } = options
+
+  if (!enabled) {
+    return definePlugin({ name: 'my-plugin-disabled' })
   }
+
+  return definePlugin({
+    name: 'my-plugin',
+    enforce: 'pre',  // 'pre' | 'post' | number
+
+    // ============== 配置阶段 ==============
+
+    config(config, env) {
+      // 修改用户配置
+      return {
+        ...config,
+        // 你的修改
+      }
+    },
+
+    configResolved(config) {
+      // 配置解析完成，可以访问最终配置
+    },
+
+    // ============== Vite 扩展 ==============
+
+    vitePlugins() {
+      return [
+        // 返回额外的 Vite 插件
+      ]
+    },
+
+    // ============== Markdown 扩展 ==============
+
+    extendMarkdown(md) {
+      // 扩展 markdown-it 实例
+      md.use(someMarkdownPlugin)
+    },
+
+    // ============== 数据扩展 ==============
+
+    extendPageData(pageData, ctx) {
+      // 扩展页面数据
+      pageData.frontmatter.customField = 'value'
+    },
+
+    extendSiteData(siteData) {
+      // 扩展站点数据
+    },
+
+    // ============== 路由扩展 ==============
+
+    extendRoutes(routes) {
+      // 修改或添加路由
+      routes.push({
+        path: '/custom',
+        component: '/path/to/component.vue'
+      })
+      return routes
+    },
+
+    onBeforeRouteChange(to, from) {
+      // 路由切换前（客户端）
+      // 返回 false 可阻止导航
+    },
+
+    onAfterRouteChange(to) {
+      // 路由切换后（客户端）
+    },
+
+    // ============== 构建生命周期 ==============
+
+    buildStart(config) {
+      // 构建开始
+    },
+
+    onBeforePageRender(page) {
+      // 页面渲染前
+    },
+
+    onAfterPageRender(page) {
+      // 页面渲染后，可访问 page.html
+    },
+
+    generateBundle(config) {
+      // 所有页面生成后
+    },
+
+    buildEnd(config) {
+      // 构建完成
+    },
+
+    // ============== 客户端生命周期 ==============
+
+    onClientInit(ctx) {
+      // Vue 应用初始化
+    },
+
+    onClientMounted(ctx) {
+      // Vue 应用挂载完成
+    },
+
+    onClientUpdated(ctx) {
+      // 页面更新后
+    },
+
+    // ============== UI 注入 ==============
+
+    slots: {
+      'doc-after': {
+        component: MyComponent,
+        props: { /* ... */ },
+        order: 100
+      }
+    },
+
+    // 或使用函数形式（可访问上下文）
+    // slots: (ctx) => ({
+    //   'doc-after': { ... }
+    // }),
+
+    globalComponents: [
+      {
+        name: 'MyGlobalComponent',
+        component: MyGlobalComponent
+      }
+    ],
+
+    globalDirectives: [
+      {
+        name: 'my-directive',
+        directive: myDirective
+      }
+    ],
+
+    // ============== 代码注入 ==============
+
+    headScripts: [
+      `console.log('Hello from plugin')`
+    ],
+
+    headStyles: [
+      `.my-class { color: red; }`
+    ],
+
+    // ============== 热更新 ==============
+
+    handleHotUpdate(ctx) {
+      // 处理热更新
+    },
+
+    // ============== 清理 ==============
+
+    onDestroy() {
+      // 插件销毁时的清理工作
+    }
+  })
+}
+```
+
+## 使用插件上下文
+
+客户端钩子会收到 `ClientPluginContext`：
+
+```ts
+onClientMounted(ctx) {
+  // Vue 应用实例
+  const app = ctx.app
+
+  // Vue Router 实例
+  const router = ctx.router
+
+  // 响应式数据
+  const siteData = ctx.siteData
+  const pageData = ctx.pageData
+
+  // 路由工具
+  ctx.route.path        // 当前路径
+  ctx.route.hash        // 当前 hash
+  ctx.route.query       // 查询参数
+  ctx.route.go('/path') // 导航
+  ctx.route.replace('/path')
+  ctx.route.back()
+  ctx.route.forward()
+  ctx.route.scrollToAnchor('#id')
+
+  // 数据工具
+  ctx.data.getPageData()
+  ctx.data.getSiteData()
+  ctx.data.getThemeConfig()
+  ctx.data.getFrontmatter()
+  ctx.data.getHeaders()
+  ctx.data.getLang()
+  ctx.data.isDark()
+
+  // UI 工具
+  ctx.ui.showToast('消息', { type: 'success' })
+  ctx.ui.showLoading('加载中...')
+  ctx.ui.hideLoading()
+  await ctx.ui.showModal({ title: '确认', content: '...' })
+  await ctx.ui.copyToClipboard('text')
+
+  // 存储工具
+  ctx.storage.set('key', value)
+  ctx.storage.get('key')
+  ctx.storage.remove('key')
+  ctx.storage.clear()
+
+  // 事件总线
+  ctx.events.on('event', handler)
+  ctx.events.off('event', handler)
+  ctx.events.emit('event', data)
+  ctx.events.once('event', handler)
+}
+```
+
+## 使用 Composables
+
+在插件组件中使用内置 composables：
+
+```vue
+<script setup>
+import { 
+  usePluginContext,
+  usePluginRoute,
+  usePluginData,
+  usePluginUI,
+  usePluginStorage,
+  usePluginEvents
+} from '@ldesign/doc/client'
+
+// 完整上下文
+const ctx = usePluginContext()
+
+// 或单独使用
+const route = usePluginRoute()
+const data = usePluginData()
+const ui = usePluginUI()
+const storage = usePluginStorage()
+const events = usePluginEvents()
+</script>
+```
+
+## 预定义事件
+
+使用预定义的事件名称：
+
+```ts
+import { PluginEvents } from '@ldesign/doc/client'
+
+ctx.events.on(PluginEvents.ROUTE_AFTER_CHANGE, (to) => {
+  console.log('Route changed to:', to)
+})
+
+ctx.events.on(PluginEvents.THEME_CHANGE, () => {
+  console.log('Theme changed')
+})
+
+ctx.events.on(PluginEvents.SEARCH_OPEN, () => {
+  console.log('Search opened')
 })
 ```
 
-使用：
+可用的预定义事件：
 
-```ts
-plugins: [
-  myPlugin({ message: 'Hello LDoc!', enabled: true })
-]
-```
+| 事件 | 描述 |
+|------|------|
+| `ROUTE_BEFORE_CHANGE` | 路由切换前 |
+| `ROUTE_AFTER_CHANGE` | 路由切换后 |
+| `PAGE_LOADED` | 页面加载完成 |
+| `PAGE_SCROLL` | 页面滚动 |
+| `THEME_CHANGE` | 主题切换 |
+| `DARK_MODE_CHANGE` | 暗色模式切换 |
+| `SEARCH_OPEN` | 搜索打开 |
+| `SEARCH_CLOSE` | 搜索关闭 |
+| `SIDEBAR_TOGGLE` | 侧边栏切换 |
+| `TOC_ACTIVE_CHANGE` | 目录活动项变化 |
 
-## 生命周期钩子
+## 创建 UI 组件
 
-### 配置阶段
+### Vue 组件
 
-```ts
-{
-  // 修改用户配置
-  config(config, env) {
-    // env: { mode: 'development' | 'production', command: 'serve' | 'build' }
-    return {
-      ...config,
-      title: config.title + ' - Modified'
-    }
-  },
-  
-  // 配置解析完成
-  configResolved(config) {
-    // config 是完整的解析后配置
-    this.siteTitle = config.site.title
-  }
+```vue
+<!-- MyPluginComponent.vue -->
+<script setup lang="ts">
+import { usePluginContext } from '@ldesign/doc/client'
+
+const props = defineProps<{
+  message: string
+}>()
+
+const ctx = usePluginContext()
+const pageTitle = ctx.data.getPageData().title
+
+function handleClick() {
+  ctx.ui.showToast('Clicked!', { type: 'success' })
 }
-```
+</script>
 
-### 构建阶段
+<template>
+  <div class="my-plugin">
+    <h3>{{ message }}</h3>
+    <p>当前页面: {{ pageTitle }}</p>
+    <button @click="handleClick">点击我</button>
+  </div>
+</template>
 
-```ts
-{
-  // 构建开始
-  async buildStart(config) {
-    await initResources()
-  },
-  
-  // 页面渲染前
-  onBeforePageRender(ctx) {
-    console.log('渲染:', ctx.pageData.relativePath)
-  },
-  
-  // 页面渲染后
-  onAfterPageRender(ctx) {
-    // ctx.html 可用
-  },
-  
-  // 所有页面生成后
-  async generateBundle(config) {
-    await writeFile('dist/sitemap.xml', sitemap)
-  },
-  
-  // 构建完成
-  async buildEnd(config) {
-    console.log('构建完成!')
-  }
+<style scoped>
+.my-plugin {
+  padding: 16px;
+  background: var(--ldoc-c-bg-soft);
+  border-radius: 8px;
 }
+</style>
 ```
 
-### 客户端阶段
-
-```ts
-{
-  // 客户端初始化
-  onClientInit(ctx) {
-    // ctx.app: Vue 应用实例
-    ctx.app.config.globalProperties.$myPlugin = {}
-  },
-  
-  // 客户端挂载完成
-  onClientMounted(ctx) {
-    // DOM 已就绪
-    initThirdPartyLib()
-  },
-  
-  // 页面切换后
-  onClientUpdated(ctx) {
-    trackPageView()
-  },
-  
-  // 路由切换前
-  onBeforeRouteChange(to, from) {
-    // 返回 false 阻止导航
-  },
-  
-  // 路由切换后
-  onAfterRouteChange(to) {
-    analytics.track(to)
-  }
-}
-```
-
-## 扩展功能
-
-### 扩展 Markdown
-
-```ts
-{
-  extendMarkdown(md) {
-    // md 是 markdown-it 实例
-    
-    // 使用插件
-    md.use(markdownItPlugin)
-    
-    // 自定义渲染规则
-    md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
-      const token = tokens[idx]
-      return `<h${token.tag.slice(1)} class="custom-heading">`
-    }
-  }
-}
-```
-
-### 扩展页面数据
-
-```ts
-{
-  async extendPageData(pageData, ctx) {
-    // 添加阅读时间
-    const content = ctx.content
-    const words = content.length
-    pageData.frontmatter.readingTime = Math.ceil(words / 200)
-    
-    // 添加自定义数据
-    pageData.frontmatter.customData = await fetchData()
-  }
-}
-```
-
-### 扩展路由
-
-```ts
-{
-  extendRoutes(routes) {
-    // 添加路由
-    routes.push({
-      path: '/api-docs',
-      component: '/path/to/ApiDocs.vue'
-    })
-    
-    // 修改现有路由
-    const homeRoute = routes.find(r => r.path === '/')
-    if (homeRoute) {
-      homeRoute.meta = { ...homeRoute.meta, custom: true }
-    }
-    
-    return routes
-  }
-}
-```
-
-## UI 注入
-
-### 注入组件到预定义位置
+### 使用 defineComponent
 
 ```ts
 import { defineComponent, h } from 'vue'
+import { usePluginContext } from '@ldesign/doc/client'
 
-const ProgressBar = defineComponent({
-  setup() {
-    const progress = ref(0)
-    
-    onMounted(() => {
-      window.addEventListener('scroll', () => {
-        const height = document.body.scrollHeight - window.innerHeight
-        progress.value = (window.scrollY / height) * 100
-      })
-    })
-    
-    return () => h('div', {
-      class: 'progress-bar',
-      style: { width: `${progress.value}%` }
-    })
-  }
-})
-
-export const progressPlugin = definePlugin({
-  name: 'progress',
-  
-  slots: {
-    'layout-top': {
-      component: ProgressBar,
-      order: 0
-    }
-  }
-})
-```
-
-### 动态 Slots
-
-```ts
-{
-  slots: (ctx) => {
-    const showComments = ctx.data.getFrontmatter().comments !== false
-    
-    if (!showComments) return {}
-    
-    return {
-      'doc-after': {
-        component: CommentSection,
-        props: { pageId: ctx.route.path }
-      }
-    }
-  }
-}
-```
-
-### 全局组件
-
-```ts
-{
-  globalComponents: [
-    { name: 'Badge', component: BadgeComponent },
-    { name: 'Demo', component: DemoComponent }
-  ]
-}
-```
-
-在 Markdown 中直接使用：
-
-```md
-<Badge text="新功能" type="tip" />
-```
-
-## 注入代码
-
-### 注入脚本
-
-```ts
-{
-  headScripts: [
-    // 内联脚本
-    `console.log('Hello from plugin')`,
-    
-    // 外部脚本
-    `<script src="https://example.com/lib.js" async></script>`
-  ]
-}
-```
-
-### 注入样式
-
-```ts
-{
-  headStyles: [
-    `.my-plugin { color: red; }`,
-    `@import url('https://fonts.googleapis.com/css2?family=...');`
-  ]
-}
-```
-
-### 客户端配置文件
-
-```ts
-{
-  clientConfigFile: `
-    export default {
-      enhance({ app, router }) {
-        // 全局增强
-        app.config.globalProperties.$myPlugin = {}
-        
-        // 路由守卫
-        router.beforeEach((to, from) => {
-          // ...
-        })
-      }
-    }
-  `
-}
-```
-
-## 完整示例
-
-```ts
-import { definePluginFactory, PluginSlotName } from '@ldesign/doc'
-import { defineComponent, h, ref, onMounted } from 'vue'
-
-interface ToastPluginOptions {
-  duration?: number
-  position?: 'top' | 'bottom'
-}
-
-const ToastContainer = defineComponent({
-  props: ['duration', 'position'],
+export const MyComponent = defineComponent({
+  name: 'MyComponent',
+  props: {
+    message: String
+  },
   setup(props) {
-    const toasts = ref<string[]>([])
-    
-    const show = (message: string) => {
-      toasts.value.push(message)
-      setTimeout(() => {
-        toasts.value.shift()
-      }, props.duration)
+    const ctx = usePluginContext()
+
+    return () => h('div', { class: 'my-component' }, [
+      h('span', props.message),
+      h('button', {
+        onClick: () => ctx.ui.showToast('Clicked!')
+      }, 'Click')
+    ])
+  }
+})
+```
+
+## 扩展 Markdown
+
+```ts
+extendMarkdown(md) {
+  // 添加自定义容器
+  md.use(require('markdown-it-container'), 'custom', {
+    validate: (params) => params.trim() === 'custom',
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        return '<div class="custom-container">\n'
+      }
+      return '</div>\n'
     }
-    
-    // 暴露给全局
-    if (typeof window !== 'undefined') {
-      (window as any).$toast = show
+  })
+
+  // 添加自定义规则
+  md.core.ruler.push('custom-rule', (state) => {
+    // 处理 tokens
+  })
+}
+```
+
+## 发布插件
+
+### package.json
+
+```json
+{
+  "name": "ldoc-plugin-my-plugin",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
+  },
+  "peerDependencies": {
+    "@ldesign/doc": "^1.0.0"
+  },
+  "keywords": ["ldoc", "ldoc-plugin"]
+}
+```
+
+### 命名约定
+
+- 包名：`ldoc-plugin-*` 或 `@scope/ldoc-plugin-*`
+- 插件名：`ldoc:plugin-name` 或 `my-org:plugin-name`
+
+## 调试技巧
+
+```ts
+definePlugin({
+  name: 'my-plugin',
+
+  configResolved(config) {
+    if (process.env.DEBUG) {
+      console.log('[my-plugin] Config:', config)
+    }
+  },
+
+  onClientMounted(ctx) {
+    if (import.meta.env.DEV) {
+      console.log('[my-plugin] Mounted')
+      // @ts-ignore
+      window.__myPlugin = { ctx }
+    }
+  }
+})
+```
+
+## 示例：阅读时间插件
+
+完整的插件示例：
+
+```ts
+import { definePlugin } from '@ldesign/doc'
+import { defineComponent, h, computed } from 'vue'
+import type { LDocPlugin, PageData, PluginPageContext } from '@ldesign/doc'
+
+export interface ReadingTimeOptions {
+  wordsPerMinute?: number
+}
+
+const ReadingTime = defineComponent({
+  props: {
+    minutes: Number,
+    words: Number
+  },
+  setup(props) {
+    const text = computed(() => 
+      `📖 ${props.words} 字 · 约 ${props.minutes} 分钟`
+    )
     
-    return () => h('div', {
-      class: ['toast-container', props.position]
-    }, toasts.value.map(msg => 
-      h('div', { class: 'toast' }, msg)
-    ))
+    return () => h('div', { 
+      class: 'reading-time',
+      style: { color: 'var(--ldoc-c-text-3)' }
+    }, text.value)
   }
 })
 
-export const toastPlugin = definePluginFactory<ToastPluginOptions>((options = {}) => {
-  const { duration = 3000, position = 'top' } = options
-  
-  return {
-    name: 'toast',
-    
-    slots: {
-      'layout-bottom': {
-        component: ToastContainer,
-        props: { duration, position }
-      }
+export function readingTimePlugin(options: ReadingTimeOptions = {}): LDocPlugin {
+  const { wordsPerMinute = 200 } = options
+
+  return definePlugin({
+    name: 'ldoc:reading-time',
+
+    extendPageData(pageData: PageData, ctx: PluginPageContext) {
+      const text = ctx.content.replace(/<[^>]*>/g, '')
+      const words = (text.match(/[\u4e00-\u9fa5]/g) || []).length +
+                    (text.match(/[a-zA-Z]+/g) || []).length
+      const minutes = Math.max(1, Math.ceil(words / wordsPerMinute))
+      
+      pageData.frontmatter.readingTime = { minutes, words }
     },
-    
-    headStyles: [`
-      .toast-container {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
+
+    slots: (ctx) => {
+      const rt = ctx.data.getFrontmatter().readingTime as any
+      if (!rt) return {}
+      
+      return {
+        'doc-top': {
+          component: ReadingTime,
+          props: { minutes: rt.minutes, words: rt.words }
+        }
       }
-      .toast-container.top { top: 20px; }
-      .toast-container.bottom { bottom: 20px; }
-      .toast {
-        padding: 12px 24px;
-        background: #333;
-        color: white;
-        border-radius: 8px;
-        margin: 8px 0;
-      }
-    `]
-  }
-})
+    }
+  })
+}
 ```

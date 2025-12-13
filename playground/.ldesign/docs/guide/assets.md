@@ -1,16 +1,21 @@
-# 静态资源
+---
+title: 资源处理
+---
 
-本章介绍如何在文档中使用图片、样式等静态资源。
+# 资源处理
 
-## 公共资源目录
+本章节介绍如何在文档中使用图片、样式等静态资源。
 
-将静态资源放在 `public` 目录中：
+## 静态资源目录
+
+将静态资源放在 `src/public` 目录中：
 
 ```
-docs/
+src/
 ├── public/
 │   ├── logo.svg
 │   ├── images/
+│   │   ├── hero.png
 │   │   └── screenshot.png
 │   └── fonts/
 │       └── custom.woff2
@@ -18,24 +23,25 @@ docs/
     └── index.md
 ```
 
-`public` 目录中的文件会被原样复制到构建输出：
+`public` 目录中的文件会被原样复制到构建输出目录：
 
 ```
-public/logo.svg → dist/logo.svg
-public/images/screenshot.png → dist/images/screenshot.png
+src/public/logo.svg → dist/logo.svg
+src/public/images/hero.png → dist/images/hero.png
 ```
 
-## 引用资源
+## 引用静态资源
 
-### Markdown 中使用
+### 在 Markdown 中
+
+使用绝对路径引用 `public` 目录中的资源：
 
 ```md
-<!-- 引用 public 目录的资源 -->
 ![Logo](/logo.svg)
-![Screenshot](/images/screenshot.png)
+![Hero](/images/hero.png)
 ```
 
-### Vue 组件中使用
+### 在 Vue 组件中
 
 ```vue
 <template>
@@ -43,7 +49,7 @@ public/images/screenshot.png → dist/images/screenshot.png
 </template>
 ```
 
-### CSS 中使用
+### 在 CSS 中
 
 ```css
 .hero {
@@ -51,31 +57,31 @@ public/images/screenshot.png → dist/images/screenshot.png
 }
 
 @font-face {
-  font-family: 'MyFont';
+  font-family: 'CustomFont';
   src: url('/fonts/custom.woff2') format('woff2');
 }
 ```
 
 ## 相对路径
 
-也可以使用相对路径引用同目录资源：
+也可以使用相对路径引用同目录或子目录的资源：
 
 ```
-docs/
-└── guide/
-    ├── index.md
-    └── images/
-        └── diagram.png
+src/
+├── guide/
+│   ├── index.md
+│   └── images/
+│       └── diagram.png
 ```
 
 ```md
-<!-- docs/guide/index.md -->
+<!-- src/guide/index.md -->
 ![Diagram](./images/diagram.png)
 ```
 
 ## Base URL
 
-如果站点部署在子目录，资源路径会自动添加 base 前缀：
+如果站点部署在子目录下，资源路径会自动添加 base 前缀：
 
 ```ts
 // doc.config.ts
@@ -94,27 +100,71 @@ export default defineConfig({
 
 ## 图片优化
 
-### 自动懒加载
+### 自动优化
 
-图片默认添加 `loading="lazy"` 属性。
+@ldesign/doc 会自动优化图片：
 
-### 指定尺寸
+- 自动添加 `loading="lazy"` 属性
+- 响应式图片支持
+- 图片压缩（构建时）
+
+### 禁用优化
+
+在 frontmatter 中禁用：
+
+```yaml
+---
+imageOptimization: false
+---
+```
+
+### 手动控制
 
 ```md
+<!-- 禁用懒加载 -->
+![Logo](/logo.svg){loading="eager"}
+
+<!-- 指定尺寸 -->
 ![Screenshot](/screenshot.png){width="800" height="600"}
 ```
 
-### 禁用预览
+## 导入资源
 
-使用 `imageViewerPlugin` 时，添加 `.no-preview` 类禁用点击预览：
+### 在 Vue 组件中导入
 
-```md
-![Logo](/logo.svg){.no-preview}
+```vue
+<script setup>
+import logoUrl from '/logo.svg'
+import heroImg from '../assets/hero.png'
+</script>
+
+<template>
+  <img :src="logoUrl" />
+  <img :src="heroImg" />
+</template>
 ```
 
-## 字体配置
+### 导入 CSS
 
-### Google Fonts
+```vue
+<style>
+@import '/styles/custom.css';
+</style>
+```
+
+或在 `doc.config.ts` 中全局引入：
+
+```ts
+export default defineConfig({
+  head: [
+    ['link', { rel: 'stylesheet', href: '/styles/custom.css' }]
+  ]
+})
+```
+
+## 字体
+
+### 使用 Google Fonts
 
 ```ts
 // doc.config.ts
@@ -131,22 +181,64 @@ export default defineConfig({
 })
 ```
 
-### 本地字体
+### 使用本地字体
 
 ```css
-/* public/styles/fonts.css */
+/* src/public/styles/fonts.css */
 @font-face {
-  font-family: 'CustomFont';
-  src: url('/fonts/CustomFont.woff2') format('woff2');
+  font-family: 'MyFont';
+  src: url('/fonts/MyFont.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 ```
 
+## SVG 图标
+
+### 内联 SVG
+
+```vue
+<template>
+  <svg viewBox="0 0 24 24" width="24" height="24">
+    <path d="..." fill="currentColor" />
+  </svg>
+</template>
+```
+
+### 作为组件使用
+
+```vue
+<script setup>
+import IconGithub from '../components/icons/Github.vue'
+</script>
+
+<template>
+  <IconGithub />
+</template>
+```
+
+### 使用图标库
+
+推荐使用 [Iconify](https://iconify.design/)：
+
+```bash
+pnpm add -D @iconify/vue
+```
+
+```vue
+<script setup>
+import { Icon } from '@iconify/vue'
+</script>
+
+<template>
+  <Icon icon="mdi:github" />
+</template>
+```
+
 ## 外部资源
 
-### CDN 引入
+### CDN 资源
 
 ```ts
 // doc.config.ts
@@ -158,7 +250,9 @@ export default defineConfig({
 })
 ```
 
-### 预连接优化
+### 预连接
+
+优化外部资源加载：
 
 ```ts
 export default defineConfig({
@@ -168,3 +262,14 @@ export default defineConfig({
   ]
 })
 ```
+
+## 资源哈希
+
+构建时，资源文件会自动添加内容哈希：
+
+```
+logo.svg → logo.abc123.svg
+styles.css → styles.def456.css
+```
+
+这确保了浏览器缓存的正确失效。

@@ -209,7 +209,11 @@ onUnmounted(() => {
   padding: 24px;
 }
 
-/* 首页无顶部padding */
+/* 首页无顶部padding，并且 main 内容区域不需要导航栏高度的 padding */
+.ldoc-layout.is-home .ldoc-layout-content {
+  padding-top: 0;
+}
+
 .ldoc-layout.is-home .ldoc-main {
   padding-top: 0;
 }
