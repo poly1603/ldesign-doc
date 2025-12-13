@@ -85,3 +85,38 @@ export type { LastUpdatedPluginOptions } from './last-updated'
 
 export { readingTimePlugin } from './reading-time'
 export type { ReadingTimePluginOptions } from './reading-time'
+
+// ============== 返回顶部插件 ==============
+
+export { backToTopPlugin } from './back-to-top'
+export type { BackToTopPluginOptions } from './back-to-top'
+
+// ============== 字数统计插件 ==============
+
+export { wordCountPlugin } from './word-count'
+export type { WordCountPluginOptions } from './word-count'
+
+// ============== 公告栏插件 ==============
+
+export { announcementPlugin } from './announcement'
+export type { AnnouncementPluginOptions } from './announcement'
+
+// ============== 社交分享插件 ==============
+
+export { socialSharePlugin } from './social-share'
+export type { SocialSharePluginOptions } from './social-share'
+
+// ============== 大纲/目录插件 ==============
+
+export { outlinePlugin } from './outline'
+export type { OutlinePluginOptions } from './outline'
+
+// ============== 图片灯箱插件 ==============
+
+export { lightboxPlugin } from './lightbox'
+export type { LightboxPluginOptions } from './lightbox'
+
+// ============== 组件演示插件 ==============
+
+export { demoPlugin } from './demo'
+export type { DemoPluginOptions } from './demo'

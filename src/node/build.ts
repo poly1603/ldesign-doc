@@ -54,7 +54,13 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       // 调用 extendPageData 钩子，让插件扩展页面数据
       console.log(pc.gray(`  Extending page data with plugins (${config.userPlugins.length} plugins)...`))
       for (const page of pages) {
-        await pluginContainer.callHook('extendPageData', page)
+        const pageContext = {
+          siteConfig: config,
+          content: '', // build 时内容已处理
+          filePath: page.filePath,
+          relativePath: page.relativePath
+        }
+        await pluginContainer.callHook('extendPageData', page, pageContext)
       }
       // 验证扩展结果
       const pagesWithReadingTime = pages.filter(p => p.frontmatter?.readingTime)

@@ -139,15 +139,29 @@ const handleCopyClick = async (e: Event) => {
   const copyBtn = target.closest('.vp-code-copy') as HTMLButtonElement
   if (!copyBtn) return
 
-  const code = copyBtn.dataset.code
-  if (!code) return
+  // 支持 Base64 编码的代码（新格式）和 HTML 实体编码的代码（旧格式）
+  const base64Code = copyBtn.dataset.codeBase64
+  const htmlCode = copyBtn.dataset.code
+
+  let decodedCode = ''
+  
+  if (base64Code) {
+    // Base64 解码
+    try {
+      decodedCode = decodeURIComponent(escape(atob(base64Code)))
+    } catch {
+      decodedCode = atob(base64Code)
+    }
+  } else if (htmlCode) {
+    // HTML 实体解码（兼容旧格式）
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = htmlCode
+    decodedCode = textarea.value
+  }
+
+  if (!decodedCode) return
 
   try {
-    // 解码 HTML 实体
-    const textarea = document.createElement('textarea')
-    textarea.innerHTML = code
-    const decodedCode = textarea.value
-
     await navigator.clipboard.writeText(decodedCode)
     copyBtn.classList.add('copied')
     setTimeout(() => {

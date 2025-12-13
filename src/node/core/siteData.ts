@@ -15,10 +15,10 @@ export interface RouteData {
 }
 
 /**
- * 扫描目录获取所有 markdown 文件
+ * 扫描目录获取所有页面文件（.md 和 .vue）
  */
-function scanMarkdownFiles(dir: string, prefix: string = ''): { relativePath: string; fullPath: string }[] {
-  const files: { relativePath: string; fullPath: string }[] = []
+function scanPageFiles(dir: string, prefix: string = ''): { relativePath: string; fullPath: string; type: 'md' | 'vue' }[] {
+  const files: { relativePath: string; fullPath: string; type: 'md' | 'vue' }[] = []
 
   if (!existsSync(dir)) return files
 
@@ -29,18 +29,30 @@ function scanMarkdownFiles(dir: string, prefix: string = ''): { relativePath: st
 
     if (entry.isDirectory()) {
       // 跳过特殊目录
-      if (['public', 'node_modules', '.git'].includes(entry.name)) continue
+      if (['public', 'node_modules', '.git', 'demos'].includes(entry.name)) continue
       // 递归扫描
-      files.push(...scanMarkdownFiles(fullPath, `${prefix}${entry.name}/`))
+      files.push(...scanPageFiles(fullPath, `${prefix}${entry.name}/`))
     } else if (entry.name.endsWith('.md')) {
       files.push({
         relativePath: `${prefix}${entry.name}`,
-        fullPath
+        fullPath,
+        type: 'md'
+      })
+    } else if (entry.name.endsWith('.vue')) {
+      files.push({
+        relativePath: `${prefix}${entry.name}`,
+        fullPath,
+        type: 'vue'
       })
     }
   }
 
   return files
+}
+
+// 保持向后兼容
+function scanMarkdownFiles(dir: string, prefix: string = ''): { relativePath: string; fullPath: string }[] {
+  return scanPageFiles(dir, prefix).filter(f => f.type === 'md')
 }
 
 /**
@@ -62,8 +74,8 @@ function parseFrontmatter(content: string): { data: Record<string, unknown>; con
  * docs/guide/index.md -> /guide
  */
 function filePathToRoutePath(relativePath: string): string {
-  // 移除 .md 后缀
-  let routePath = relativePath.replace(/\.md$/, '')
+  // 移除 .md 或 .vue 后缀
+  let routePath = relativePath.replace(/\.(md|vue)$/, '')
 
   // 处理 index 文件
   if (routePath === 'index') {
@@ -78,21 +90,34 @@ function filePathToRoutePath(relativePath: string): string {
 }
 
 /**
- * 生成路由数据
+ * 生成路由数据（支持 .md 和 .vue 文件）
  */
 export async function generateRoutes(config: SiteConfig): Promise<RouteData[]> {
   const srcDir = config.srcDir
-  const files = scanMarkdownFiles(srcDir)
+  const files = scanPageFiles(srcDir)
 
   const routes: RouteData[] = []
 
   for (const file of files) {
     const content = readFileSync(file.fullPath, 'utf-8')
-    const { data: frontmatter } = parseFrontmatter(content)
+
+    let frontmatter: Record<string, unknown> = {}
+    let title = ''
+
+    if (file.type === 'md') {
+      const parsed = parseFrontmatter(content)
+      frontmatter = parsed.data
+      const baseName = file.relativePath.replace(/\.md$/, '').split('/').pop() || ''
+      title = (frontmatter.title as string) || (baseName === 'index' ? '' : baseName)
+    } else {
+      // Vue 文件：尝试从注释中提取 frontmatter 或使用文件名
+      const titleMatch = content.match(/<!--\s*title:\s*(.+?)\s*-->/)
+      const baseName = file.relativePath.replace(/\.vue$/, '').split('/').pop() || ''
+      title = titleMatch ? titleMatch[1] : baseName
+      frontmatter = { title, layout: 'page' }
+    }
 
     const routePath = filePathToRoutePath(file.relativePath)
-    const baseName = file.relativePath.replace(/\.md$/, '').split('/').pop() || ''
-    const title = (frontmatter.title as string) || (baseName === 'index' ? '' : baseName)
 
     routes.push({
       path: routePath,

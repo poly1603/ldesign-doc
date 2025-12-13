@@ -307,14 +307,14 @@ function setupCodeHighlight(
       ? `<div class="vp-code-line-numbers">${Array.from({ length: actualLineCount }, (_, i) => `<span class="line-number">${i + 1}</span>`).join('')}</div>`
       : ''
 
-    // 转义代码用于复制
-    const escapedCode = escapeHtml(code.trim())
+    // 使用 Base64 编码存储代码，避免 HTML 属性值中的特殊字符问题
+    const base64Code = Buffer.from(code.trim(), 'utf-8').toString('base64')
 
     // 包装代码块
     return `<div class="vp-code-block${showLineNumbers ? ' line-numbers' : ''}" data-lang="${lang}">
   <div class="vp-code-header">
     <span class="vp-code-lang">${lang}</span>
-    <button class="vp-code-copy" data-code="${escapedCode.replace(/"/g, '&quot;')}" title="复制代码">
+    <button class="vp-code-copy" data-code-base64="${base64Code}" title="复制代码">
       <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>

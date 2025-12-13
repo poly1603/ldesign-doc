@@ -2,8 +2,8 @@
  * Vite 插件系统
  */
 
-import { resolve, dirname } from 'path'
-import { readFileSync } from 'fs'
+import { resolve, dirname, relative } from 'path'
+import { readFileSync, existsSync } from 'fs'
 import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
@@ -12,11 +12,23 @@ import type { SiteConfig, MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
 
+// Demo 组件信息
+interface DemoInfo {
+  id: string
+  src: string           // 源文件路径
+  absolutePath: string  // 绝对路径
+  code: string          // 源代码
+  title?: string
+}
+
 export interface VitePluginOptions {
   md: MarkdownRenderer
   pluginContainer: PluginContainer
   command: 'serve' | 'build'
 }
+
+// 存储 demo 代码块，用于生成虚拟模块
+const demoCodeMap = new Map<string, { code: string; language: string }>()
 
 /**
  * 创建 Vite 插件列表
@@ -41,6 +53,9 @@ export async function createVitePlugins(
 
   // Markdown 插件（传入 pluginContainer 以支持 extendPageData）
   plugins.push(createMarkdownPlugin(config, md, pluginContainer))
+
+  // Demo 虚拟模块插件
+  plugins.push(createDemoPlugin(config))
 
   // 虚拟模块插件
   plugins.push(createVirtualModulesPlugin(config, pluginContainer))
@@ -77,6 +92,7 @@ function createMarkdownPlugin(
       if (!id.endsWith('.md')) return null
 
       const filePath = normalizePath(id)
+      const fileDir = dirname(filePath)
 
       // 解析 frontmatter
       const frontmatterMatch = code.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -90,19 +106,63 @@ function createMarkdownPlugin(
         } catch { }
       }
 
+      // 解析 <demo src="./xxx.vue" /> 标签，收集所有 demo 组件
+      const demos: DemoInfo[] = []
+      let demoIndex = 0
+
+      // 调试：检查 markdown 内容
+      if (filePath.includes('basic.md')) {
+        console.log('[ldoc:demo] Processing:', filePath)
+        console.log('[ldoc:demo] Markdown content:', markdown.slice(0, 500))
+      }
+
+      markdown = markdown.replace(
+        /<demo\s+src=["']([^"']+)["'](?:\s+title=["']([^"']+)["'])?\s*\/?>/gi,
+        (match, src, title) => {
+          console.log('[ldoc:demo] Match found:', match, 'src:', src)
+          const demoId = `Demo${demoIndex++}`
+          const absolutePath = resolve(fileDir, src)
+
+          let demoCode = ''
+          if (existsSync(absolutePath)) {
+            demoCode = readFileSync(absolutePath, 'utf-8')
+          }
+
+          demos.push({
+            id: demoId,
+            src,
+            absolutePath: normalizePath(absolutePath),
+            code: demoCode,
+            title
+          })
+
+          // 返回占位符，稍后替换
+          return `<!--DEMO_${demoId}-->`
+        }
+      )
+
       // 创建页面数据对象，供插件扩展
+      const relativePath = filePath.replace(config.srcDir, '').replace(/^[\\/]/, '')
       const pageData = {
         title: frontmatter.title as string || '',
         description: frontmatter.description as string || '',
         frontmatter,
         headers: [],
-        relativePath: filePath.replace(config.srcDir, '').replace(/^\//, ''),
+        relativePath,
         filePath,
         lastUpdated: Date.now()
       }
 
+      // 创建页面上下文
+      const pageContext = {
+        siteConfig: config,
+        content: markdown,
+        filePath,
+        relativePath
+      }
+
       // 调用 extendPageData 钩子，让插件扩展页面数据
-      await pluginContainer.callHook('extendPageData', pageData)
+      await pluginContainer.callHook('extendPageData', pageData, pageContext)
 
       // 渲染 Markdown
       const html = md.render(markdown, { path: filePath })
@@ -113,8 +173,16 @@ function createMarkdownPlugin(
         (config.framework === 'auto' && hasReactImport(code))) {
         result = generateReactComponent(html, pageData.frontmatter)
       } else {
-        // 默认生成 Vue 组件
-        result = generateVueComponent(html, pageData.frontmatter)
+        // 默认生成 Vue 组件，传入 demos 信息
+        result = generateVueComponent(html, pageData.frontmatter, demos)
+
+        // 调试：输出生成的代码
+        if (demos.length > 0) {
+          console.log('[ldoc:demo] File:', filePath)
+          console.log('[ldoc:demo] Demos found:', demos.length)
+          demos.forEach(d => console.log(`  - ${d.id}: ${d.absolutePath}`))
+          console.log('[ldoc:demo] Generated code preview:', result.slice(0, 500))
+        }
       }
 
       return {
@@ -127,58 +195,228 @@ function createMarkdownPlugin(
 
 /**
  * 生成 Vue 组件代码
+ * 如果有 demo 组件，使用模板模式；否则使用 v-html 模式
  */
-function generateVueComponent(html: string, frontmatter: Record<string, unknown>): string {
-  const htmlJson = JSON.stringify(html)
+function generateVueComponent(
+  html: string,
+  frontmatter: Record<string, unknown>,
+  demos: DemoInfo[] = []
+): string {
   const frontmatterJson = JSON.stringify(frontmatter)
-  // 生成唯一的组件 ID 用于 HMR
   const componentId = `md_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  return `
+  // 如果没有 demo，使用简单的 v-html 模式
+  if (demos.length === 0) {
+    const htmlJson = JSON.stringify(html)
+    return `
 <template>
   <div class="ldoc-content" v-html="contentHtml"></div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const componentId = '${componentId}'
 const contentHtml = ref(${htmlJson})
 const frontmatter = ${frontmatterJson}
 
-// 更新全局 pageData
 const updatePageData = () => {
   if (typeof window !== 'undefined' && window.__LDOC_PAGE_DATA__) {
-    console.log('[ldoc] Updating pageData, componentId:', componentId)
     window.__LDOC_PAGE_DATA__.value = {
       ...window.__LDOC_PAGE_DATA__.value,
       frontmatter: { ...frontmatter },
-      _hmrId: componentId  // 添加 HMR ID 触发响应式更新
+      _hmrId: componentId
     }
-    // 触发自定义事件通知组件更新
-    window.dispatchEvent(new CustomEvent('ldoc:frontmatter-update', { 
-      detail: { frontmatter, componentId } 
-    }))
   }
 }
 
-// 立即更新
 updatePageData()
+onMounted(() => { updatePageData() })
 
-onMounted(() => {
-  updatePageData()
-})
-
-// HMR 支持
 if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    console.log('[ldoc] HMR accepted, updating...')
-    updatePageData()
-  })
+  import.meta.hot.accept(() => { updatePageData() })
 }
 
 defineExpose({ frontmatter })
 </script>
+`
+  }
+
+  // 有 demo 组件时，使用运行时挂载方案
+  // 在 HTML 中插入占位符，onMounted 时动态挂载组件
+  const demoImports = demos.map(d =>
+    `import ${d.id} from '/@fs/${d.absolutePath}'`
+  ).join('\n')
+
+  // 对代码也使用 URI 编码 + Base64 处理 UTF-8
+  const demoCodeMap = demos.map(d =>
+    `  '${d.id}': '${Buffer.from(encodeURIComponent(d.code)).toString('base64')}'`
+  ).join(',\n')
+
+  const demoComponentsMap = demos.map(d =>
+    `  '${d.id}': ${d.id}`
+  ).join(',\n')
+
+  // 替换 HTML 中的占位符为 div 容器
+  let processedHtml = html
+  for (const demo of demos) {
+    const placeholder = `<!--DEMO_${demo.id}-->`
+    processedHtml = processedHtml.replace(
+      placeholder,
+      `<div class="ldoc-demo" id="ldoc-demo-${demo.id}"><div class="ldoc-demo-preview" id="ldoc-demo-preview-${demo.id}"></div><div class="ldoc-demo-actions"><button class="ldoc-demo-btn ldoc-demo-copy" data-demo-id="${demo.id}" title="复制代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg></button><button class="ldoc-demo-btn ldoc-demo-toggle" data-demo-id="${demo.id}" title="展开代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></button></div><div class="ldoc-demo-code" id="ldoc-demo-code-${demo.id}" style="display:none"><pre><code></code></pre></div></div>`
+    )
+  }
+
+  // 使用 URI 编码 + Base64 处理 UTF-8 字符
+  const htmlEncoded = Buffer.from(encodeURIComponent(processedHtml)).toString('base64')
+
+  return `
+<template>
+  <div class="ldoc-content" ref="contentRef" v-html="contentHtml"></div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted, createApp, h } from 'vue'
+${demoImports}
+
+// UTF-8 安全的 Base64 解码
+const decodeBase64 = (str) => decodeURIComponent(atob(str))
+
+const componentId = '${componentId}'
+const frontmatter = ${frontmatterJson}
+const contentHtml = ref(typeof atob !== 'undefined' ? decodeBase64('${htmlEncoded}') : '')
+const contentRef = ref(null)
+
+const demoCode = {
+${demoCodeMap}
+}
+
+const demoComponents = {
+${demoComponentsMap}
+}
+
+const mountedApps = []
+
+onMounted(() => {
+  // 挂载所有 demo 组件
+  for (const [id, Component] of Object.entries(demoComponents)) {
+    const container = document.getElementById('ldoc-demo-preview-' + id)
+    if (container && Component) {
+      const app = createApp({ render: () => h(Component) })
+      app.mount(container)
+      mountedApps.push(app)
+    }
+    
+    // 填充代码（从 Base64 解码）
+    const codeEl = document.querySelector('#ldoc-demo-code-' + id + ' code')
+    if (codeEl && demoCode[id]) {
+      codeEl.textContent = decodeBase64(demoCode[id])
+    }
+  }
+  
+  // 绑定按钮事件
+  document.querySelectorAll('.ldoc-demo-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const demoId = btn.dataset.demoId
+      const codeEl = document.getElementById('ldoc-demo-code-' + demoId)
+      if (codeEl) {
+        codeEl.style.display = codeEl.style.display === 'none' ? 'block' : 'none'
+      }
+    })
+  })
+  
+  document.querySelectorAll('.ldoc-demo-copy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const demoId = btn.dataset.demoId
+      const code = demoCode[demoId] ? decodeBase64(demoCode[demoId]) : ''
+      if (code) {
+        try {
+          await navigator.clipboard.writeText(code)
+          btn.title = '已复制!'
+          setTimeout(() => { btn.title = '复制代码' }, 2000)
+        } catch (e) {
+          console.error('复制失败:', e)
+        }
+      }
+    })
+  })
+  
+  updatePageData()
+})
+
+onUnmounted(() => {
+  // 卸载所有 demo 应用
+  mountedApps.forEach(app => app.unmount())
+})
+
+const updatePageData = () => {
+  if (typeof window !== 'undefined' && window.__LDOC_PAGE_DATA__) {
+    window.__LDOC_PAGE_DATA__.value = {
+      ...window.__LDOC_PAGE_DATA__.value,
+      frontmatter: { ...frontmatter },
+      _hmrId: componentId
+    }
+  }
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(() => { updatePageData() })
+}
+
+defineExpose({ frontmatter })
+</script>
+
+<style>
+.ldoc-demo {
+  border: 1px solid var(--vp-c-divider, #e5e7eb);
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+.ldoc-demo-preview {
+  padding: 24px;
+  background: var(--vp-c-bg, #fff);
+}
+.ldoc-demo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--vp-c-divider, #e5e7eb);
+  background: var(--vp-c-bg-soft, #f9fafb);
+}
+.ldoc-demo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--vp-c-text-2, #6b7280);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.ldoc-demo-btn:hover {
+  background: var(--vp-c-bg-mute, #f3f4f6);
+  color: var(--vp-c-text-1, #1f2937);
+}
+.ldoc-demo-code {
+  border-top: 1px solid var(--vp-c-divider, #e5e7eb);
+  background: #1e1e1e;
+}
+.ldoc-demo-code pre {
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+}
+.ldoc-demo-code code {
+  font-family: var(--vp-font-family-mono, 'Consolas', monospace);
+  font-size: 13px;
+  color: #d4d4d4;
+  white-space: pre;
+}
+</style>
 `
 }
 
@@ -209,6 +447,41 @@ function hasReactImport(code: string): boolean {
   return /import\s+.*\s+from\s+['"]react['"]/.test(code)
 }
 
+/**
+ * Demo 虚拟模块插件 - 支持在 Markdown 中渲染 Vue 组件
+ */
+function createDemoPlugin(config: SiteConfig): Plugin {
+  return {
+    name: 'ldoc:demo',
+
+    resolveId(id) {
+      // 处理 demo 虚拟模块
+      if (id.startsWith('virtual:demo/')) {
+        return '\0' + id
+      }
+      return null
+    },
+
+    load(id) {
+      if (id.startsWith('\0virtual:demo/')) {
+        const demoId = id.slice('\0virtual:demo/'.length)
+        const demo = demoCodeMap.get(demoId)
+
+        if (demo) {
+          // 返回 Vue SFC 代码
+          return demo.code
+        }
+
+        return `
+<template>
+  <div class="demo-error">Demo not found: ${demoId}</div>
+</template>
+`
+      }
+      return null
+    }
+  }
+}
 
 /**
  * 虚拟模块插件
@@ -253,9 +526,17 @@ export const themeConfig = ${JSON.stringify(config.themeConfig)}
     'virtual:ldoc/plugins': `
 // 插件客户端配置 - 自动生成
 console.log('[ldoc] Loading virtual:ldoc/plugins module');
+import builtinPlugins from '@ldesign/doc/plugins/builtin-client';
 ${imports}
 
 const plugins = [];
+
+// 添加内置插件
+plugins.push({
+  name: 'ldoc-builtin-plugins',
+  ...builtinPlugins
+});
+
 ${pluginsPush}
 console.log('[ldoc] Client plugins loaded:', plugins.map(p => p.name));
 

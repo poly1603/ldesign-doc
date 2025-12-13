@@ -114,6 +114,7 @@ async function buildLibrary() {
           'theme/index': resolve(rootDir, 'src/theme/index.ts'),
           'plugin/index': resolve(rootDir, 'src/plugin/index.ts'),
           'plugins/index': resolve(rootDir, 'src/plugins/index.ts'),
+          'plugins/builtin-client': resolve(rootDir, 'src/plugins/builtin-client.ts'),
           'markdown/index': resolve(rootDir, 'src/markdown/index.ts')
         },
         formats: ['es'],

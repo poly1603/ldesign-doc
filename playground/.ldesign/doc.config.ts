@@ -1,24 +1,42 @@
 import { defineConfig } from '@ldesign/doc'
-import readingTimePlugin from 'ldoc-plugin-reading-time'
-import wordCountPlugin from 'ldoc-plugin-word-count'
+import {
+  readingTimePlugin,
+  progressPlugin,
+  copyCodePlugin,
+  demoPlugin
+} from '@ldesign/doc/plugins'
 
 export default defineConfig({
+  srcDir: 'src',
   title: 'LDoc 演示站点',
   description: '现代化文档系统演示',
   lang: 'zh-CN',
-  // srcDir 已自动设置为 .ldesign/docs
 
-  // 主题配置 - 暂时使用默认主题测试
-  // theme: 'ldoc-theme-clean',
-
-  // 使用插件
+  // 插件配置
+  // 内置插件（返回顶部、图片灯箱、公告栏）自动加载
   plugins: [
+    // 阅读时间插件
     readingTimePlugin({
-      wordsPerMinute: 300,
-      includeCode: true
+      wordsPerMinute: 300
     }),
-    wordCountPlugin({
-      enabled: true
+
+    // 阅读进度条（非首页显示）
+    progressPlugin({
+      color: 'var(--vp-c-brand, #3b82f6)',
+      height: 3,
+      position: 'top',
+      exclude: ['/']
+    }),
+
+    // 代码复制按钮
+    copyCodePlugin({
+      showLanguage: true
+    }),
+
+    // 组件演示插件
+    demoPlugin({
+      defaultTitle: '示例',
+      defaultExpanded: false
     })
   ],
 
@@ -38,6 +56,7 @@ export default defineConfig({
     // 导航栏 - 点击后跳转到侧边栏第一个页面
     nav: [
       { text: '指南', link: '/guide/' },
+      { text: '示例', link: '/examples/' },
       { text: 'API', link: '/api/' },
       { text: '插件', link: '/plugins/' },
       { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
@@ -87,6 +106,48 @@ export default defineConfig({
           ]
         }
       ],
+      '/examples/': [
+        {
+          text: '功能示例',
+          items: [
+            { text: '示例总览', link: '/examples/' }
+          ]
+        },
+        {
+          text: 'Markdown 增强',
+          items: [
+            { text: '代码块', link: '/examples/markdown/code' }
+          ]
+        },
+        {
+          text: '容器与提示',
+          items: [
+            { text: '信息容器', link: '/examples/containers/' }
+          ]
+        },
+        {
+          text: '媒体资源',
+          items: [
+            { text: '图片展示', link: '/examples/media/images' },
+            { text: '视频嵌入', link: '/examples/media/videos' },
+            { text: '图标使用', link: '/examples/media/icons' }
+          ]
+        },
+        {
+          text: 'Vue 组件',
+          items: [
+            { text: '基础组件', link: '/examples/vue/basic' },
+            { text: '交互组件', link: '/examples/vue/interactive' }
+          ]
+        },
+        {
+          text: '高级功能',
+          items: [
+            { text: '数学公式', link: '/examples/advanced/math' },
+            { text: '流程图', link: '/examples/advanced/diagrams' }
+          ]
+        }
+      ],
       '/plugins/': [
         {
           text: '插件系统',
@@ -98,6 +159,7 @@ export default defineConfig({
         {
           text: '内置插件',
           items: [
+            { text: '组件演示插件', link: '/plugins/demo' },
             { text: '搜索插件', link: '/plugins/search' },
             { text: '评论插件', link: '/plugins/comment' },
             { text: '进度条插件', link: '/plugins/progress' },

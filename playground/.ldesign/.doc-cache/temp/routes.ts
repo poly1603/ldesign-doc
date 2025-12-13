@@ -3,258 +3,186 @@
 export const routes = [
   {
     path: '/',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/index.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/index.md'),
     meta: { 
-      title: 'LDoc - 现代化文档系统',
-      frontmatter: {"layout":"home","title":"LDoc - 现代化文档系统","hero":{"name":"1LDoc1","text":"为现代化文档而生1","tagline":"22e基于 Vite 的高性能文档框架，支持 Vue/React 组件渲染、主题系统、插件系统3333","canvas":{"type":"waves","speed":1.2,"density":1},"actions":[{"text":"快速开始","link":"/guide/getting-started","theme":"brand"},{"text":"Markdown 语法","link":"/guide/markdown","theme":"alt"}],"image":{"src":"/logo.svg","alt":"LDoc"}},"featuresTitle":"核心特性","featuresDescription":"为现代化文档而生，提供极致的开发体验","features":[{"icon":"zap","title":"极速启动","details":"基于 Vite 构建，毫秒级冷启动，即时热更新，文档修改实时可见","link":"/guide/getting-started","linkText":"快速开始"},{"icon":"code","title":"Markdown 增强","details":"丰富的 Markdown 扩展语法，支持自定义容器、代码高亮、组件演示等","link":"/guide/markdown","linkText":"查看语法"},{"icon":"palette","title":"主题定制","details":"完全可定制的主题系统，支持暗色模式切换，CSS 变量轻松修改样式","link":"/guide/theme","linkText":"主题配置"},{"icon":"puzzle","title":"插件扩展","details":"强大的插件架构，支持自定义 Markdown 语法、页面数据、构建流程","link":"/guide/plugins","linkText":"插件开发"},{"icon":"layout","title":"响应式布局","details":"完美适配各种设备尺寸，从桌面到移动端都能获得最佳阅读体验"},{"icon":"search","title":"全文搜索","details":"内置全文搜索支持，快速定位文档内容，提升查阅效率"}],"stats":[{"value":"50+","title":"Markdown 特性"},{"value":"100%","title":"TypeScript"},{"value":"MIT","title":"开源协议"},{"value":"2KB","title":"主题包大小"}],"codeExample":{"title":"三步开始","description":"只需几行命令，即可创建你的文档站点","steps":[{"title":"安装依赖","code":"npm install @ldesign/doc -D"},{"title":"初始化配置","code":"npx ldoc init"},{"title":"启动开发","code":"npm run docs:dev"}]},"banner":{"icon":"rocket","title":"开始使用 LDoc","description":"查看完整的使用指南，了解如何配置和自定义你的文档站点","link":"/guide/getting-started","linkText":"阅读文档"}}
+      title: 'LDoc 现代化文档框架',
+      frontmatter: {"layout":"home","title":"LDoc 现代化文档框架","hero":{"name":"LDesign Doc","text":"现代化文档生成框架","tagline":"基于 Vite，支持 Vue/React，开箱即用","actions":[{"theme":"brand","text":"快速开始","link":"/guide/getting-started"},{"theme":"alt","text":"在 GitHub 上查看","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"⚡️","title":"Vite 驱动","details":"享受 Vite 带来的极速开发体验，即时热更新"},{"icon":"📝","title":"Markdown 为中心","details":"专注于内容编写，Markdown 原生支持 + 丰富扩展"},{"icon":"🎨","title":"高度可定制","details":"灵活的主题系统，支持 Vue/React 组件"},{"icon":"🔌","title":"插件系统","details":"完善的插件架构，轻松扩展功能"},{"icon":"🌍","title":"多语言支持","details":"内置国际化支持，轻松构建多语言文档"},{"icon":"📱","title":"响应式设计","details":"移动端友好，任何设备上都有出色体验"}]}
     }
   },
   {
     path: '/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/index.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/api/index.md'),
     meta: { 
       title: 'API 参考',
-      frontmatter: {"title":"API 参考","description":"LDoc 的完整 API 文档"}
+      frontmatter: {"title":"API 参考"}
     }
   },
   {
     path: '/api/client',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/client.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/api/client.md'),
     meta: { 
-      title: 'client',
-      frontmatter: {}
+      title: '客户端 API',
+      frontmatter: {"title":"客户端 API"}
     }
   },
   {
-    path: '/api/components',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/components.md'),
+    path: '/api/plugin',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/api/plugin.md'),
     meta: { 
-      title: 'components',
-      frontmatter: {}
+      title: '插件 API',
+      frontmatter: {"title":"插件 API"}
     }
   },
   {
-    path: '/api/composables',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/composables.md'),
+    path: '/examples',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/index.md'),
     meta: { 
-      title: 'composables',
-      frontmatter: {}
+      title: '功能示例',
+      frontmatter: {"title":"功能示例"}
     }
   },
   {
-    path: '/api/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/frontmatter.md'),
+    path: '/examples/advanced/diagrams',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/advanced/diagrams.md'),
     meta: { 
-      title: 'frontmatter',
-      frontmatter: {}
+      title: '流程图与图表',
+      frontmatter: {"title":"流程图与图表"}
     }
   },
   {
-    path: '/api/site-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/site-config.md'),
+    path: '/examples/advanced/math',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/advanced/math.md'),
     meta: { 
-      title: 'site-config',
-      frontmatter: {}
+      title: '数学公式',
+      frontmatter: {"title":"数学公式"}
     }
   },
   {
-    path: '/api/theme',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme.md'),
+    path: '/examples/containers',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/containers/index.md'),
     meta: { 
-      title: 'theme',
-      frontmatter: {}
+      title: '信息容器',
+      frontmatter: {"title":"信息容器"}
     }
   },
   {
-    path: '/api/theme-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme-config.md'),
+    path: '/examples/markdown/code',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/markdown/code.md'),
     meta: { 
-      title: 'theme-config',
-      frontmatter: {}
+      title: '代码块',
+      frontmatter: {"title":"代码块"}
     }
   },
   {
-    path: '/components',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/components/index.md'),
+    path: '/examples/media/icons',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/media/icons.md'),
     meta: { 
-      title: '',
-      frontmatter: {}
+      title: '图标使用',
+      frontmatter: {"title":"图标使用"}
     }
   },
   {
-    path: '/components/button',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/components/button.md'),
+    path: '/examples/media/images',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/media/images.md'),
     meta: { 
-      title: 'button',
-      frontmatter: {}
+      title: '图片展示',
+      frontmatter: {"title":"图片展示"}
+    }
+  },
+  {
+    path: '/examples/media/videos',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/media/videos.md'),
+    meta: { 
+      title: '视频嵌入',
+      frontmatter: {"title":"视频嵌入"}
+    }
+  },
+  {
+    path: '/examples/vue/basic',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/vue/basic.md'),
+    meta: { 
+      title: '基础 Vue 组件',
+      frontmatter: {"title":"基础 Vue 组件"}
+    }
+  },
+  {
+    path: '/examples/vue/interactive',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/examples/vue/interactive.md'),
+    meta: { 
+      title: '交互式组件',
+      frontmatter: {"title":"交互式组件"}
     }
   },
   {
     path: '/guide',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/index.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/index.md'),
     meta: { 
-      title: '',
-      frontmatter: {}
+      title: '介绍',
+      frontmatter: {"title":"介绍"}
     }
   },
   {
     path: '/guide/assets',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/assets.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/assets.md'),
     meta: { 
-      title: 'assets',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/guide/configuration',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/configuration.md'),
-    meta: { 
-      title: 'configuration',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/guide/deploy',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/deploy.md'),
-    meta: { 
-      title: 'deploy',
-      frontmatter: {}
+      title: '资源处理',
+      frontmatter: {"title":"资源处理"}
     }
   },
   {
     path: '/guide/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/frontmatter.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/frontmatter.md'),
     meta: { 
-      title: 'frontmatter',
-      frontmatter: {}
+      title: 'Frontmatter',
+      frontmatter: {"title":"Frontmatter"}
     }
   },
   {
     path: '/guide/getting-started',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/getting-started.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/getting-started.md'),
     meta: { 
       title: '快速开始',
-      frontmatter: {"title":"快速开始","description":"从零开始搭建 LDoc 文档站点"}
+      frontmatter: {"title":"快速开始"}
     }
   },
   {
     path: '/guide/markdown',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/markdown.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/markdown.md'),
     meta: { 
-      title: 'markdown',
-      frontmatter: {}
+      title: 'Markdown 扩展',
+      frontmatter: {"title":"Markdown 扩展"}
     }
   },
   {
-    path: '/guide/plugin',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/plugin.md'),
+    path: '/guide/structure',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/guide/structure.md'),
     meta: { 
-      title: 'plugin',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/guide/theme',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/theme.md'),
-    meta: { 
-      title: 'theme',
-      frontmatter: {}
+      title: '目录结构',
+      frontmatter: {"title":"目录结构"}
     }
   },
   {
     path: '/plugins',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/index.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/plugins/index.md'),
     meta: { 
-      title: '',
-      frontmatter: {}
+      title: '插件概述',
+      frontmatter: {"title":"插件概述"}
     }
   },
   {
-    path: '/plugins/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/api.md'),
+    path: '/plugins/built-in',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/plugins/built-in.md'),
     meta: { 
-      title: 'api',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/comment',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/comment.md'),
-    meta: { 
-      title: 'comment',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/copy-code',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/copy-code.md'),
-    meta: { 
-      title: 'copy-code',
-      frontmatter: {}
+      title: '内置插件',
+      frontmatter: {"title":"内置插件"}
     }
   },
   {
     path: '/plugins/development',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/development.md'),
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/src/plugins/development.md'),
     meta: { 
-      title: 'development',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/image-viewer',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/image-viewer.md'),
-    meta: { 
-      title: 'image-viewer',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/last-updated',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/last-updated.md'),
-    meta: { 
-      title: 'last-updated',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/progress',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/progress.md'),
-    meta: { 
-      title: 'progress',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/reading-time',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/reading-time.md'),
-    meta: { 
-      title: 'reading-time',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/search',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/search.md'),
-    meta: { 
-      title: 'search',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/theme-dev',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/theme-dev.md'),
-    meta: { 
-      title: 'theme-dev',
-      frontmatter: {}
-    }
-  },
-  {
-    path: '/plugins/using',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/using.md'),
-    meta: { 
-      title: 'using',
-      frontmatter: {}
+      title: '插件开发',
+      frontmatter: {"title":"插件开发"}
     }
   },
   {

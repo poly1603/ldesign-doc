@@ -1,13 +1,10 @@
 ---
 layout: home
-title: '@ldesign/doc - 现代化文档生成框架'
+title: LDoc 现代化文档框架
 hero:
-  name: '@ldesign/doc'
+  name: LDesign Doc
   text: 现代化文档生成框架
   tagline: 基于 Vite，支持 Vue/React，开箱即用
-  image:
-    src: /logo.svg
-    alt: '@ldesign/doc'
   actions:
     - theme: brand
       text: 快速开始
@@ -37,9 +34,9 @@ features:
     details: 移动端友好，任何设备上都有出色体验
 ---
 
-## 为什么选择 @ldesign/doc？
+## 为什么选择 LDoc？
 
-@ldesign/doc 是一个现代化的静态文档生成框架，专为构建技术文档、组件库文档、API 文档等场景设计。
+LDoc 是一个现代化的静态文档生成框架，专为构建技术文档、组件库文档、API 文档等场景设计。
 
 ### 特点
 
@@ -53,7 +50,7 @@ features:
 
 ```bash
 # 创建项目
-pnpm create @ldesign/doc my-docs
+pnpm create ldoc my-docs
 
 # 进入目录
 cd my-docs
@@ -68,12 +65,6 @@ pnpm dev
 ## 赞助商
 
 感谢所有赞助商的支持！
-
-<script setup>
-import { ref } from 'vue'
-
-const count = ref(0)
-</script>
 
 <div class="sponsors">
   <p>成为赞助商，支持项目持续发展</p>

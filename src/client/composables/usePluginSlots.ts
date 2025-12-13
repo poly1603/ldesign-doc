@@ -3,7 +3,7 @@
  * 
  * 提供插件 UI 注入功能，让插件可以独立于主题向页面注入组件
  */
-import { inject, provide, ref, type Ref, type InjectionKey } from 'vue'
+import { inject, provide, ref, markRaw, type Ref, type InjectionKey } from 'vue'
 import type {
   PluginSlotName,
   PluginSlotComponent,
@@ -39,29 +39,36 @@ export function createPluginSlotsContext(): PluginSlotsContext {
 
   const registerPluginSlots = (pluginName: string, pluginSlots: PluginSlots) => {
     if (!pluginSlots) {
-      console.log(`[ldoc] Plugin "${pluginName}" has no slots`)
       return
     }
-
-    console.log(`[ldoc] Plugin "${pluginName}" registering slots:`, pluginSlots)
 
     for (const [slotName, components] of Object.entries(pluginSlots)) {
       const name = slotName as PluginSlotName
       const componentArray = Array.isArray(components) ? components : [components]
 
-      console.log(`[ldoc] Registering slot "${name}" with ${componentArray.length} component(s)`)
+      // 使用 markRaw 包裹组件，避免被转换为响应式对象
+      const rawComponents = componentArray.map(comp => {
+        if (typeof comp === 'object' && comp !== null) {
+          return markRaw(comp) as PluginSlotComponent
+        }
+        return comp
+      })
 
       const existing = slots.value.get(name) || []
-      slots.value.set(name, [...existing, ...componentArray])
+      slots.value.set(name, [...existing, ...rawComponents])
     }
-
-    console.log(`[ldoc] Plugin "${pluginName}" registered slots:`, Object.keys(pluginSlots))
-    console.log(`[ldoc] Total slots after registration:`, Array.from(slots.value.keys()))
   }
 
   const registerGlobalComponents = (components: PluginGlobalComponent[]) => {
     if (!components?.length) return
-    globalComponents.value.push(...components)
+    // 使用 markRaw 包裹组件
+    const rawComponents = components.map(comp => {
+      if (comp.component && typeof comp.component === 'object') {
+        return { ...comp, component: markRaw(comp.component) }
+      }
+      return comp
+    })
+    globalComponents.value.push(...rawComponents)
   }
 
   const getSlotComponents = (name: PluginSlotName): PluginSlotComponent[] => {

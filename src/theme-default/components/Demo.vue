@@ -31,17 +31,19 @@
     <!-- 代码区域 -->
     <Transition name="slide">
       <div v-show="expanded" class="demo-code" ref="codeContainer">
-        <slot name="code" />
+        <pre v-if="code"><code class="language-vue">{{ code }}</code></pre>
+        <slot v-else name="code" />
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   info?: string
+  code?: string
 }>()
 
 const expanded = ref(false)
@@ -53,16 +55,18 @@ const toggleCode = () => {
 }
 
 const copyCode = async () => {
-  if (!codeContainer.value) return
+  // 优先使用 code prop
+  let codeText = props.code || ''
+  
+  if (!codeText && codeContainer.value) {
+    const codeEl = codeContainer.value.querySelector('code')
+    codeText = codeEl?.textContent || ''
+  }
 
-  // 获取代码内容
-  const codeEl = codeContainer.value.querySelector('code')
-  if (!codeEl) return
-
-  const code = codeEl.textContent || ''
+  if (!codeText) return
 
   try {
-    await navigator.clipboard.writeText(code)
+    await navigator.clipboard.writeText(codeText)
     copied.value = true
     setTimeout(() => {
       copied.value = false

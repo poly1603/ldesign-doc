@@ -25,7 +25,7 @@ export interface PluginContainer {
 interface PluginHooks {
   configResolved: (config: SiteConfig) => void | Promise<void>
   extendMarkdown: (md: MarkdownRenderer) => void
-  extendPageData: (pageData: PageData) => void | Promise<void>
+  extendPageData: (pageData: PageData, ctx: { siteConfig: SiteConfig; content: string; filePath: string; relativePath: string }) => void | Promise<void>
   extendRoutes: (routes: Route[]) => Route[] | void
   buildStart: (config: SiteConfig) => void | Promise<void>
   buildEnd: (config: SiteConfig) => void | Promise<void>

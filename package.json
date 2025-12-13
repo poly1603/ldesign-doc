@@ -38,6 +38,10 @@
       "types": "./dist/types/plugins/index.d.ts",
       "import": "./dist/es/plugins/index.js"
     },
+    "./plugins/builtin-client": {
+      "types": "./dist/types/plugins/builtin-client.d.ts",
+      "import": "./dist/es/plugins/builtin-client.js"
+    },
     "./node": {
       "types": "./dist/types/node/index.d.ts",
       "import": "./dist/es/node/index.js"
