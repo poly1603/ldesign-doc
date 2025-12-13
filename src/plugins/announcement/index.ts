@@ -48,6 +48,15 @@ const AnnouncementBar = defineComponent({
   },
   setup(props) {
     const visible = ref(true)
+    const announcementRef = ref<HTMLElement | null>(null)
+
+    // 更新 CSS 变量来控制 header 位置
+    const updateAnnouncementHeight = () => {
+      if (typeof document !== 'undefined') {
+        const height = visible.value && announcementRef.value ? announcementRef.value.offsetHeight : 0
+        document.documentElement.style.setProperty('--ldoc-announcement-height', `${height}px`)
+      }
+    }
 
     onMounted(() => {
       if (props.storageKey) {
@@ -56,6 +65,8 @@ const AnnouncementBar = defineComponent({
           visible.value = false
         }
       }
+      // 初始化时更新高度
+      setTimeout(updateAnnouncementHeight, 0)
     })
 
     const close = () => {
@@ -63,6 +74,8 @@ const AnnouncementBar = defineComponent({
       if (props.storageKey) {
         localStorage.setItem(`ldoc-announcement-${props.storageKey}`, 'true')
       }
+      // 关闭后更新高度
+      updateAnnouncementHeight()
     }
 
     return () => {
@@ -73,8 +86,11 @@ const AnnouncementBar = defineComponent({
       const txtColor = props.textColor || colors.text
 
       return h('div', {
+        ref: announcementRef,
         class: 'ldoc-announcement',
         style: {
+          position: 'relative',
+          zIndex: '200',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

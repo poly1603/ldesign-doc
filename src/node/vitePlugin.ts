@@ -19,6 +19,7 @@ interface DemoInfo {
   absolutePath: string  // 绝对路径
   code: string          // 源代码
   title?: string
+  type?: 'vue' | 'html' | 'react'  // demo 类型
 }
 
 export interface VitePluginOptions {
@@ -106,19 +107,28 @@ function createMarkdownPlugin(
         } catch { }
       }
 
-      // 解析 demo，支持两种语法：
+      // 解析 demo，支持多种语法：
       // 1. <demo src="./xxx.vue" /> 标签
       // 2. ```vue-demo 代码块（可以是 src="./xxx.vue" 或直接写代码）
+      // 3. ```html-demo 纯 HTML 演示
+      // 4. ```react-demo React 组件演示（未来支持）
       const demos: DemoInfo[] = []
       let demoIndex = 0
 
-      // 解析 ```vue-demo 代码块
-      markdown = markdown.replace(
-        /```vue-demo(?:\s+src=["']([^"']+)["'])?(?:\s+title=["']([^"']+)["'])?\s*\n([\s\S]*?)```/gi,
-        (match, src, title, inlineCode) => {
+      // 支持的 demo 类型：vue-demo, html-demo, react-demo
+      const demoTypes = ['vue', 'html', 'react']
+
+      // 解析 ```xxx-demo 代码块
+      for (const demoType of demoTypes) {
+        const regex = new RegExp(
+          '```' + demoType + '-demo(?:\\s+src=["\']([^"\']+)["\'])?(?:\\s+title=["\']([^"\']+)["\'])?\\s*\\n([\\s\\S]*?)```',
+          'gi'
+        )
+        markdown = markdown.replace(regex, (match, src, title, inlineCode) => {
           const demoId = `Demo${demoIndex++}`
           let demoCode = ''
           let absolutePath = ''
+          const ext = demoType === 'vue' ? '.vue' : demoType === 'react' ? '.tsx' : '.html'
 
           if (src) {
             // 引用外部文件
@@ -130,9 +140,9 @@ function createMarkdownPlugin(
             // 内联代码 - 生成临时虚拟模块
             demoCode = inlineCode.trim()
             // 为内联代码创建虚拟路径
-            absolutePath = `virtual:demo/${filePath}/${demoId}.vue`
+            absolutePath = `virtual:demo/${filePath}/${demoId}${ext}`
             // 存储内联代码供虚拟模块使用
-            demoCodeMap.set(absolutePath, { code: demoCode, language: 'vue' })
+            demoCodeMap.set(absolutePath, { code: demoCode, language: demoType })
           }
 
           if (demoCode) {
@@ -141,13 +151,14 @@ function createMarkdownPlugin(
               src: src || `inline-${demoId}`,
               absolutePath: normalizePath(absolutePath),
               code: demoCode,
-              title
+              title,
+              type: demoType as 'vue' | 'html' | 'react'
             })
             return `<!--DEMO_${demoId}-->`
           }
           return match
-        }
-      )
+        })
+      }
 
       // 解析 <demo src="./xxx.vue" /> 标签
       markdown = markdown.replace(
@@ -277,7 +288,9 @@ defineExpose({ frontmatter })
 
   // 有 demo 组件时，使用运行时挂载方案
   // 在 HTML 中插入占位符，onMounted 时动态挂载组件
-  const demoImports = demos.map(d => {
+  // Vue demos 需要导入组件
+  const vueDemos = demos.filter(d => d.type !== 'html')
+  const demoImports = vueDemos.map(d => {
     // 虚拟模块使用 virtual: 前缀，实际文件使用 /@fs/ 前缀
     const importPath = d.absolutePath.startsWith('virtual:')
       ? d.absolutePath
@@ -286,11 +299,16 @@ defineExpose({ frontmatter })
   }).join('\n')
 
   // 对代码也使用 URI 编码 + Base64 处理 UTF-8
-  const demoCodeMap = demos.map(d =>
+  const demoCodeMapStr = demos.map(d =>
     `  '${d.id}': '${Buffer.from(encodeURIComponent(d.code)).toString('base64')}'`
   ).join(',\n')
 
-  const demoComponentsMap = demos.map(d =>
+  // 记录每个 demo 的类型
+  const demoTypesMap = demos.map(d =>
+    `  '${d.id}': '${d.type || 'vue'}'`
+  ).join(',\n')
+
+  const demoComponentsMap = vueDemos.map(d =>
     `  '${d.id}': ${d.id}`
   ).join(',\n')
 
@@ -319,13 +337,20 @@ ${demoImports}
 // UTF-8 安全的 Base64 解码
 const decodeBase64 = (str) => decodeURIComponent(atob(str))
 
+// 代码转义（简单版，不做复杂语法高亮避免正则问题）
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
 const componentId = '${componentId}'
 const frontmatter = ${frontmatterJson}
 const contentHtml = ref(typeof atob !== 'undefined' ? decodeBase64('${htmlEncoded}') : '')
 const contentRef = ref(null)
 
 const demoCode = {
-${demoCodeMap}
+${demoCodeMapStr}
+}
+
+const demoTypes = {
+${demoTypesMap}
 }
 
 const demoComponents = {
@@ -335,19 +360,27 @@ ${demoComponentsMap}
 const mountedApps = []
 
 onMounted(() => {
-  // 挂载所有 demo 组件
-  for (const [id, Component] of Object.entries(demoComponents)) {
+  // 挂载所有 demo
+  for (const [id, code] of Object.entries(demoCode)) {
     const container = document.getElementById('ldoc-demo-preview-' + id)
-    if (container && Component) {
-      const app = createApp({ render: () => h(Component) })
-      app.mount(container)
-      mountedApps.push(app)
+    const demoType = demoTypes[id] || 'vue'
+    
+    if (container) {
+      if (demoType === 'html') {
+        // HTML demo: 直接渲染 HTML
+        container.innerHTML = decodeBase64(code)
+      } else if (demoComponents[id]) {
+        // Vue demo: 挂载 Vue 组件
+        const app = createApp({ render: () => h(demoComponents[id]) })
+        app.mount(container)
+        mountedApps.push(app)
+      }
     }
     
-    // 填充代码（从 Base64 解码）
+    // 填充代码（从 Base64 解码并高亮）
     const codeEl = document.querySelector('#ldoc-demo-code-' + id + ' code')
-    if (codeEl && demoCode[id]) {
-      codeEl.textContent = decodeBase64(demoCode[id])
+    if (codeEl && code) {
+      codeEl.innerHTML = escapeHtml(decodeBase64(code))
     }
   }
   
@@ -450,12 +483,23 @@ defineExpose({ frontmatter })
 }
 .ldoc-demo-code code {
   font-family: var(--vp-font-family-mono, 'Consolas', 'Monaco', 'Andale Mono', monospace);
-  font-size: 14px;
-  line-height: 1.6;
-  color: #e6e6e6;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #d4d4d4;
   white-space: pre;
   display: block;
 }
+/* 语法高亮 */
+.ldoc-demo-code .hl-tag { color: #569cd6; }
+.ldoc-demo-code .hl-attr { color: #9cdcfe; }
+.ldoc-demo-code .hl-string { color: #ce9178; }
+.ldoc-demo-code .hl-keyword { color: #c586c0; }
+.ldoc-demo-code .hl-function { color: #dcdcaa; }
+.ldoc-demo-code .hl-variable { color: #9cdcfe; }
+.ldoc-demo-code .hl-number { color: #b5cea8; }
+.ldoc-demo-code .hl-comment { color: #6a9955; font-style: italic; }
+.ldoc-demo-code .hl-punctuation { color: #808080; }
+.ldoc-demo-code .hl-operator { color: #d4d4d4; }
 </style>
 `
 }

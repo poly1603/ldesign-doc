@@ -195,12 +195,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .ldoc-layout-content {
   display: flex;
   flex: 1;
-  padding-top: var(--ldoc-nav-height, 64px);
 }
 
 .ldoc-main {
@@ -209,13 +209,10 @@ onUnmounted(() => {
   padding: 24px;
 }
 
-/* 首页无顶部padding，并且 main 内容区域不需要导航栏高度的 padding */
-.ldoc-layout.is-home .ldoc-layout-content {
-  padding-top: 0;
-}
-
+/* 首页样式 */
 .ldoc-layout.is-home .ldoc-main {
-  padding-top: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 .skip-link {
