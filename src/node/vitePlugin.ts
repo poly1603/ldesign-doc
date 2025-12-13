@@ -106,20 +106,53 @@ function createMarkdownPlugin(
         } catch { }
       }
 
-      // 解析 <demo src="./xxx.vue" /> 标签，收集所有 demo 组件
+      // 解析 demo，支持两种语法：
+      // 1. <demo src="./xxx.vue" /> 标签
+      // 2. ```vue-demo 代码块（可以是 src="./xxx.vue" 或直接写代码）
       const demos: DemoInfo[] = []
       let demoIndex = 0
 
-      // 调试：检查 markdown 内容
-      if (filePath.includes('basic.md')) {
-        console.log('[ldoc:demo] Processing:', filePath)
-        console.log('[ldoc:demo] Markdown content:', markdown.slice(0, 500))
-      }
+      // 解析 ```vue-demo 代码块
+      markdown = markdown.replace(
+        /```vue-demo(?:\s+src=["']([^"']+)["'])?(?:\s+title=["']([^"']+)["'])?\s*\n([\s\S]*?)```/gi,
+        (match, src, title, inlineCode) => {
+          const demoId = `Demo${demoIndex++}`
+          let demoCode = ''
+          let absolutePath = ''
 
+          if (src) {
+            // 引用外部文件
+            absolutePath = resolve(fileDir, src)
+            if (existsSync(absolutePath)) {
+              demoCode = readFileSync(absolutePath, 'utf-8')
+            }
+          } else if (inlineCode && inlineCode.trim()) {
+            // 内联代码 - 生成临时虚拟模块
+            demoCode = inlineCode.trim()
+            // 为内联代码创建虚拟路径
+            absolutePath = `virtual:demo/${filePath}/${demoId}.vue`
+            // 存储内联代码供虚拟模块使用
+            demoCodeMap.set(absolutePath, { code: demoCode, language: 'vue' })
+          }
+
+          if (demoCode) {
+            demos.push({
+              id: demoId,
+              src: src || `inline-${demoId}`,
+              absolutePath: normalizePath(absolutePath),
+              code: demoCode,
+              title
+            })
+            return `<!--DEMO_${demoId}-->`
+          }
+          return match
+        }
+      )
+
+      // 解析 <demo src="./xxx.vue" /> 标签
       markdown = markdown.replace(
         /<demo\s+src=["']([^"']+)["'](?:\s+title=["']([^"']+)["'])?\s*\/?>/gi,
         (match, src, title) => {
-          console.log('[ldoc:demo] Match found:', match, 'src:', src)
           const demoId = `Demo${demoIndex++}`
           const absolutePath = resolve(fileDir, src)
 
@@ -244,9 +277,13 @@ defineExpose({ frontmatter })
 
   // 有 demo 组件时，使用运行时挂载方案
   // 在 HTML 中插入占位符，onMounted 时动态挂载组件
-  const demoImports = demos.map(d =>
-    `import ${d.id} from '/@fs/${d.absolutePath}'`
-  ).join('\n')
+  const demoImports = demos.map(d => {
+    // 虚拟模块使用 virtual: 前缀，实际文件使用 /@fs/ 前缀
+    const importPath = d.absolutePath.startsWith('virtual:')
+      ? d.absolutePath
+      : `/@fs/${d.absolutePath}`
+    return `import ${d.id} from '${importPath}'`
+  }).join('\n')
 
   // 对代码也使用 URI 编码 + Base64 处理 UTF-8
   const demoCodeMap = demos.map(d =>
@@ -451,21 +488,27 @@ function hasReactImport(code: string): boolean {
  * Demo 虚拟模块插件 - 支持在 Markdown 中渲染 Vue 组件
  */
 function createDemoPlugin(config: SiteConfig): Plugin {
+  // 使用特殊的文件系统路径作为虚拟模块 ID
+  const DEMO_PREFIX = '/@ldoc-demo/'
+
   return {
     name: 'ldoc:demo',
+    enforce: 'pre',
 
     resolveId(id) {
       // 处理 demo 虚拟模块
-      if (id.startsWith('virtual:demo/')) {
-        return '\0' + id
+      if (id.startsWith('virtual:demo/') && id.endsWith('.vue')) {
+        // 转换为可被 Vue 插件处理的路径格式
+        const demoPath = id.slice('virtual:demo/'.length)
+        return DEMO_PREFIX + demoPath
       }
       return null
     },
 
     load(id) {
-      if (id.startsWith('\0virtual:demo/')) {
-        const demoId = id.slice('\0virtual:demo/'.length)
-        const demo = demoCodeMap.get(demoId)
+      if (id.startsWith(DEMO_PREFIX) && id.endsWith('.vue')) {
+        const demoPath = 'virtual:demo/' + id.slice(DEMO_PREFIX.length)
+        const demo = demoCodeMap.get(demoPath)
 
         if (demo) {
           // 返回 Vue SFC 代码
@@ -474,7 +517,7 @@ function createDemoPlugin(config: SiteConfig): Plugin {
 
         return `
 <template>
-  <div class="demo-error">Demo not found: ${demoId}</div>
+  <div class="demo-error">Demo not found: ${demoPath}</div>
 </template>
 `
       }
