@@ -190,6 +190,9 @@ import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useData } from '../composables'
 import { PluginSlot, Content } from '@ldesign/doc/client'
 
+// 必须在任何引用之前先获取 frontmatter
+const { frontmatter } = useData()
+
 // Canvas 动画背景 - 支持多种动画效果
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
@@ -520,6 +523,16 @@ onMounted(() => {
   })
 })
 
+// 监听 frontmatter 变化，重新初始化 canvas
+watch(() => frontmatter.value.hero, () => {
+  cleanup?.()
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      cleanup = initCanvas()
+    })
+  })
+}, { deep: true })
+
 onUnmounted(() => {
   cleanup?.()
 })
@@ -575,8 +588,6 @@ interface Banner {
   link?: string
   linkText?: string
 }
-
-const { frontmatter } = useData()
 
 // HMR 更新计数器 - 强制重新计算 computed
 const hmrUpdateKey = ref(0)
@@ -713,9 +724,7 @@ const onFeatureLeave = (e: MouseEvent) => {
   text-align: center;
   overflow: hidden;
   margin: 0;
-  margin-left: calc(-1 * var(--ldoc-sidebar-width, 260px));
-  margin-right: calc(-1 * var(--ldoc-outline-width, 220px));
-  width: calc(100% + var(--ldoc-sidebar-width, 260px) + var(--ldoc-outline-width, 220px));
+  width: 100%;
   /* 创建堆叠上下文，确保 canvas 背景可见 */
   isolation: isolate;
 }

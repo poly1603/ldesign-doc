@@ -343,12 +343,27 @@ const AnnouncementBar = defineComponent({
   name: 'LDocAnnouncement',
   props: {
     content: { type: String, default: '' },
+    contentEn: { type: String, default: '' },
     type: { type: String, default: 'info' },
     closable: { type: Boolean, default: true },
     storageKey: { type: String, default: '' }
   },
   setup(props) {
     const visible = ref(true)
+    const route = useRoute()
+
+    // 检测当前是否为英文环境
+    const isEnglish = computed(() => {
+      return route.path.startsWith('/en/')
+    })
+
+    // 根据语言环境选择内容
+    const displayContent = computed(() => {
+      if (isEnglish.value && props.contentEn) {
+        return props.contentEn
+      }
+      return props.content
+    })
 
     onMounted(() => {
       if (props.storageKey) {
@@ -372,7 +387,7 @@ const AnnouncementBar = defineComponent({
     }
 
     return () => {
-      if (!visible.value || !props.content) return null
+      if (!visible.value || !displayContent.value) return null
 
       const color = colors[props.type] || colors.info
 
@@ -389,7 +404,7 @@ const AnnouncementBar = defineComponent({
           fontWeight: '500'
         }
       }, [
-        h('span', { innerHTML: props.content }),
+        h('span', { innerHTML: displayContent.value }),
         props.closable && h('button', {
           onClick: close,
           style: {
@@ -416,6 +431,7 @@ export interface BuiltinPluginConfig {
   lightbox?: boolean
   announcement?: {
     content: string
+    contentEn?: string
     type?: 'info' | 'warning' | 'success' | 'error'
     closable?: boolean
     storageKey?: string
@@ -477,6 +493,7 @@ export default {
     lightbox: true,
     announcement: {
       content: '🎉 <strong>LDoc 1.0</strong> 正式发布！全新的文档体验，欢迎体验！',
+      contentEn: '🎉 <strong>LDoc 1.0</strong> is released! A brand new documentation experience, try it now!',
       type: 'info',
       closable: true,
       storageKey: 'ldoc-v1.0'

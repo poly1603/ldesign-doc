@@ -37,7 +37,6 @@ window.__LDOC_SITE_DATA__ = siteDataRef
 const pluginSlotsContext = createPluginSlotsContext()
 
 // 收集插件的 slots 和全局组件
-console.log('[ldoc] Client plugins:', clientPlugins)
 collectPluginSlots(clientPlugins, pluginSlotsContext)
 
 // 创建路由

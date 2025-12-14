@@ -110,7 +110,143 @@ export const routes = [
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/index.md'),
     meta: { 
       title: 'LDoc Modern Documentation Framework',
-      frontmatter: {"layout":"home","title":"LDoc Modern Documentation Framework","hero":{"name":"LDesign Doc","text":"Modern Documentation Framework","tagline":"Powered by Vite, supports Vue/React, out of the box","actions":[{"theme":"brand","text":"Get Started","link":"/en/guide/getting-started"},{"theme":"alt","text":"View on GitHub","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite Powered","details":"Enjoy ultra-fast development with instant HMR, 10x productivity boost"},{"icon":"file-text","title":"Enhanced Markdown","details":"Code highlighting, containers, math formulas, Mermaid diagrams, Emoji and more"},{"icon":"palette","title":"Highly Customizable","details":"Flexible theming, Vue/React components, custom layouts and styles"},{"icon":"plug","title":"Plugin Ecosystem","details":"10+ built-in plugins including comments, search, reading time, image viewer"},{"icon":"search","title":"Full-text Search","details":"Built-in search plugin with keyboard shortcuts, instant results"},{"icon":"code","title":"Code Demo","details":"Live preview Vue/React components, side-by-side code and output"}]}
+      frontmatter: {"layout":"home","title":"LDoc Modern Documentation Framework","hero":{"name":"LDesign Doc","text":"Modern Documentation Framework","tagline":"Powered by Vite, supports Vue/React, out of the box","canvas":{"type":"particles","speed":1,"density":1},"actions":[{"theme":"brand","text":"Get Started","link":"/en/guide/getting-started"},{"theme":"alt","text":"View on GitHub","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite Powered","details":"Enjoy ultra-fast development with instant HMR, 10x productivity boost"},{"icon":"file-text","title":"Enhanced Markdown","details":"Code highlighting, containers, math formulas, Mermaid diagrams, Emoji and more"},{"icon":"palette","title":"Highly Customizable","details":"Flexible theming, Vue/React components, custom layouts and styles"},{"icon":"plug","title":"Plugin Ecosystem","details":"10+ built-in plugins including comments, search, reading time, image viewer"},{"icon":"search","title":"Full-text Search","details":"Built-in search plugin with keyboard shortcuts, instant results"},{"icon":"code","title":"Code Demo","details":"Live preview Vue/React components, side-by-side code and output"}]}
+    }
+  },
+  {
+    path: '/en/api',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/index.md'),
+    meta: { 
+      title: '',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/api/components',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/components.md'),
+    meta: { 
+      title: 'components',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/api/composables',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/composables.md'),
+    meta: { 
+      title: 'composables',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/api/frontmatter',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/frontmatter.md'),
+    meta: { 
+      title: 'frontmatter',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/api/site-config',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/site-config.md'),
+    meta: { 
+      title: 'site-config',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/api/theme-config',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/theme-config.md'),
+    meta: { 
+      title: 'theme-config',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/index.md'),
+    meta: { 
+      title: '',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/advanced/diagrams',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/diagrams.md'),
+    meta: { 
+      title: 'diagrams',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/advanced/math',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/math.md'),
+    meta: { 
+      title: 'math',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/containers',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/containers/index.md'),
+    meta: { 
+      title: '',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/markdown/code',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/code.md'),
+    meta: { 
+      title: 'code',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/markdown/containers',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/containers.md'),
+    meta: { 
+      title: 'containers',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/media/icons',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/icons.md'),
+    meta: { 
+      title: 'icons',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/media/images',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/images.md'),
+    meta: { 
+      title: 'images',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/media/videos',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/videos.md'),
+    meta: { 
+      title: 'videos',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/vue/basic',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/basic.md'),
+    meta: { 
+      title: 'basic',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/examples/vue/interactive',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/interactive.md'),
+    meta: { 
+      title: 'interactive',
+      frontmatter: {}
     }
   },
   {
@@ -119,6 +255,166 @@ export const routes = [
     meta: { 
       title: 'Introduction',
       frontmatter: {"title":"Introduction"}
+    }
+  },
+  {
+    path: '/en/guide/assets',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/assets.md'),
+    meta: { 
+      title: 'assets',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/configuration',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/configuration.md'),
+    meta: { 
+      title: 'configuration',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/deploy',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/deploy.md'),
+    meta: { 
+      title: 'deploy',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/frontmatter',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/frontmatter.md'),
+    meta: { 
+      title: 'frontmatter',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/getting-started',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/getting-started.md'),
+    meta: { 
+      title: 'getting-started',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/i18n',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/i18n.md'),
+    meta: { 
+      title: 'i18n',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/markdown',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/markdown.md'),
+    meta: { 
+      title: 'markdown',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/guide/theme',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/theme.md'),
+    meta: { 
+      title: 'theme',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/index.md'),
+    meta: { 
+      title: '',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/api',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/api.md'),
+    meta: { 
+      title: 'api',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/comment',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/comment.md'),
+    meta: { 
+      title: 'comment',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/copy-code',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/copy-code.md'),
+    meta: { 
+      title: 'copy-code',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/demo',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/demo.md'),
+    meta: { 
+      title: 'demo',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/development',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/development.md'),
+    meta: { 
+      title: 'development',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/image-viewer',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/image-viewer.md'),
+    meta: { 
+      title: 'image-viewer',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/last-updated',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/last-updated.md'),
+    meta: { 
+      title: 'last-updated',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/progress',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/progress.md'),
+    meta: { 
+      title: 'progress',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/reading-time',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/reading-time.md'),
+    meta: { 
+      title: 'reading-time',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/search',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/search.md'),
+    meta: { 
+      title: 'search',
+      frontmatter: {}
+    }
+  },
+  {
+    path: '/en/plugins/using',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/using.md'),
+    meta: { 
+      title: 'using',
+      frontmatter: {}
     }
   },
   {

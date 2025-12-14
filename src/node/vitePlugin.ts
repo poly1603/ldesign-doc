@@ -617,8 +617,6 @@ function createVirtualModulesPlugin(config: SiteConfig, pluginContainer: PluginC
     .map(p => `plugins.push({ name: '${p.name}', ...${p.varName} });`)
     .join('\n')
 
-  // 调试日志
-  console.log('[ldoc] Client plugins to load:', clientPlugins.map(p => ({ name: p.name, path: p.path })))
 
   const virtualModules: Record<string, string> = {
     'virtual:ldoc/site-data': `
@@ -636,7 +634,6 @@ export const themeConfig = ${JSON.stringify(config.themeConfig)}
 `,
     'virtual:ldoc/plugins': `
 // 插件客户端配置 - 自动生成
-console.log('[ldoc] Loading virtual:ldoc/plugins module');
 import builtinPlugins from '@ldesign/doc/plugins/builtin-client';
 ${imports}
 
@@ -649,7 +646,6 @@ plugins.push({
 });
 
 ${pluginsPush}
-console.log('[ldoc] Client plugins loaded:', plugins.map(p => p.name));
 
 export { plugins };
 export default plugins;

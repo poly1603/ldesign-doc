@@ -6,6 +6,7 @@ import { existsSync } from 'fs'
 import polka from 'polka'
 import sirv from 'sirv'
 import pc from 'picocolors'
+import * as logger from './logger'
 import type { SiteConfig } from '../shared/types'
 import { resolveConfig } from './config'
 
@@ -61,7 +62,7 @@ async function tryStartServer(
       return result
     } catch (err: any) {
       if (err.code === 'EADDRINUSE') {
-        console.log(pc.yellow(`Port ${currentPort} is in use, trying another one...`))
+        logger.printPortInUse(currentPort)
         continue
       }
       throw err
@@ -103,18 +104,12 @@ export async function serve(
   const hostStr = host === true ? '0.0.0.0' : (host || 'localhost')
   const url = `http://${hostStr}:${port}${config.base}`
 
-  console.log()
-  console.log(pc.green('  ✓ Production preview server running at:'))
-  console.log()
-  console.log(`    ${pc.cyan('Local:')}   ${pc.blue(url)}`)
-
-  if (host === true) {
-    console.log(`    ${pc.cyan('Network:')} ${pc.blue(`http://0.0.0.0:${port}${config.base}`)}`)
-  }
-
-  console.log()
-  console.log(pc.gray('  press Ctrl+C to stop'))
-  console.log()
+  logger.printServerInfo({
+    type: 'preview',
+    port,
+    base: config.base,
+    host: host === true ? '0.0.0.0' : undefined
+  })
 
   // 自动打开浏览器
   if (open) {

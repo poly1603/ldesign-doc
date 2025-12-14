@@ -9,6 +9,7 @@ import { createBuilder } from './build'
 import { createMarkdownRenderer } from '../markdown/createMarkdown'
 import { createPluginContainer } from '../plugin/pluginContainer'
 import { createAdminServer } from './admin'
+import * as logger from './logger'
 
 export interface LDocInstance {
   config: SiteConfig
@@ -54,9 +55,8 @@ export async function createLDoc(
   const pluginContainer = createPluginContainer(config)
 
   // 应用用户插件
-  console.log(`[ldoc] Registering ${config.userPlugins.length} user plugins...`)
+  logger.printBuildStep('Loading plugins', `${config.userPlugins.length} registered`)
   for (const plugin of config.userPlugins) {
-    console.log(`[ldoc] Registering plugin: ${plugin.name}, has extendPageData: ${typeof plugin.extendPageData === 'function'}`)
     await pluginContainer.register(plugin)
   }
 
@@ -90,9 +90,12 @@ export async function createLDoc(
       const adminPort = server.port + 1
       adminServer = createAdminServer(config, { port: adminPort, docsPort: server.port })
 
-      // 打印访问地址（不自动打开，避免重复）
-      console.log(`\n  📄 文档: http://localhost:${server.port}${config.base}`)
-      console.log(`  ⚙️  Admin: http://localhost:${adminPort}/\n`)
+      // 打印额外信息
+      logger.printKeyValues([
+        { key: '📄 Docs', value: `http://localhost:${server.port}${config.base}` },
+        { key: '⚙️  Admin', value: `http://localhost:${adminPort}/` }
+      ])
+      logger.printNewLine()
 
       return {
         close: async () => {

@@ -58,9 +58,34 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useData } from '../composables'
+import { useData, useRoute } from '../composables'
 
-const { theme } = useData()
+const { site, theme } = useData()
+const route = useRoute()
+
+// 获取当前语言环境
+const currentLocale = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (!locales) return 'root'
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && route.path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+})
+
+// 获取语言环境感知的主题配置
+const localeTheme = computed(() => {
+  const baseTheme = theme.value as Record<string, unknown>
+  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+  const localeConfig = locales?.[currentLocale.value]?.themeConfig
+
+  if (!localeConfig) return baseTheme
+  return { ...baseTheme, ...localeConfig }
+})
 
 interface FooterLink {
   text: string
@@ -84,7 +109,7 @@ interface SocialLink {
 }
 
 const footer = computed<Footer | undefined>(() => {
-  const config = theme.value as { footer?: Footer }
+  const config = localeTheme.value as { footer?: Footer }
   return config.footer
 })
 
@@ -93,7 +118,7 @@ const footerLinks = computed<FooterLinkGroup[]>(() => {
 })
 
 const socialLinks = computed<SocialLink[]>(() => {
-  const config = theme.value as { socialLinks?: SocialLink[] }
+  const config = localeTheme.value as { socialLinks?: SocialLink[] }
   return config.socialLinks || []
 })
 

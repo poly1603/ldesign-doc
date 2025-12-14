@@ -62,16 +62,46 @@ interface SidebarItem {
   collapsed?: boolean
 }
 
-const { theme } = useData()
+const { site, theme } = useData()
 const route = useRoute()
 const { isOpen, close } = useSidebar()
+
+// 获取当前语言环境
+const currentLocale = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (!locales) return 'root'
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && route.path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+})
+
+// 获取语言环境感知的主题配置
+const localeTheme = computed(() => {
+  const baseTheme = theme.value as Record<string, unknown>
+  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+  const localeConfig = locales?.[currentLocale.value]?.themeConfig
+
+  if (!localeConfig) return baseTheme
+
+  // 合并 sidebar 配置
+  const merged = { ...baseTheme }
+  if (localeConfig.sidebar) {
+    merged.sidebar = { ...(baseTheme.sidebar as object || {}), ...(localeConfig.sidebar as object) }
+  }
+  return merged
+})
 
 // 用于触发侧边栏动画的key
 const sidebarKey = ref(0)
 
-// 获取侧边栏配置
+// 获取侧边栏配置 - 使用语言环境感知配置
 const sidebarItems = computed(() => {
-  const config = theme.value as { sidebar?: Record<string, SidebarItem[]> | SidebarItem[] }
+  const config = localeTheme.value as { sidebar?: Record<string, SidebarItem[]> | SidebarItem[] }
   const sidebar = config.sidebar
 
   if (!sidebar) return []

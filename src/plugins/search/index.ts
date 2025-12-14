@@ -49,7 +49,7 @@ export function searchPlugin(options: SearchPluginOptions = {}): LDocPlugin {
     enforce: 'pre',
 
     configResolved(config: SiteConfig) {
-      console.log('[ldoc:search] Search plugin initialized')
+      // Search plugin initialized
     },
 
     // 构建时收集搜索索引

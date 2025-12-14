@@ -44,8 +44,32 @@ interface Header {
   slug: string
 }
 
-const { theme } = useData()
+const { site, theme } = useData()
 const route = useRoute()
+
+// 获取当前语言环境
+const currentLocale = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (!locales) return 'root'
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && route.path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+})
+
+// 获取语言环境感知的主题配置
+const localeTheme = computed(() => {
+  const baseTheme = theme.value as Record<string, unknown>
+  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+  const localeConfig = locales?.[currentLocale.value]?.themeConfig
+
+  if (!localeConfig) return baseTheme
+  return { ...baseTheme, ...localeConfig }
+})
 
 // 从 DOM 提取的标题
 const tocHeaders = ref<Header[]>([])
@@ -75,15 +99,15 @@ const indicatorStyle = computed<CSSProperties>(() => ({
   opacity: indicatorHeight.value > 0 ? 1 : 0
 }))
 
-// 大纲标题
+// 大纲标题 - 使用语言环境感知配置
 const outlineTitle = computed(() => {
-  const config = theme.value as { outline?: { label?: string } }
+  const config = localeTheme.value as { outline?: { label?: string } }
   return config.outline?.label || '本页目录'
 })
 
 // 获取标题级别配置 - 默认获取所有标题(h1-h6)
 const getLevelConfig = () => {
-  const config = theme.value as { outline?: { level?: number | [number, number] | 'deep' } }
+  const config = localeTheme.value as { outline?: { level?: number | [number, number] | 'deep' } }
   const levelConfig = config.outline?.level
 
   // 默认显示 h2-h6 所有标题

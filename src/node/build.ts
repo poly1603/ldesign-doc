@@ -14,6 +14,7 @@ import { createVitePlugins } from './vitePlugin'
 import { scanPages } from './pages'
 import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate, pageDataToRoutes } from './core/siteData'
 import pc from 'picocolors'
+import * as logger from './logger'
 
 // 获取当前包的根目录
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -40,7 +41,7 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
 
   return {
     async build() {
-      console.log(pc.cyan('\n📦 Building for production...\n'))
+      logger.printBuildStart()
 
       const startTime = Date.now()
 
@@ -49,10 +50,10 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
 
       // 扫描所有页面
       const pages = await scanPages(config)
-      console.log(pc.gray(`  Found ${pages.length} pages`))
+      logger.printBuildStep('Scanning pages', `${pages.length} found`)
 
       // 调用 extendPageData 钩子，让插件扩展页面数据
-      console.log(pc.gray(`  Extending page data with plugins (${config.userPlugins.length} plugins)...`))
+      logger.printBuildStep('Extending page data', `${config.userPlugins.length} plugins`)
       for (const page of pages) {
         const pageContext = {
           siteConfig: config,
@@ -65,7 +66,7 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       // 验证扩展结果
       const pagesWithReadingTime = pages.filter(p => p.frontmatter?.readingTime)
       if (pagesWithReadingTime.length > 0) {
-        console.log(pc.gray(`  ${pagesWithReadingTime.length} pages have reading time data`))
+        logger.printBuildStep('Reading time data', `${pagesWithReadingTime.length} pages`)
       }
 
       // 确保输出目录存在
@@ -127,7 +128,7 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
 
       // SSR 构建（如果启用）
       if (config.build.ssr) {
-        console.log(pc.gray('  Building SSR bundle...'))
+        logger.printBuildStep('Building SSR bundle')
         await buildSSR(config, vitePlugins)
       }
 
@@ -146,8 +147,7 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       }
 
       const endTime = Date.now()
-      console.log(pc.green(`\n✓ Build completed in ${endTime - startTime}ms`))
-      console.log(pc.gray(`  Output: ${config.outDir}\n`))
+      logger.printBuildComplete(endTime - startTime, config.outDir)
     }
   }
 }

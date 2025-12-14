@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSy
 import type { SiteConfig } from '../../shared/types'
 import { generateAdminHTML } from './ui'
 import pc from 'picocolors'
+import * as logger from '../logger'
 
 export interface AdminServerOptions {
   port?: number
@@ -22,7 +23,7 @@ export interface AdminServerOptions {
 export function createAdminServer(config: SiteConfig, options: AdminServerOptions = {}): Server {
   const { port = 8880, host = '0.0.0.0', docsPort = 5173 } = options
 
-  console.log(pc.gray(`  [Admin] Creating server on port ${port}...`))
+  // Admin server starts silently
 
   const server = createServer(async (req, res) => {
     // CORS
@@ -53,17 +54,15 @@ export function createAdminServer(config: SiteConfig, options: AdminServerOption
 
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
-      console.log(pc.yellow(`  ⚠️ Admin port ${port} is in use, trying ${port + 1}...`))
+      logger.printPortInUse(port)
       server.listen(port + 1, host)
     } else {
-      console.error(pc.red(`  ❌ Admin server error: ${err.message}`))
+      logger.printError('Admin server error', err.message)
     }
   })
 
   server.listen(port, host, () => {
-    const addr = server.address()
-    const actualPort = typeof addr === 'object' && addr ? addr.port : port
-    console.log(pc.cyan(`  📝 Admin UI: `) + pc.green(`http://localhost:${actualPort}/`))
+    // Admin URL is printed by createLDoc
   })
 
   return server

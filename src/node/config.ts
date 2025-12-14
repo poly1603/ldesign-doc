@@ -115,7 +115,7 @@ export async function resolveConfig(
   // 检测是否直接传入 Theme 对象
   const themeObject = isThemeObject(mergedConfig.theme) ? mergedConfig.theme : undefined
   if (themeObject) {
-    console.log(`[ldoc] Using custom theme object`)
+    // Using custom theme object
   }
 
   // 构建最终配置
@@ -258,7 +258,6 @@ async function resolveTheme(root: string, theme?: string | Theme | ThemeConfig):
   for (const pkgName of packageNames) {
     try {
       const themePkgPath = require.resolve(`${pkgName}/package.json`, { paths: [root] })
-      console.log(`[ldoc] Using theme: ${pkgName}`)
       return { themeDir: dirname(themePkgPath), themePkg: pkgName }
     } catch {
       // 继续尝试下一个包名
@@ -322,14 +321,12 @@ async function loadPluginFromPackage(root: string, pluginName: string): Promise<
       if (typeof plugin === 'function') {
         const result = plugin()
         if (result && typeof result === 'object' && 'name' in result) {
-          console.log(`[ldoc] Loaded plugin: ${pkgName}`)
           return result as LDocPlugin
         }
       }
 
       // 如果直接是插件对象
       if (plugin && typeof plugin === 'object' && 'name' in plugin) {
-        console.log(`[ldoc] Loaded plugin: ${pkgName}`)
         return plugin as LDocPlugin
       }
     } catch {

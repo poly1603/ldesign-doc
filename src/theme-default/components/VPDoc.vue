@@ -5,7 +5,7 @@
 
     <!-- 面包屑 -->
     <nav v-if="showBreadcrumb" class="vp-doc-breadcrumb">
-      <a href="/">首页</a>
+      <a :href="homeLink">{{ i18nText.home }}</a>
       <span class="vp-doc-breadcrumb-separator">/</span>
       <span>{{ page.title }}</span>
     </nav>
@@ -22,7 +22,7 @@
       <!-- 元信息（只保留最后更新时间，阅读时间由插件提供） -->
       <div v-if="page.lastUpdated" class="vp-doc-meta">
         <span class="vp-doc-meta-item">
-          最后更新: {{ formatDate(page.lastUpdated) }}
+          {{ i18nText.lastUpdated }}: {{ formatDate(page.lastUpdated) }}
         </span>
       </div>
 
@@ -52,13 +52,13 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          上一页
+          {{ i18nText.prevPage }}
         </span>
         <span class="vp-doc-pagination-title">{{ prevPage.text }}</span>
       </router-link>
       <router-link v-if="nextPage" :to="nextPage.link" class="vp-doc-pagination-next">
         <span class="vp-doc-pagination-label">
-          下一页
+          {{ i18nText.nextPage }}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -80,8 +80,50 @@ import { computed } from 'vue'
 import { useData, useRoute, Content } from '@ldesign/doc/client'
 import { PluginSlot } from '@ldesign/doc/client'
 
-const { page, theme, frontmatter } = useData()
+const { page, site, theme, frontmatter } = useData()
 const route = useRoute()
+
+// 获取当前语言环境
+const currentLocale = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (!locales) return 'root'
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && route.path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+})
+
+// 获取语言环境感知的主题配置
+const localeTheme = computed(() => {
+  const baseTheme = theme.value as Record<string, unknown>
+  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+  const localeConfig = locales?.[currentLocale.value]?.themeConfig
+
+  if (!localeConfig) return baseTheme
+  return { ...baseTheme, ...localeConfig }
+})
+
+// 获取当前 locale 的首页链接
+const homeLink = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (currentLocale.value === 'root') return '/'
+  return locales?.[currentLocale.value]?.link || '/'
+})
+
+// 获取本地化文本
+const i18nText = computed(() => {
+  const isEn = currentLocale.value === 'en'
+  return {
+    home: isEn ? 'Home' : '首页',
+    lastUpdated: isEn ? 'Last updated' : '最后更新',
+    prevPage: isEn ? 'Previous' : '上一页',
+    nextPage: isEn ? 'Next' : '下一页'
+  }
+})
 
 // 是否显示面包屑
 const showBreadcrumb = computed(() => {

@@ -52,7 +52,6 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
   // 收集插件的 slots 和全局组件
   collectPluginSlots(allPlugins, pluginSlotsContext)
 
-  console.log('[ldoc] Client plugins loaded:', allPlugins.map(p => p.name))
 
   // 站点数据
   const siteData = ref<SiteData>(initialSiteData || {

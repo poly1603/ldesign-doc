@@ -3,10 +3,10 @@
     <div class="vp-nav-container">
       <!-- 左侧区域：Logo 与侧边栏对齐 -->
       <div class="vp-nav-left">
-        <router-link to="/" class="vp-nav-logo">
+        <a :href="homeLink" class="vp-nav-logo">
           <img v-if="logo" :src="logo" :alt="siteTitle" class="vp-nav-logo-img" />
           <span class="vp-nav-logo-text">{{ siteTitle }}</span>
-        </router-link>
+        </a>
         <!-- Logo 后面插槽 -->
         <PluginSlot name="nav-bar-logo-after" />
       </div>
@@ -196,16 +196,49 @@ const { toggle: toggleSidebar } = useSidebar()
 const { colors: themeColors, currentColor: currentThemeColor, setColor: setThemeColor } = useThemeColor()
 const route = useRoute()
 
+// 获取当前语言环境
+const currentLocale = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (!locales) return 'root'
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && route.path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+})
+
+// 获取语言环境感知的主题配置
+const localeTheme = computed(() => {
+  const baseTheme = theme.value as Record<string, unknown>
+  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+  const localeConfig = locales?.[currentLocale.value]?.themeConfig
+
+  if (!localeConfig) return baseTheme
+
+  // 合并配置，locale 配置覆盖基础配置
+  return { ...baseTheme, ...localeConfig }
+})
+
+// 获取当前 locale 的首页链接
+const homeLink = computed(() => {
+  const locales = site.value.locales as Record<string, { link?: string }> | undefined
+  if (currentLocale.value === 'root') return '/'
+  return locales?.[currentLocale.value]?.link || '/'
+})
+
 // 站点标题
 const siteTitle = computed(() => {
-  const config = theme.value as { siteTitle?: string | false }
+  const config = localeTheme.value as { siteTitle?: string | false }
   if (config.siteTitle === false) return ''
   return config.siteTitle || site.value.title
 })
 
 // Logo
 const logo = computed(() => {
-  const config = theme.value as { logo?: string | { light: string; dark: string } }
+  const config = localeTheme.value as { logo?: string | { light: string; dark: string } }
   if (!config.logo) return ''
   if (typeof config.logo === 'string') return config.logo
   return isDark.value ? config.logo.dark : config.logo.light
@@ -223,15 +256,15 @@ interface NavItem {
   items?: NavSubItem[]
 }
 
-// 导航项
+// 导航项 - 使用语言环境感知配置
 const navItems = computed<NavItem[]>(() => {
-  const config = theme.value as { nav?: NavItem[] }
+  const config = localeTheme.value as { nav?: NavItem[] }
   return config.nav || []
 })
 
 // 社交链接
 const socialLinks = computed(() => {
-  const config = theme.value as { socialLinks?: Array<{ icon: string; link: string }> }
+  const config = localeTheme.value as { socialLinks?: Array<{ icon: string; link: string }> }
   return config.socialLinks || []
 })
 
@@ -291,39 +324,46 @@ const isCurrentLocale = (key: string) => {
 const getLocaleLink = (key: string) => {
   const currentPath = route.path
 
-  if (key === 'root') {
-    // 切换到 root 语言：移除语言前缀
-    if (!locales.value) return currentPath
-    for (const k in locales.value) {
-      if (k !== 'root') {
-        const locale = locales.value[k]
-        if (locale.link && currentPath.startsWith(locale.link)) {
-          return currentPath.replace(locale.link, '') || '/'
-        }
-      }
-    }
-    return currentPath
-  }
-
-  const locale = locales.value?.[key]
-  if (!locale?.link) return currentPath
-
-  // 先移除其他语言前缀
-  let basePath = currentPath
+  // 1. 找出当前路径中的语言前缀
+  let currentPrefix = '/'
   if (locales.value) {
     for (const k in locales.value) {
-      if (k !== 'root') {
-        const loc = locales.value[k]
-        if (loc.link && currentPath.startsWith(loc.link)) {
-          basePath = currentPath.replace(loc.link, '') || '/'
-          break
-        }
+      if (k === 'root') continue
+      const loc = locales.value[k]
+      if (loc.link && currentPath.startsWith(loc.link)) {
+        currentPrefix = loc.link
+        break
       }
     }
   }
 
-  // 添加目标语言前缀
-  return locale.link + (basePath === '/' ? '' : basePath)
+  // 2. 获取不带语言前缀的相对路径
+  let relativePath = currentPath
+  if (currentPrefix !== '/' && currentPath.startsWith(currentPrefix)) {
+    relativePath = currentPath.slice(currentPrefix.length)
+  }
+  // 确保相对路径以 / 开头
+  if (!relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath
+  }
+
+  // 3. 构建目标语言路径
+  if (key === 'root') {
+    // 切换到 root (中文): 仅保留相对路径
+    return relativePath
+  }
+
+  const targetLocale = locales.value?.[key]
+  if (!targetLocale?.link) return relativePath
+
+  // 切换到其他语言: 拼接目标语言前缀 + 相对路径
+  // 此时 targetLocale.link 通常为 '/en/'，relativePath 为 '/guide/...'
+  // 我们需要去掉其中一个斜杠，或者确保拼接正确
+  const prefix = targetLocale.link.endsWith('/')
+    ? targetLocale.link.slice(0, -1)
+    : targetLocale.link
+
+  return prefix + relativePath
 }
 
 // 判断是否为外部链接

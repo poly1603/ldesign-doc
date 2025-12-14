@@ -5,6 +5,10 @@ hero:
   name: LDesign Doc
   text: Modern Documentation Framework
   tagline: Powered by Vite, supports Vue/React, out of the box
+  canvas:
+    type: particles
+    speed: 1
+    density: 1
   actions:
     - theme: brand
       text: Get Started

@@ -13,6 +13,7 @@ import type { PluginContainer } from '../../plugin/pluginContainer'
 import { createVitePlugins } from '../vitePlugin'
 import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate } from '../core/siteData'
 import pc from 'picocolors'
+import * as logger from '../logger'
 
 export interface DevServerOptions {
   md: MarkdownRenderer
@@ -118,14 +119,12 @@ export async function createDevServer(
   const port = typeof address === 'object' && address ? address.port : 5173
 
   // 打印服务器信息
-  console.log()
-  console.log(pc.green('  ✓ LDoc dev server running at:'))
-  console.log()
-  console.log(`    ${pc.cyan('Local:')}   ${pc.blue(`http://localhost:${port}${config.base}`)}`)
-  console.log(`    ${pc.cyan('Network:')} ${pc.blue(`http://0.0.0.0:${port}${config.base}`)}`)
-  console.log()
-  console.log(pc.gray('  press h to show help'))
-  console.log()
+  logger.printServerInfo({
+    type: 'dev',
+    port,
+    base: config.base,
+    host: '0.0.0.0'
+  })
 
   return {
     server,
@@ -151,7 +150,6 @@ async function generateTempFiles(config: SiteConfig): Promise<void> {
   // 清理旧的临时目录，确保使用最新数据
   if (existsSync(tempDir)) {
     rmSync(tempDir, { recursive: true, force: true })
-    console.log(pc.gray('[ldoc] Cleared temp directory'))
   }
 
   // 创建新的临时目录
@@ -159,14 +157,6 @@ async function generateTempFiles(config: SiteConfig): Promise<void> {
 
   // 生成路由数据
   const routes = await generateRoutes(config)
-
-  // 调试：打印首页的 frontmatter
-  const indexRoute = routes.find(r => r.path === '/')
-  if (indexRoute) {
-    console.log(pc.cyan('[ldoc] Index page frontmatter:'))
-    console.log(pc.gray(`  hero.name: ${(indexRoute.frontmatter.hero as any)?.name || 'N/A'}`))
-    console.log(pc.gray(`  hero.text: ${(indexRoute.frontmatter.hero as any)?.text || 'N/A'}`))
-  }
 
   // 写入路由文件
   const routesCode = generateRoutesCode(routes, 'dev')

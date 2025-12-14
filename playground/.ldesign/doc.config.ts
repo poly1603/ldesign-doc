@@ -28,13 +28,143 @@ export default defineConfig({
       lang: 'en-US',
       link: '/en/',
       themeConfig: {
+        siteTitle: 'LDesign',
         nav: [
           { text: 'Guide', link: '/en/guide/' },
           { text: 'Examples', link: '/en/examples/' },
           { text: 'API', link: '/en/api/' },
           { text: 'Plugins', link: '/en/plugins/' },
           { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
-        ]
+        ],
+        footer: {
+          message: 'Released under the MIT License',
+          copyright: 'Copyright © 2024 LDesign'
+        },
+        outline: {
+          level: [1, 6],
+          label: 'On this page'
+        },
+        lastUpdated: {
+          text: 'Last updated'
+        },
+        sidebar: {
+          '/en/guide/': [
+            {
+              text: 'Getting Started',
+              items: [
+                { text: 'Introduction', link: '/en/guide/' },
+                { text: 'Quick Start', link: '/en/guide/getting-started' },
+                { text: 'Configuration', link: '/en/guide/configuration' }
+              ]
+            },
+            {
+              text: 'Writing Docs',
+              items: [
+                { text: 'Markdown Extensions', link: '/en/guide/markdown' },
+                { text: 'Frontmatter', link: '/en/guide/frontmatter' },
+                { text: 'Static Assets', link: '/en/guide/assets' }
+              ]
+            },
+            {
+              text: 'Advanced',
+              items: [
+                { text: 'Theme Customization', link: '/en/guide/theme' },
+                { text: 'Internationalization', link: '/en/guide/i18n' },
+                { text: 'Deployment', link: '/en/guide/deploy' }
+              ]
+            }
+          ],
+          '/en/api/': [
+            {
+              text: 'API Reference',
+              items: [
+                { text: 'Overview', link: '/en/api/' },
+                { text: 'Site Config', link: '/en/api/site-config' },
+                { text: 'Theme Config', link: '/en/api/theme-config' },
+                { text: 'Frontmatter', link: '/en/api/frontmatter' }
+              ]
+            },
+            {
+              text: 'Client API',
+              items: [
+                { text: 'Composables', link: '/en/api/composables' },
+                { text: 'Components', link: '/en/api/components' }
+              ]
+            }
+          ],
+          '/en/examples/': [
+            {
+              text: 'Feature Examples',
+              items: [
+                { text: 'Overview', link: '/en/examples/' }
+              ]
+            },
+            {
+              text: 'Markdown',
+              items: [
+                { text: 'Code Blocks', link: '/en/examples/markdown/code' },
+                { text: 'Containers', link: '/en/examples/markdown/containers' }
+              ]
+            },
+            {
+              text: 'Containers',
+              items: [
+                { text: 'Info Containers', link: '/en/examples/containers/' }
+              ]
+            },
+            {
+              text: 'Media',
+              items: [
+                { text: 'Images', link: '/en/examples/media/images' },
+                { text: 'Videos', link: '/en/examples/media/videos' },
+                { text: 'Icons', link: '/en/examples/media/icons' }
+              ]
+            },
+            {
+              text: 'Vue Components',
+              items: [
+                { text: 'Basic', link: '/en/examples/vue/basic' },
+                { text: 'Interactive', link: '/en/examples/vue/interactive' }
+              ]
+            },
+            {
+              text: 'Advanced',
+              items: [
+                { text: 'Math Equations', link: '/en/examples/advanced/math' },
+                { text: 'Diagrams', link: '/en/examples/advanced/diagrams' }
+              ]
+            }
+          ],
+          '/en/plugins/': [
+            {
+              text: 'Plugin System',
+              items: [
+                { text: 'Overview', link: '/en/plugins/' },
+                { text: 'Using Plugins', link: '/en/plugins/using' }
+              ]
+            },
+            {
+              text: 'Built-in Plugins',
+              items: [
+                { text: 'Demo Plugin', link: '/en/plugins/demo' },
+                { text: 'Search Plugin', link: '/en/plugins/search' },
+                { text: 'Comment Plugin', link: '/en/plugins/comment' },
+                { text: 'Progress Plugin', link: '/en/plugins/progress' },
+                { text: 'Copy Code Plugin', link: '/en/plugins/copy-code' },
+                { text: 'Image Viewer Plugin', link: '/en/plugins/image-viewer' },
+                { text: 'Reading Time Plugin', link: '/en/plugins/reading-time' },
+                { text: 'Last Updated Plugin', link: '/en/plugins/last-updated' }
+              ]
+            },
+            {
+              text: 'Plugin Development',
+              items: [
+                { text: 'Development Guide', link: '/en/plugins/development' },
+                { text: 'Plugin API', link: '/en/plugins/api' }
+              ]
+            }
+          ]
+        }
       }
     }
   },

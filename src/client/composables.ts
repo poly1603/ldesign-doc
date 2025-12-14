@@ -26,11 +26,57 @@ export interface Data {
 }
 
 /**
+ * 获取当前语言环境
+ */
+function getCurrentLocale(path: string, locales?: Record<string, { link?: string; lang?: string }>): string {
+  if (!locales) return 'root'
+
+  for (const key of Object.keys(locales)) {
+    if (key === 'root') continue
+    const locale = locales[key]
+    if (locale.link && path.startsWith(locale.link)) {
+      return key
+    }
+  }
+  return 'root'
+}
+
+/**
+ * 合并主题配置（locale 配置覆盖基础配置）
+ */
+function mergeThemeConfig(baseConfig: Record<string, unknown>, localeConfig?: Record<string, unknown>): Record<string, unknown> {
+  if (!localeConfig) return baseConfig
+
+  const merged = { ...baseConfig }
+
+  for (const key of Object.keys(localeConfig)) {
+    const baseValue = baseConfig[key]
+    const localeValue = localeConfig[key]
+
+    // 对于数组（如 nav, sidebar），直接使用 locale 值替换
+    if (Array.isArray(localeValue)) {
+      merged[key] = localeValue
+    }
+    // 对于对象（如 sidebar 的路径映射），合并
+    else if (typeof localeValue === 'object' && localeValue !== null && typeof baseValue === 'object' && baseValue !== null && !Array.isArray(baseValue)) {
+      merged[key] = { ...baseValue as Record<string, unknown>, ...localeValue as Record<string, unknown> }
+    }
+    // 其他情况直接覆盖
+    else {
+      merged[key] = localeValue
+    }
+  }
+
+  return merged
+}
+
+/**
  * 获取页面和站点数据
  */
 export function useData(): Data {
   const pageData = inject(pageDataSymbol)
   const siteData = inject(siteDataSymbol)
+  const route = useVueRoute()
   const isDark = ref(false)
 
   // 检测暗色模式
@@ -48,15 +94,35 @@ export function useData(): Data {
     })
   }
 
+  // 当前语言环境 - 使用响应式路由路径
+  const currentLocale = computed(() => {
+    const locales = siteData?.value?.locales as Record<string, { link?: string; lang?: string }> | undefined
+    return getCurrentLocale(route.path, locales)
+  })
+
+  // 合并后的主题配置（基础 + 当前语言环境）
+  const theme = computed(() => {
+    const baseTheme = siteData?.value?.themeConfig || {}
+    const locales = siteData?.value?.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
+    const localeTheme = locales?.[currentLocale.value]?.themeConfig
+    return mergeThemeConfig(baseTheme as Record<string, unknown>, localeTheme)
+  })
+
+  // 当前语言
+  const lang = computed(() => {
+    const locales = siteData?.value?.locales as Record<string, { lang?: string }> | undefined
+    return locales?.[currentLocale.value]?.lang || siteData?.value?.lang || 'zh-CN'
+  })
+
   return {
     page: computed(() => pageData?.value || {} as PageData),
     site: computed(() => siteData?.value || {} as SiteData),
-    theme: computed(() => siteData?.value?.themeConfig || {}),
+    theme,
     frontmatter: computed(() => pageData?.value?.frontmatter || {}),
     title: computed(() => pageData?.value?.title || ''),
     description: computed(() => pageData?.value?.description || ''),
     headers: computed(() => pageData?.value?.headers || []),
-    lang: computed(() => siteData?.value?.lang || 'zh-CN'),
+    lang,
     isDark
   }
 }
