@@ -273,16 +273,16 @@ function updateTheme(dark: boolean) {
 }
 
 /**
- * 侧边栏状态
+ * 侧边栏状态 - 全局共享
  */
+const sidebarState = ref(false)
+
 export function useSidebar() {
-  const isOpen = ref(false)
+  const open = () => { sidebarState.value = true }
+  const close = () => { sidebarState.value = false }
+  const toggle = () => { sidebarState.value = !sidebarState.value }
 
-  const open = () => { isOpen.value = true }
-  const close = () => { isOpen.value = false }
-  const toggle = () => { isOpen.value = !isOpen.value }
-
-  return { isOpen, open, close, toggle }
+  return { isOpen: sidebarState, open, close, toggle }
 }
 
 /**

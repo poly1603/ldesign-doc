@@ -1,6 +1,20 @@
 # 评论插件
 
-评论系统插件，支持多种评论服务。
+评论系统插件，支持多种**免费**评论服务，无需自建服务器即可为文档添加评论功能。
+
+::: tip 演示模式
+即使未配置评论服务，插件也会显示演示界面，方便您预览评论区效果。
+:::
+
+## 免费评论方案对比
+
+| 服务 | 数据存储 | 部署难度 | 推荐场景 |
+|------|----------|----------|----------|
+| **Giscus** ⭐ | GitHub Discussions | ⭐ 极简 | 开源项目、技术文档 |
+| **Gitalk** | GitHub Issues | ⭐ 简单 | 个人博客 |
+| **Waline** | Vercel + LeanCloud | ⭐⭐ 中等 | 需要邮件通知 |
+| **Twikoo** | Vercel/腾讯云 | ⭐⭐ 中等 | 国内访问 |
+| **Artalk** | 自托管 Docker | ⭐⭐⭐ 复杂 | 完全自主控制 |
 
 ## 安装
 
@@ -19,29 +33,51 @@ export default defineConfig({
 
 ## 支持的服务
 
-### Giscus
+### Giscus ⭐ 推荐
 
-基于 GitHub Discussions，推荐使用。
+基于 GitHub Discussions，**零成本、零服务器**，最推荐的方案。
+
+#### 配置步骤
+
+1. **启用 Discussions**
+   - 进入你的 GitHub 仓库 → Settings → Features
+   - 勾选 "Discussions" 启用讨论功能
+
+2. **安装 Giscus App**
+   - 访问 [github.com/apps/giscus](https://github.com/apps/giscus)
+   - 点击 "Install" 安装到你的仓库
+
+3. **获取配置参数**
+   - 访问 [giscus.app/zh-CN](https://giscus.app/zh-CN)
+   - 填写仓库信息，自动生成 `repoId` 和 `categoryId`
+
+4. **配置插件**
 
 ```ts
 commentPlugin({
   provider: 'giscus',
   giscus: {
-    repo: 'owner/repo',
-    repoId: 'R_xxx',
-    category: 'Announcements',
-    categoryId: 'DIC_xxx',
-    mapping: 'pathname',
-    strict: true,
-    reactionsEnabled: true,
-    inputPosition: 'bottom',
-    theme: 'preferred_color_scheme',
-    lang: 'zh-CN'
+    repo: 'your-name/your-repo',      // 仓库名
+    repoId: 'R_kgDOxxxxxx',           // 从 giscus.app 获取
+    category: 'Announcements',         // 讨论分类
+    categoryId: 'DIC_kwDOxxxxxx',     // 从 giscus.app 获取
+    mapping: 'pathname',               // 页面映射方式
+    strict: true,                      // 严格匹配
+    reactionsEnabled: true,            // 启用表情反应
+    inputPosition: 'top',              // 输入框位置
+    theme: 'preferred_color_scheme',   // 主题跟随系统
+    lang: 'zh-CN'                      // 语言
   }
 })
 ```
 
-获取配置：访问 [giscus.app](https://giscus.app/zh-CN)
+::: details Giscus 配置参数详解
+| 参数 | 说明 | 可选值 |
+|------|------|--------|
+| `mapping` | 页面与讨论的映射方式 | `pathname`、`url`、`title`、`og:title` |
+| `theme` | 评论区主题 | `light`、`dark`、`preferred_color_scheme`、自定义CSS URL |
+| `inputPosition` | 评论输入框位置 | `top`、`bottom` |
+:::
 
 ### Gitalk
 

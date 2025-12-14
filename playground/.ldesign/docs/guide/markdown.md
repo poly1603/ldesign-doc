@@ -231,6 +231,138 @@ const count = ref(0)
 <<< @/snippets/example.ts{2-5}
 ```
 
+## GitHub 风格警报
+
+支持 GitHub 风格的警报语法：
+
+```md
+> [!NOTE]
+> 这是一个备注信息。
+
+> [!TIP]
+> 这是一个有用的提示。
+
+> [!IMPORTANT]
+> 这是重要信息。
+
+> [!WARNING]
+> 这是一条警告。
+
+> [!CAUTION]
+> 这是危险操作提醒。
+```
+
+渲染效果：
+
+> [!NOTE]
+> 这是一个备注信息。
+
+> [!TIP]
+> 这是一个有用的提示。
+
+## 代码块高级功能
+
+### 代码聚焦
+
+使用 `// [!code focus]` 注释聚焦特定行：
+
+```ts
+function hello() {
+  const name = 'world'
+  console.log(name) // [!code focus]
+  return name
+}
+```
+
+### 代码差异
+
+使用 `// [!code ++]` 和 `// [!code --]` 显示代码变更：
+
+```ts
+export default {
+  data() {
+    return {
+      msg: 'Hello' // [!code --]
+      msg: 'Hello World!' // [!code ++]
+    }
+  }
+}
+```
+
+### 错误和警告高亮
+
+使用 `// [!code error]` 和 `// [!code warning]` 高亮错误和警告行：
+
+```ts
+function sum(a: number, b: number) {
+  return a - b // [!code error] 这里应该是 +
+}
+
+const result = sum(1, '2') // [!code warning] 类型不匹配
+```
+
+## 图片懒加载
+
+图片默认启用懒加载，提升页面加载性能：
+
+```md
+![图片描述](/path/to/image.png)
+```
+
+可以在配置中禁用：
+
+```ts
+export default defineConfig({
+  markdown: {
+    image: {
+      lazyLoading: false
+    }
+  }
+})
+```
+
+## Mermaid 图表
+
+支持 Mermaid 流程图、时序图等：
+
+````md
+```mermaid
+graph TD
+    A[开始] --> B{判断条件}
+    B -->|是| C[执行操作A]
+    B -->|否| D[执行操作B]
+    C --> E[结束]
+    D --> E
+```
+````
+
+```mermaid
+graph TD
+    A[开始] --> B{判断条件}
+    B -->|是| C[执行操作A]
+    B -->|否| D[执行操作B]
+    C --> E[结束]
+    D --> E
+```
+
+## 包含 Markdown 文件
+
+可以在一个 Markdown 文件中包含另一个：
+
+```md
+<!--@include: ./shared/header.md-->
+
+# 页面内容
+
+<!--@include: ./shared/footer.md-->
+```
+
+还可以指定包含的行范围：
+
+```md
+<!--@include: ./example.md{5-10}-->
+```
+
 ## Frontmatter
 
 每个 Markdown 文件可以包含 YAML frontmatter：

@@ -171,6 +171,74 @@ const MermaidRenderer = defineComponent({
     const route = useRoute()
     let mermaidLoaded = false
 
+    const renderMermaid = async () => {
+      if (typeof window === 'undefined' || !(window as any).mermaid) {
+        // 如果页面上有 mermaid 代码块但库未加载，则尝试加载
+        if (document.querySelector('.mermaid')) {
+          console.log('[LDoc] Mermaid block found but lib not loaded, retrying...')
+          setTimeout(() => mermaidLoaded ? renderMermaid() : loadMermaid(), 500)
+        }
+        return
+      }
+
+      try {
+        const mermaid = (window as any).mermaid
+        // 每次渲染重置主题
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+          fontFamily: 'var(--ldoc-font-family-base)',
+          securityLevel: 'loose',
+        })
+
+        const blocks = document.querySelectorAll('.mermaid')
+        if (blocks.length > 0) {
+          console.log(`[LDoc] Found ${blocks.length} mermaid blocks`)
+        }
+
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i] as HTMLElement
+          if (block.getAttribute('data-processed')) continue
+
+          // 获取原始内容
+          let code = block.textContent || ''
+
+          // HTML 实体解码
+          const textarea = document.createElement('textarea')
+          textarea.innerHTML = code
+          code = textarea.value.trim()
+
+          if (!code) continue
+
+          // 标记处理中
+          block.setAttribute('data-processed', 'true')
+
+          try {
+            const id = `mermaid-svg-${Date.now()}-${i}`
+            // 清空内容准备渲染
+            block.innerHTML = ''
+            const { svg } = await mermaid.render(id, code)
+            block.innerHTML = svg
+            block.classList.add('mermaid-rendered')
+            // 增加一些样式
+            block.style.display = 'flex'
+            block.style.justifyContent = 'center'
+            block.style.margin = '16px 0'
+            block.style.background = 'var(--ldoc-c-bg-soft)'
+            block.style.padding = '16px'
+            block.style.borderRadius = '8px'
+            block.style.overflowX = 'auto'
+          } catch (e) {
+            console.error('[LDoc] Mermaid rendering failed:', e)
+            block.innerHTML = `<div style="color:var(--ldoc-c-red); background:var(--ldoc-c-red-soft); padding:16px; border-radius:8px; font-family:monospace; white-space:pre-wrap; font-size:13px;">Mermaid Error: ${(e as Error).message}</div>`
+            block.style.display = 'block'
+          }
+        }
+      } catch (err) {
+        console.error('[LDoc] Mermaid initialization failed:', err)
+      }
+    }
+
     const loadMermaid = async () => {
       if (mermaidLoaded) return
 
@@ -178,44 +246,9 @@ const MermaidRenderer = defineComponent({
       script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'
       script.onload = () => {
         mermaidLoaded = true
-        const mermaid = (window as any).mermaid
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default'
-        })
         renderMermaid()
       }
       document.head.appendChild(script)
-    }
-
-    const renderMermaid = async () => {
-      if (typeof window === 'undefined' || !(window as any).mermaid) return
-
-      const mermaid = (window as any).mermaid
-
-      // 查找所有 mermaid 代码块
-      document.querySelectorAll('.vp-code-block[data-lang="mermaid"]').forEach(async (block, index) => {
-        const codeEl = block.querySelector('code')
-        if (!codeEl || block.classList.contains('mermaid-rendered')) return
-
-        const code = codeEl.textContent || ''
-        if (!code.trim()) return
-
-        try {
-          const id = `mermaid-${Date.now()}-${index}`
-          const { svg } = await mermaid.render(id, code.trim())
-
-          // 替换代码块为渲染的 SVG
-          const container = document.createElement('div')
-          container.className = 'mermaid-container'
-          container.innerHTML = svg
-          container.style.cssText = 'background: var(--vp-c-bg-soft, #f9fafb); padding: 20px; border-radius: 8px; margin: 16px 0; text-align: center; overflow-x: auto;'
-
-          block.parentNode?.replaceChild(container, block)
-        } catch (e) {
-          console.warn('Mermaid render error:', e)
-        }
-      })
     }
 
     onMounted(() => {

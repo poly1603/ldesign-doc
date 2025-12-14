@@ -6,7 +6,7 @@ export const routes = [
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/index.md'),
     meta: { 
       title: 'LDoc 现代化文档框架',
-      frontmatter: {"layout":"home","title":"LDoc 现代化文档框架","hero":{"name":"LDesign Doc","text":"现代化文档生成框架","tagline":"基于 Vite，支持 Vue/React，开箱即用","actions":[{"theme":"brand","text":"快速开始","link":"/guide/getting-started"},{"theme":"alt","text":"在 GitHub 上查看","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"⚡️","title":"Vite 驱动","details":"享受 Vite 带来的极速开发体验，即时热更新"},{"icon":"📝","title":"Markdown 为中心","details":"专注于内容编写，Markdown 原生支持 + 丰富扩展"},{"icon":"🎨","title":"高度可定制","details":"灵活的主题系统，支持 Vue/React 组件"},{"icon":"🔌","title":"插件系统","details":"完善的插件架构，轻松扩展功能"},{"icon":"🌍","title":"多语言支持","details":"内置国际化支持，轻松构建多语言文档"},{"icon":"📱","title":"响应式设计","details":"移动端友好，任何设备上都有出色体验"}]}
+      frontmatter: {"layout":"home","title":"LDoc 现代化文档框架","hero":{"name":"LDesign Doc","text":"现代化文档生成框架","tagline":"基于 Vite，支持 Vue/React，开箱即用","canvas":{"type":"particles","speed":1,"density":1},"actions":[{"theme":"brand","text":"快速开始","link":"/guide/getting-started"},{"theme":"alt","text":"在 GitHub 上查看","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite 驱动","details":"享受 Vite 带来的极速开发体验，毫秒级热更新，开发效率提升 10 倍"},{"icon":"file-text","title":"Markdown 增强","details":"代码高亮、容器语法、数学公式、Mermaid 图表、Emoji 表情等丰富扩展"},{"icon":"palette","title":"高度可定制","details":"灵活的主题系统，支持 Vue/React 组件，自定义布局和样式"},{"icon":"plug","title":"插件生态","details":"评论系统、搜索、阅读时间、图片预览等 10+ 内置插件"},{"icon":"search","title":"全文搜索","details":"内置搜索插件，支持快捷键唤起，毫秒级响应"},{"icon":"code","title":"代码演示","details":"支持 Vue/React 组件实时预览，代码与效果并排展示"},{"icon":"globe","title":"多语言支持","details":"内置国际化支持，轻松构建多语言文档站点"},{"icon":"smartphone","title":"响应式设计","details":"移动端友好，任何设备上都有出色的阅读体验"},{"icon":"terminal","title":"CLI 工具","details":"一键创建项目，快速启动开发，支持模板定制"},{"icon":"sparkles","title":"主题切换动画","details":"多种主题切换动画效果，圆形扩散、淡入淡出、翻转等"},{"icon":"cpu","title":"TypeScript 优先","details":"完整的类型定义，智能代码补全，开发体验极佳"},{"icon":"box","title":"组件库文档","details":"专为组件库设计，支持 Props 表格、Slots、Events 文档生成"}]}
     }
   },
   {
@@ -39,6 +39,14 @@ export const routes = [
     meta: { 
       title: 'composables',
       frontmatter: {}
+    }
+  },
+  {
+    path: '/api/examples/Button',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/examples/Button.vue'),
+    meta: { 
+      title: 'Button',
+      frontmatter: {"title":"Button","layout":"page"}
     }
   },
   {
@@ -98,6 +106,22 @@ export const routes = [
     }
   },
   {
+    path: '/en',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/index.md'),
+    meta: { 
+      title: 'LDoc Modern Documentation Framework',
+      frontmatter: {"layout":"home","title":"LDoc Modern Documentation Framework","hero":{"name":"LDesign Doc","text":"Modern Documentation Framework","tagline":"Powered by Vite, supports Vue/React, out of the box","actions":[{"theme":"brand","text":"Get Started","link":"/en/guide/getting-started"},{"theme":"alt","text":"View on GitHub","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite Powered","details":"Enjoy ultra-fast development with instant HMR, 10x productivity boost"},{"icon":"file-text","title":"Enhanced Markdown","details":"Code highlighting, containers, math formulas, Mermaid diagrams, Emoji and more"},{"icon":"palette","title":"Highly Customizable","details":"Flexible theming, Vue/React components, custom layouts and styles"},{"icon":"plug","title":"Plugin Ecosystem","details":"10+ built-in plugins including comments, search, reading time, image viewer"},{"icon":"search","title":"Full-text Search","details":"Built-in search plugin with keyboard shortcuts, instant results"},{"icon":"code","title":"Code Demo","details":"Live preview Vue/React components, side-by-side code and output"}]}
+    }
+  },
+  {
+    path: '/en/guide',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/index.md'),
+    meta: { 
+      title: 'Introduction',
+      frontmatter: {"title":"Introduction"}
+    }
+  },
+  {
     path: '/examples',
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/index.md'),
     meta: { 
@@ -135,6 +159,14 @@ export const routes = [
     meta: { 
       title: '代码块',
       frontmatter: {"title":"代码块"}
+    }
+  },
+  {
+    path: '/examples/markdown/containers',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/markdown/containers.md'),
+    meta: { 
+      title: 'containers',
+      frontmatter: {}
     }
   },
   {
@@ -223,6 +255,14 @@ export const routes = [
     meta: { 
       title: '快速开始',
       frontmatter: {"title":"快速开始"}
+    }
+  },
+  {
+    path: '/guide/i18n',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/i18n.md'),
+    meta: { 
+      title: '国际化',
+      frontmatter: {"title":"国际化"}
     }
   },
   {
@@ -367,6 +407,14 @@ export const routes = [
     meta: { 
       title: 'using',
       frontmatter: {}
+    }
+  },
+  {
+    path: '/src-demo',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/src-demo.md'),
+    meta: { 
+      title: '源码示例',
+      frontmatter: {"title":"源码示例"}
     }
   },
   {

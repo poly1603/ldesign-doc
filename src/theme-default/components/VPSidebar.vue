@@ -200,21 +200,34 @@ const isActive = (link?: string) => {
 
 @media (max-width: 768px) {
   .vp-sidebar {
+    position: fixed !important;
+    top: var(--ldoc-nav-height, 64px);
+    left: 0;
+    width: var(--ldoc-sidebar-width, 260px);
+    height: calc(100vh - var(--ldoc-nav-height, 64px));
     transform: translateX(-100%);
+    z-index: 200;
+    background: var(--ldoc-c-bg);
+    border-right: 1px solid var(--ldoc-c-divider);
   }
 
   .vp-sidebar.open {
     transform: translateX(0);
   }
 
-  .vp-sidebar.open .vp-sidebar-mask {
-    display: block;
+  .vp-sidebar-mask {
+    display: none;
     position: fixed;
-    top: 0;
-    left: var(--ldoc-sidebar-width, 260px);
+    top: var(--ldoc-nav-height, 64px);
+    left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+  }
+
+  .vp-sidebar.open .vp-sidebar-mask {
+    display: block;
   }
 }
 

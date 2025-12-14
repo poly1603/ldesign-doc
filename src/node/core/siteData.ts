@@ -218,6 +218,7 @@ export const siteData = {
   description: '${config.description}',
   lang: '${config.lang}',
   themeConfig: ${JSON.stringify(config.themeConfig)},
+  locales: ${JSON.stringify(config.locales || {})},
   head: ${JSON.stringify(config.head)}
 }
 `

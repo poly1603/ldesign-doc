@@ -74,6 +74,28 @@
           <span class="vp-nav-search-shortcut">Ctrl K</span>
         </button>
 
+        <!-- 语言切换 -->
+        <div v-if="locales && Object.keys(locales).length > 1" class="vp-nav-lang">
+          <button class="vp-nav-lang-trigger" title="切换语言">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span class="vp-nav-lang-label">{{ currentLocaleLabel }}</span>
+            <svg class="vp-nav-lang-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="vp-nav-lang-menu">
+            <a v-for="(locale, key) in locales" :key="key" :href="getLocaleLink(key as string)" class="vp-nav-lang-item"
+              :class="{ active: isCurrentLocale(key as string) }">
+              {{ locale.label }}
+            </a>
+          </div>
+        </div>
+
         <!-- 主题色选择 -->
         <div class="vp-nav-theme-color">
           <button class="vp-nav-theme-color-trigger" title="选择主题色">
@@ -86,15 +108,15 @@
             <div class="vp-theme-color-header">选择主题色</div>
             <div class="vp-theme-color-grid">
               <button v-for="color in themeColors" :key="color.name" class="vp-theme-color-card"
-                :class="{ active: currentThemeColor === color.name }"
-                @click="setThemeColor(color.name)">
+                :class="{ active: currentThemeColor === color.name }" @click="setThemeColor(color.name)">
                 <span class="vp-theme-color-dot" :style="{ background: `hsl(${color.hue}, 70%, 55%)` }"></span>
                 <span class="vp-theme-color-info">
                   <span class="vp-theme-color-label">{{ color.label }}</span>
                   <span class="vp-theme-color-desc">{{ color.desc }}</span>
                 </span>
-                <svg v-if="currentThemeColor === color.name" class="vp-theme-color-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg v-if="currentThemeColor === color.name" class="vp-theme-color-check" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
             </div>
@@ -212,6 +234,97 @@ const socialLinks = computed(() => {
   const config = theme.value as { socialLinks?: Array<{ icon: string; link: string }> }
   return config.socialLinks || []
 })
+
+// 多语言配置
+interface LocaleConfig {
+  label: string
+  lang?: string
+  link?: string
+}
+
+const locales = computed<Record<string, LocaleConfig> | undefined>(() => {
+  const config = site.value as { locales?: Record<string, LocaleConfig> }
+  return config.locales
+})
+
+// 当前语言标签
+const currentLocaleLabel = computed(() => {
+  if (!locales.value) return ''
+  const currentPath = route.path
+
+  // 检查是否是某个语言路径
+  for (const key in locales.value) {
+    if (key === 'root') continue
+    const locale = locales.value[key]
+    if (locale.link && currentPath.startsWith(locale.link)) {
+      return locale.label
+    }
+  }
+
+  // 默认返回 root 语言
+  return locales.value.root?.label || '简体中文'
+})
+
+// 判断是否为当前语言
+const isCurrentLocale = (key: string) => {
+  const currentPath = route.path
+
+  if (key === 'root') {
+    // root 语言：不以任何其他语言前缀开头
+    if (!locales.value) return true
+    for (const k in locales.value) {
+      if (k !== 'root') {
+        const locale = locales.value[k]
+        if (locale.link && currentPath.startsWith(locale.link)) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+
+  const locale = locales.value?.[key]
+  return locale?.link ? currentPath.startsWith(locale.link) : false
+}
+
+// 获取语言链接
+const getLocaleLink = (key: string) => {
+  const currentPath = route.path
+
+  if (key === 'root') {
+    // 切换到 root 语言：移除语言前缀
+    if (!locales.value) return currentPath
+    for (const k in locales.value) {
+      if (k !== 'root') {
+        const locale = locales.value[k]
+        if (locale.link && currentPath.startsWith(locale.link)) {
+          return currentPath.replace(locale.link, '') || '/'
+        }
+      }
+    }
+    return currentPath
+  }
+
+  const locale = locales.value?.[key]
+  if (!locale?.link) return currentPath
+
+  // 先移除其他语言前缀
+  let basePath = currentPath
+  if (locales.value) {
+    for (const k in locales.value) {
+      if (k !== 'root') {
+        const loc = locales.value[k]
+        if (loc.link && currentPath.startsWith(loc.link)) {
+          basePath = currentPath.replace(loc.link, '') || '/'
+          break
+        }
+      }
+    }
+  }
+
+  // 添加目标语言前缀
+  return locale.link + (basePath === '/' ? '' : basePath)
+}
 
 // 判断是否为外部链接
 const isExternalLink = (link: string) => {
@@ -468,6 +581,88 @@ onUnmounted(() => {
   .vp-nav-search-shortcut {
     display: flex;
   }
+}
+
+/* 语言切换器 */
+.vp-nav-lang {
+  position: relative;
+}
+
+.vp-nav-lang-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ldoc-c-text-1);
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.vp-nav-lang-trigger:hover {
+  border-color: var(--ldoc-c-brand);
+  background: var(--ldoc-c-bg-soft);
+}
+
+.vp-nav-lang-label {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .vp-nav-lang-label {
+    display: inline;
+  }
+}
+
+.vp-nav-lang-arrow {
+  opacity: 0.6;
+}
+
+.vp-nav-lang-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 120px;
+  padding: 8px 0;
+  margin-top: 8px;
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s;
+  z-index: 100;
+}
+
+.vp-nav-lang:hover .vp-nav-lang-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.vp-nav-lang-item {
+  display: block;
+  padding: 8px 16px;
+  color: var(--ldoc-c-text-1);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.vp-nav-lang-item:hover {
+  background: var(--ldoc-c-bg-soft);
+  color: var(--ldoc-c-brand);
+}
+
+.vp-nav-lang-item.active {
+  color: var(--ldoc-c-brand);
+  font-weight: 600;
+  background: var(--ldoc-c-brand-soft);
 }
 
 /* 主题色选择器 */

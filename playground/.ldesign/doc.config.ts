@@ -1,9 +1,14 @@
 import { defineConfig } from '@ldesign/doc'
 import {
+  commentPlugin,
   readingTimePlugin,
   progressPlugin,
   copyCodePlugin,
-  demoPlugin
+  demoPlugin,
+  searchPlugin,
+  imageViewerPlugin,
+  lastUpdatedPlugin,
+  wordCountPlugin
 } from '@ldesign/doc/plugins'
 
 export default defineConfig({
@@ -12,9 +17,49 @@ export default defineConfig({
   description: '现代化文档系统演示',
   lang: 'zh-CN',
 
+  // 多语言配置
+  locales: {
+    root: {
+      label: '简体中文',
+      lang: 'zh-CN'
+    },
+    en: {
+      label: 'English',
+      lang: 'en-US',
+      link: '/en/',
+      themeConfig: {
+        nav: [
+          { text: 'Guide', link: '/en/guide/' },
+          { text: 'Examples', link: '/en/examples/' },
+          { text: 'API', link: '/en/api/' },
+          { text: 'Plugins', link: '/en/plugins/' },
+          { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
+        ]
+      }
+    }
+  },
+
   // 插件配置
   // 内置插件（返回顶部、图片灯箱、公告栏）自动加载
   plugins: [
+    // 评论插件
+    commentPlugin({
+      provider: 'giscus',
+      giscus: {
+        repo: 'nicepkg/ldesign',
+        repoId: 'R_kgDOMtLzZw',
+        category: 'Announcements',
+        categoryId: 'DIC_kwDOMtLzZ84CiU7_',
+        mapping: 'pathname',
+        strict: false,
+        reactionsEnabled: true,
+        emitMetadata: false,
+        inputPosition: 'top',
+        theme: 'preferred_color_scheme',
+        lang: 'zh-CN'
+      }
+    }),
+
     // 阅读时间插件
     readingTimePlugin({
       wordsPerMinute: 300
@@ -37,7 +82,26 @@ export default defineConfig({
     demoPlugin({
       defaultTitle: '示例',
       defaultExpanded: false
-    })
+    }),
+
+    // 搜索插件
+    searchPlugin({
+      hotkeys: ['/', 'Ctrl+K']
+    }),
+
+    // 图片预览插件
+    imageViewerPlugin({
+      zoom: true
+    }),
+
+    // 最后更新时间
+    lastUpdatedPlugin({
+      useGitTime: false, // 演示环境可能没有git信息
+      text: '最后更新于'
+    }),
+
+    // 字数统计
+    wordCountPlugin()
   ],
 
   themeConfig: {
@@ -59,6 +123,7 @@ export default defineConfig({
       { text: '示例', link: '/examples/' },
       { text: 'API', link: '/api/' },
       { text: '插件', link: '/plugins/' },
+      { text: '源码示例', link: '/src-demo' },
       { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
     ],
 
@@ -84,6 +149,7 @@ export default defineConfig({
           text: '进阶',
           items: [
             { text: '主题定制', link: '/guide/theme' },
+            { text: '国际化', link: '/guide/i18n' },
             { text: '部署', link: '/guide/deploy' }
           ]
         }
@@ -116,7 +182,8 @@ export default defineConfig({
         {
           text: 'Markdown 增强',
           items: [
-            { text: '代码块', link: '/examples/markdown/code' }
+            { text: '代码块', link: '/examples/markdown/code' },
+            { text: '容器与扩展', link: '/examples/markdown/containers' }
           ]
         },
         {

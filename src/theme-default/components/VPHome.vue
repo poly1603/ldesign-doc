@@ -172,21 +172,21 @@
         </div>
       </section>
 
-      <!-- 自定义内容 -->
+      <!-- 自定义内容（slot 或 markdown 内容） -->
       <div v-if="$slots.default" class="vp-home-content">
         <slot />
       </div>
-    </div>
-    
-    <!-- 隐藏的 Content 组件，用于触发 markdown 组件挂载以更新 frontmatter -->
-    <div style="display: none;">
-      <Content />
+
+      <!-- Markdown 内容区域 -->
+      <div class="vp-home-content vp-home-markdown">
+        <Content />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useData } from '../composables'
 import { PluginSlot, Content } from '@ldesign/doc/client'
 
@@ -222,7 +222,7 @@ const initParticlesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanva
   const speed = config.speed || 1
   const density = config.density || 1
   const count = Math.min(50, Math.floor((canvas.width * canvas.height) / 18000 * density))
-  
+
   for (let i = 0; i < count; i++) {
     particles.push({
       x: Math.random() * canvas.width,
@@ -238,7 +238,7 @@ const initParticlesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanva
   return () => {
     const themeColor = getThemeColor()
     gradientOffset += 0.002 * speed
-    
+
     const gradient = ctx.createLinearGradient(
       canvas.width * (0.3 + Math.sin(gradientOffset) * 0.2), 0,
       canvas.width * (0.7 + Math.cos(gradientOffset) * 0.2), canvas.height
@@ -274,25 +274,25 @@ const initParticlesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanva
 const initWavesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
   let time = 0
   const speed = config.speed || 1
-  
+
   return () => {
     const themeColor = getThemeColor()
     time += 0.015 * speed
-    
+
     // 背景渐变
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
     gradient.addColorStop(0, `hsla(${themeColor.hue}, 60%, 88%, 0.95)`)
     gradient.addColorStop(1, `hsla(${themeColor.hue + 20}, 50%, 92%, 0.95)`)
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     // 绘制多层波浪
     const waves = [
       { amp: 30, freq: 0.008, phase: 0, opacity: 0.15, y: 0.7 },
       { amp: 25, freq: 0.012, phase: 2, opacity: 0.12, y: 0.75 },
       { amp: 20, freq: 0.015, phase: 4, opacity: 0.08, y: 0.8 },
     ]
-    
+
     waves.forEach(wave => {
       ctx.beginPath()
       ctx.moveTo(0, canvas.height)
@@ -312,11 +312,11 @@ const initWavesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
 const initGradientAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, config: CanvasConfig) => {
   let time = 0
   const speed = config.speed || 1
-  
+
   return () => {
     const themeColor = getThemeColor()
     time += 0.005 * speed
-    
+
     // 动态多点渐变
     const gradient = ctx.createRadialGradient(
       canvas.width * (0.3 + Math.sin(time) * 0.2),
@@ -331,7 +331,7 @@ const initGradientAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvas
     gradient.addColorStop(1, `hsla(${themeColor.hue - 20}, 50%, 90%, 0.9)`)
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     // 添加光斑
     for (let i = 0; i < 3; i++) {
       const x = canvas.width * (0.2 + i * 0.3 + Math.sin(time + i) * 0.1)
@@ -353,7 +353,7 @@ const initBubblesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasE
   const speed = config.speed || 1
   const density = config.density || 1
   const count = Math.floor(25 * density)
-  
+
   for (let i = 0; i < count; i++) {
     bubbles.push({
       x: Math.random() * canvas.width,
@@ -364,35 +364,35 @@ const initBubblesAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasE
       opacity: Math.random() * 0.3 + 0.1
     })
   }
-  
+
   let time = 0
   return () => {
     const themeColor = getThemeColor()
     time += 0.02 * speed
-    
+
     // 背景
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
     gradient.addColorStop(0, `hsla(${themeColor.hue}, 55%, 90%, 0.95)`)
     gradient.addColorStop(1, `hsla(${themeColor.hue + 15}, 60%, 85%, 0.95)`)
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     bubbles.forEach(b => {
       b.y -= b.speed
       b.wobble += 0.02
       const wobbleX = Math.sin(b.wobble) * 2
-      
+
       if (b.y + b.r < 0) {
         b.y = canvas.height + b.r
         b.x = Math.random() * canvas.width
       }
-      
+
       // 气泡
       ctx.beginPath()
       ctx.arc(b.x + wobbleX, b.y, b.r, 0, Math.PI * 2)
       ctx.fillStyle = `hsla(${themeColor.hue}, 70%, 70%, ${b.opacity})`
       ctx.fill()
-      
+
       // 高光
       ctx.beginPath()
       ctx.arc(b.x + wobbleX - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.2, 0, Math.PI * 2)
@@ -409,7 +409,7 @@ const initConstellationAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLC
   const speed = config.speed || 1
   const density = config.density || 1
   const count = Math.floor(80 * density)
-  
+
   for (let i = 0; i < count; i++) {
     stars.push({
       x: Math.random() * canvas.width,
@@ -419,12 +419,12 @@ const initConstellationAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLC
       speed: Math.random() * 0.02 + 0.01
     })
   }
-  
+
   let time = 0
   return () => {
     const themeColor = getThemeColor()
     time += 0.01 * speed
-    
+
     // 深色背景
     const gradient = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, 0,
@@ -434,17 +434,17 @@ const initConstellationAnimation = (ctx: CanvasRenderingContext2D, canvas: HTMLC
     gradient.addColorStop(1, `hsla(${themeColor.hue + 20}, 50%, 15%, 0.98)`)
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     // 星星和连线
     stars.forEach((s, i) => {
       s.twinkle += s.speed * speed
       const opacity = 0.4 + Math.sin(s.twinkle) * 0.3
-      
+
       ctx.beginPath()
       ctx.arc(s.x, s.y, s.r * (1 + Math.sin(s.twinkle) * 0.3), 0, Math.PI * 2)
       ctx.fillStyle = `hsla(${themeColor.hue + 40}, 80%, 80%, ${opacity})`
       ctx.fill()
-      
+
       // 连接附近星星
       stars.slice(i + 1, i + 10).forEach(s2 => {
         const dx = s.x - s2.x, dy = s.y - s2.y, dist = Math.sqrt(dx * dx + dy * dy)
@@ -470,10 +470,22 @@ const initCanvas = () => {
 
   const resize = () => {
     const rect = canvas.parentElement?.getBoundingClientRect()
-    if (rect) { canvas.width = rect.width; canvas.height = rect.height }
+    if (rect && rect.width > 0 && rect.height > 0) {
+      canvas.width = rect.width;
+      canvas.height = rect.height
+    }
   }
   resize()
+  // Ensure resize happens after a frame to catch layout updates
+  requestAnimationFrame(resize)
   window.addEventListener('resize', resize)
+
+  // 监听主题颜色变化
+  const observer = new MutationObserver(() => {
+    // 强制触发重绘
+    resize()
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] })
 
   // 根据配置选择动画类型
   let animateFn: (() => void) | null = null
@@ -500,10 +512,12 @@ const initCanvas = () => {
 let cleanup: (() => void) | undefined
 
 onMounted(() => {
-  // 延迟初始化canvas确保DOM已渲染
-  setTimeout(() => {
-    cleanup = initCanvas()
-  }, 100)
+  // 使用 nextTick + requestAnimationFrame 确保 DOM 完全渲染后立即初始化
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      cleanup = initCanvas()
+    })
+  })
 })
 
 onUnmounted(() => {
@@ -573,9 +587,9 @@ if (typeof window !== 'undefined' && (import.meta as any).hot) {
   hot.on('ldoc:frontmatter-update', (data: { file: string; frontmatter: Record<string, unknown> }) => {
     console.log('[VPHome] Received WS frontmatter update:', data.file)
     // 更新全局 pageData
-    if (window.__LDOC_PAGE_DATA__) {
-      window.__LDOC_PAGE_DATA__.value = {
-        ...window.__LDOC_PAGE_DATA__.value,
+    if ((window as any).__LDOC_PAGE_DATA__) {
+      (window as any).__LDOC_PAGE_DATA__.value = {
+        ...(window as any).__LDOC_PAGE_DATA__.value,
         frontmatter: data.frontmatter
       }
     }
@@ -637,6 +651,17 @@ const iconMap: Record<string, string> = {
   'book': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
   'settings': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
   'shield': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  'file-text': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
+  'plug': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>',
+  'globe': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+  'smartphone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>',
+  'languages': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>',
+  'blocks': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/></svg>',
+  'component': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg>',
+  'box': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  'sparkles': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
+  'terminal': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>',
+  'cpu': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>',
 }
 
 // 获取图标HTML
@@ -691,6 +716,8 @@ const onFeatureLeave = (e: MouseEvent) => {
   margin-left: calc(-1 * var(--ldoc-sidebar-width, 260px));
   margin-right: calc(-1 * var(--ldoc-outline-width, 220px));
   width: calc(100% + var(--ldoc-sidebar-width, 260px) + var(--ldoc-outline-width, 220px));
+  /* 创建堆叠上下文，确保 canvas 背景可见 */
+  isolation: isolate;
 }
 
 .vp-home-hero-content {

@@ -1,5 +1,5 @@
 <template>
-  <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome }"
+  <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome, 'is-mobile': isMobile }"
     :style="layoutStyles">
     <!-- 布局顶部插槽（导航栏上方，可用于公告栏） -->
     <PluginSlot name="layout-top" />
@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { computed, onMounted, onUnmounted, nextTick, watch, ref } from 'vue'
 import { useData, useRoute } from '@ldesign/doc/client'
 import { PluginSlot } from '@ldesign/doc/client'
 import VPNav from './components/VPNav.vue'
@@ -75,6 +75,26 @@ import VPImageZoom from './components/VPImageZoom.vue'
 
 const { frontmatter, theme } = useData()
 const route = useRoute()
+
+// 移动端检测
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
+}
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+// 路由切换时滚动到顶部
+watch(() => route.path, () => {
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  })
+})
 
 // 布局配置
 const layoutConfig = computed(() => {
@@ -285,10 +305,40 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .ldoc-layout-content {
     flex-direction: column;
+    min-height: calc(100vh - var(--ldoc-nav-height, 64px));
+    /* 移动端重置为块级布局，避免 flex 影响 */
+    display: block !important;
   }
 
   .ldoc-main {
     padding: 16px;
+    width: 100%;
+    min-width: 0;
+    display: block !important;
+  }
+
+  /* 移动端侧边栏固定定位，不占用布局空间 */
+  .ldoc-layout-content > .vp-sidebar,
+  .ldoc-layout-content :deep(.vp-sidebar) {
+    position: fixed !important;
+    top: var(--ldoc-nav-height, 64px);
+    left: 0;
+    width: var(--ldoc-sidebar-width, 260px);
+    height: calc(100vh - var(--ldoc-nav-height, 64px));
+    transform: translateX(-100%);
+    z-index: 200;
+    background: var(--ldoc-c-bg);
+  }
+
+  .ldoc-layout-content > .vp-sidebar.open,
+  .ldoc-layout-content :deep(.vp-sidebar.open) {
+    transform: translateX(0);
+  }
+
+  /* 移动端隐藏右侧大纲 */
+  .ldoc-layout-content > .vp-outline,
+  .ldoc-layout-content :deep(.vp-outline) {
+    display: none !important;
   }
 }
 
@@ -363,5 +413,41 @@ onUnmounted(() => {
   .ldoc-main {
     margin-left: 0 !important;
   }
+}
+</style>
+
+<!-- 全局移动端样式 - 使用 JavaScript 检测的 .is-mobile 类 -->
+<style>
+/* 移动端布局 - 通过 JS 检测应用 */
+.ldoc-layout.is-mobile .ldoc-layout-content {
+  display: block !important;
+  width: 100% !important;
+}
+
+.ldoc-layout.is-mobile .vp-sidebar {
+  position: fixed !important;
+  top: var(--ldoc-nav-height, 64px) !important;
+  left: 0 !important;
+  width: var(--ldoc-sidebar-width, 260px) !important;
+  height: calc(100vh - var(--ldoc-nav-height, 64px)) !important;
+  transform: translateX(-100%) !important;
+  z-index: 200 !important;
+  background: var(--ldoc-c-bg) !important;
+  border-right: 1px solid var(--ldoc-c-divider);
+}
+
+.ldoc-layout.is-mobile .vp-sidebar.open {
+  transform: translateX(0) !important;
+}
+
+.ldoc-layout.is-mobile .ldoc-main {
+  width: 100% !important;
+  max-width: 100vw !important;
+  margin-left: 0 !important;
+  padding: 16px !important;
+}
+
+.ldoc-layout.is-mobile .vp-outline {
+  display: none !important;
 }
 </style>
