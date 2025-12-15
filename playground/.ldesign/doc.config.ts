@@ -180,7 +180,7 @@ export default defineConfig({
       outlineWidth: 220,
       contentGap: 32,
       navHeight: 64,
-      maxWidth: 1600,
+      maxWidth: 1400,
       contentWidth: '100%'
     },
 

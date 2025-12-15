@@ -362,6 +362,12 @@ onUnmounted(() => {
   margin: 0 auto;
 }
 
+/* 首页布局特殊处理：移除最大宽度限制，允许 Hero/Banner 全屏展示 */
+.ldoc-layout.is-home .ldoc-layout-content {
+  max-width: none;
+  width: 100%;
+}
+
 /* 有侧边栏时的布局 */
 .ldoc-layout.has-sidebar .ldoc-layout-content {
   /* 使用 Flexbox 布局，Sidebar 占据空间 */
