@@ -21,7 +21,10 @@ export {
   usePluginSlots,
   createPluginSlotsContext,
   providePluginSlots,
-  collectPluginSlots
+  collectPluginSlots,
+  cachePlugins,
+  getCachedPlugins,
+  recollectPluginSlots
 } from './composables/usePluginSlots'
 
 // 插件上下文系统

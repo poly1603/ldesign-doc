@@ -6,7 +6,7 @@ import { createApp as createVueApp, ref, provide, h, type App, type Component } 
 import { createRouter, createWebHistory, type RouteRecordRaw, type Router } from 'vue-router'
 import type { Theme, SiteData, PageData, Route, LDocPlugin } from '../shared/types'
 import { pageDataSymbol, siteDataSymbol } from './composables'
-import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from './composables/usePluginSlots'
+import { createPluginSlotsContext, providePluginSlots, collectPluginSlots, cachePlugins, recollectPluginSlots } from './composables/usePluginSlots'
 
 // 导入虚拟模块的插件配置（延迟加载）
 // 使用动态字符串避免构建时解析
@@ -49,9 +49,8 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
   const virtualPlugins = await loadVirtualPlugins()
   const allPlugins = [...plugins, ...virtualPlugins]
 
-  // 收集插件的 slots 和全局组件
-  collectPluginSlots(allPlugins, pluginSlotsContext)
-
+  // 缓存插件定义,用于路由变化时重新收集 slots
+  cachePlugins(allPlugins)
 
   // 站点数据
   const siteData = ref<SiteData>(initialSiteData || {
@@ -110,6 +109,9 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
     }
   })
 
+  // 初始收集插件 slots(不传上下文,让动态 slots 返回空)
+  collectPluginSlots(allPlugins, pluginSlotsContext)
+
   // 路由守卫 - 更新页面数据
   router.beforeResolve(async (to) => {
     const meta = to.meta || {}
@@ -128,6 +130,25 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
         ? `${pageData.value.title} | ${siteData.value.title}`
         : siteData.value.title
     }
+  })
+
+  // 路由变化后重新收集插件 slots
+  router.afterEach((to) => {
+    // 创建插件上下文
+    const pluginContext = {
+      app: null,
+      router,
+      siteData: siteData.value,
+      pageData: pageData.value,
+      route: {
+        path: to.path,
+        hash: to.hash,
+        query: to.query
+      }
+    }
+    
+    // 重新收集插件 slots
+    recollectPluginSlots(pluginSlotsContext, pluginContext)
   })
 
   // 创建 Vue 应用
@@ -165,6 +186,21 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
     mount(container: string | Element) {
       // 等待路由就绪后挂载
       router.isReady().then(() => {
+        // 初始加载时也需要收集一次 slots
+        const currentRoute = router.currentRoute.value
+        const pluginContext = {
+          app: null,
+          router,
+          siteData: siteData.value,
+          pageData: pageData.value,
+          route: {
+            path: currentRoute.path,
+            hash: currentRoute.hash,
+            query: currentRoute.query
+          }
+        }
+        recollectPluginSlots(pluginSlotsContext, pluginContext)
+        
         app.mount(container)
       })
     }

@@ -174,19 +174,12 @@ export default defineConfig({
   plugins: [
     // 评论插件
     commentPlugin({
-      provider: 'giscus',
-      giscus: {
-        repo: 'nicepkg/ldesign',
-        repoId: 'R_kgDOMtLzZw',
-        category: 'Announcements',
-        categoryId: 'DIC_kwDOMtLzZ84CiU7_',
-        mapping: 'pathname',
-        strict: false,
-        reactionsEnabled: true,
-        emitMetadata: false,
-        inputPosition: 'top',
-        theme: 'preferred_color_scheme',
-        lang: 'zh-CN'
+      provider: 'artalk',
+      artalk: {
+        server: 'http://swimly.cn:8080/',
+        site: 'My Site',
+        pageKey: '',
+        darkMode: 'auto'
       }
     }),
 

@@ -113,16 +113,18 @@ export function usePluginSlots(): PluginSlotsContext {
 
 /**
  * 从插件列表中收集所有 slots 和全局组件
+ * 注意:此函数会在应用初始化时调用,对于需要路由信息的插件,slots 应该返回空对象或占位符
  */
 export function collectPluginSlots(
   plugins: LDocPlugin[],
-  context: PluginSlotsContext
+  context: PluginSlotsContext,
+  pluginContext?: any
 ) {
   for (const plugin of plugins) {
     // 注册 slots（支持对象或工厂函数）
     if (plugin.slots) {
       const slots = typeof plugin.slots === 'function'
-        ? plugin.slots({} as never) // 工厂函数，传入空上下文（后续可以完善）
+        ? plugin.slots(pluginContext || {} as never)
         : plugin.slots
       context.registerPluginSlots(plugin.name, slots)
     }
@@ -132,4 +134,37 @@ export function collectPluginSlots(
       context.registerGlobalComponents(plugin.globalComponents)
     }
   }
+}
+
+/**
+ * 存储插件定义,用于动态重新收集 slots
+ */
+let cachedPlugins: LDocPlugin[] = []
+
+/**
+ * 缓存插件定义
+ */
+export function cachePlugins(plugins: LDocPlugin[]) {
+  cachedPlugins = plugins
+}
+
+/**
+ * 获取缓存的插件
+ */
+export function getCachedPlugins(): LDocPlugin[] {
+  return cachedPlugins
+}
+
+/**
+ * 重新收集插件 slots(用于路由变化时)
+ */
+export function recollectPluginSlots(
+  context: PluginSlotsContext,
+  pluginContext: any
+) {
+  // 清空现有 slots
+  context.slots.value.clear()
+  
+  // 重新收集
+  collectPluginSlots(cachedPlugins, context, pluginContext)
 }

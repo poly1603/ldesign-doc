@@ -241,7 +241,8 @@ const Layout = theme.Layout
 import '@theme-styles'
 
 // 导入插件系统
-import { createPluginSlotsContext, providePluginSlots, collectPluginSlots } from '@ldesign/doc/client'
+import { createPluginSlotsContext, providePluginSlots, collectPluginSlots, cachePlugins, recollectPluginSlots } from '@ldesign/doc/client'
+import { createPluginContext, providePluginContext } from '@ldesign/doc/client'
 
 // 导入插件客户端配置
 import clientPlugins from 'virtual:ldoc/plugins'
@@ -266,14 +267,17 @@ window.__LDOC_SITE_DATA__ = siteDataRef
 // 创建插件 Slot 上下文
 const pluginSlotsContext = createPluginSlotsContext()
 
-// 收集插件的 slots 和全局组件
-collectPluginSlots(clientPlugins, pluginSlotsContext)
+// 缓存插件定义,用于路由变化时重新收集 slots
+cachePlugins(clientPlugins)
 
 // 创建路由
 const router = createRouter({
   history: createWebHistory('${config.base}'),
   routes
 })
+
+// 初始收集插件 slots(不传上下文,让动态 slots 返回空)
+collectPluginSlots(clientPlugins, pluginSlotsContext)
 
 // 路由守卫
 router.beforeResolve(async (to) => {
@@ -288,6 +292,25 @@ router.beforeResolve(async (to) => {
   document.title = pageDataRef.value.title 
     ? pageDataRef.value.title + ' | ' + siteData.title
     : siteData.title
+})
+
+// 路由变化后重新收集插件 slots
+router.afterEach((to) => {
+  // 创建插件上下文
+  const pluginContext = {
+    app: null,
+    router,
+    siteData: siteDataRef.value,
+    pageData: pageDataRef.value,
+    route: {
+      path: to.path,
+      hash: to.hash,
+      query: to.query
+    }
+  }
+  
+  // 重新收集插件 slots
+  recollectPluginSlots(pluginSlotsContext, pluginContext)
 })
 
 // 根组件
@@ -306,7 +329,26 @@ const RootComponent = {
 // 创建应用
 const app = createApp(RootComponent)
 app.use(router)
-app.mount('#app')
+
+// 等待路由就绪后挂载应用
+router.isReady().then(() => {
+  // 初始加载时也需要收集一次 slots
+  const currentRoute = router.currentRoute.value
+  const pluginContext = {
+    app: null,
+    router,
+    siteData: siteDataRef.value,
+    pageData: pageDataRef.value,
+    route: {
+      path: currentRoute.path,
+      hash: currentRoute.hash,
+      query: currentRoute.query
+    }
+  }
+  recollectPluginSlots(pluginSlotsContext, pluginContext)
+  
+  app.mount('#app')
+})
 
 // HMR
 if (import.meta.hot) {
