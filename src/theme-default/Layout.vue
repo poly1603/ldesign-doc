@@ -14,7 +14,7 @@
     <VPNav />
 
     <!-- 主要内容区 -->
-    <div class="ldoc-layout-content">
+    <div class="ldoc-layout-content" :class="{ 'has-sidebar': hasSidebar, 'has-outline': hasFixedOutline }">
       <!-- 侧边栏 -->
       <Transition name="sidebar-slide">
         <VPSidebar v-if="hasSidebar" :key="hasSidebar ? 'sidebar' : 'no-sidebar'" />
@@ -154,6 +154,10 @@ const showOutline = computed(() => {
   return frontmatter.value.outline !== false
 })
 
+const hasFixedOutline = computed(() => {
+  return !isHome.value && showOutline.value && !hasSidebar.value
+})
+
 // 是否显示页脚
 const showFooter = computed(() => {
   const footer = (theme.value as { footer?: unknown }).footer
@@ -232,6 +236,23 @@ onUnmounted(() => {
   flex: 1;
   /* 确保 flex 容器允许子元素 sticky */
   overflow: visible;
+  align-items: flex-start;
+  position: relative;
+  transition: padding-right 0.3s ease;
+}
+
+/* 当没有侧边栏时，为浮动大纲预留空间并固定其位置 */
+@media (min-width: 1024px) {
+  .ldoc-layout.has-outline .ldoc-layout-content:not(.has-sidebar) {
+    padding-right: var(--ldoc-outline-width, 220px);
+  }
+
+  .ldoc-layout.has-outline :is(.vp-outline) {
+    position: fixed !important;
+    top: calc(var(--ldoc-nav-height, 64px) + 24px);
+    right: max(0px, calc((100vw - var(--ldoc-layout-max-width, 1440px)) / 2));
+    z-index: 10;
+  }
 }
 
 .ldoc-main {
@@ -367,12 +388,6 @@ onUnmounted(() => {
 .ldoc-layout.is-home .ldoc-layout-content {
   max-width: none;
   width: 100%;
-}
-
-/* 有侧边栏时的布局 */
-.ldoc-layout.has-sidebar .ldoc-layout-content {
-  /* 使用 Flexbox 布局，Sidebar 占据空间 */
-  align-items: flex-start;
 }
 
 .ldoc-layout.has-sidebar .ldoc-main {

@@ -300,7 +300,6 @@ const scrollToHeader = (slug: string) => {
 .vp-outline {
   position: sticky;
   top: calc(var(--ldoc-nav-height, 64px) + 24px);
-  right: 0;
   width: var(--ldoc-outline-width, 220px);
   max-height: calc(100vh - var(--ldoc-nav-height, 64px) - 48px);
   overflow-y: auto;
@@ -309,6 +308,7 @@ const scrollToHeader = (slug: string) => {
   padding-right: 24px;
   box-sizing: border-box;
   transition: transform 0.3s ease;
+  z-index: 10;
 }
 
 .vp-outline:hover {
@@ -434,13 +434,6 @@ const scrollToHeader = (slug: string) => {
 @media (max-width: 1280px) {
   .vp-outline {
     display: none;
-  }
-}
-
-/* 大屏幕优化定位 */
-@media (min-width: 1600px) {
-  .vp-outline {
-    right: calc((100vw - var(--ldoc-layout-max-width, 1400px)) / 2);
   }
 }
 </style>
