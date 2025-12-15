@@ -263,7 +263,7 @@ watch(() => route.path, (newPath, oldPath) => {
   const tryExtract = (retries = 5, delay = 200) => {
     extractHeaders()
     setupObserver()
-    
+
     if (tocHeaders.value.length > 0) {
       isReady.value = true
       // 页面加载时选中第一个标题
@@ -299,7 +299,7 @@ const scrollToHeader = (slug: string) => {
 <style scoped>
 .vp-outline {
   position: sticky;
-  top: calc(var(--ldoc-nav-height, 64px) + 24px);
+  top: calc(var(--ldoc-nav-height, 64px));
   width: var(--ldoc-outline-width, 220px);
   max-height: calc(100vh - var(--ldoc-nav-height, 64px) - 48px);
   overflow-y: auto;
