@@ -8,6 +8,7 @@ import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
 import yaml from 'js-yaml'
+import { getHighlighter, type Highlighter } from 'shiki'
 import type { SiteConfig, MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
@@ -20,6 +21,7 @@ interface DemoInfo {
   code: string          // 源代码
   title?: string
   type?: 'vue' | 'html' | 'react'  // demo 类型
+  highlightedCode?: string // 高亮后的代码
 }
 
 export interface VitePluginOptions {
@@ -30,6 +32,18 @@ export interface VitePluginOptions {
 
 // 存储 demo 代码块，用于生成虚拟模块
 const demoCodeMap = new Map<string, { code: string; language: string }>()
+
+let highlighter: Highlighter
+
+async function getSharedHighlighter() {
+  if (!highlighter) {
+    highlighter = await getHighlighter({
+      themes: ['github-light', 'github-dark'],
+      langs: ['vue', 'vue-html', 'html', 'tsx', 'jsx', 'typescript', 'javascript', 'json', 'bash', 'css']
+    })
+  }
+  return highlighter
+}
 
 /**
  * 创建 Vite 插件列表
@@ -115,6 +129,9 @@ function createMarkdownPlugin(
       const demos: DemoInfo[] = []
       let demoIndex = 0
 
+      // 获取高亮器
+      const highlighter = await getSharedHighlighter()
+
       // 支持的 demo 类型：vue-demo, html-demo, react-demo
       const demoTypes = ['vue', 'html', 'react']
 
@@ -124,6 +141,17 @@ function createMarkdownPlugin(
           '```' + demoType + '-demo(?:\\s+src=["\']([^"\']+)["\'])?(?:\\s+title=["\']([^"\']+)["\'])?\\s*\\n([\\s\\S]*?)```',
           'gi'
         )
+        // 使用 replace 的回调来处理异步操作是不行的，所以我们先收集再替换
+        // 或者使用 while 循环匹配
+
+        let match
+        while ((match = regex.exec(markdown)) !== null) {
+          // 我们不能直接在循环里修改 markdown，因为会影响 regex.lastIndex
+          // 这里我们采用 replace 的方式，但因为需要 await，所以我们不能在 replace 回调里做
+          // 不过，shiki 的 codeToHtml 是同步的（只要 themes 和 langs 已加载）
+          // getSharedHighlighter 已经 await 过了
+        }
+
         markdown = markdown.replace(regex, (match, src, title, inlineCode) => {
           const demoId = `Demo${demoIndex++}`
           let demoCode = ''
@@ -146,11 +174,21 @@ function createMarkdownPlugin(
           }
 
           if (demoCode) {
+            const lang = demoType === 'vue' ? 'vue' : (demoType === 'react' ? 'tsx' : 'html')
+            const highlightedCode = highlighter.codeToHtml(demoCode, {
+              lang,
+              themes: {
+                light: 'github-light',
+                dark: 'github-dark'
+              }
+            })
+
             demos.push({
               id: demoId,
               src: src || `inline-${demoId}`,
               absolutePath: normalizePath(absolutePath),
               code: demoCode,
+              highlightedCode,
               title,
               type: demoType as 'vue' | 'html' | 'react'
             })
@@ -172,11 +210,23 @@ function createMarkdownPlugin(
             demoCode = readFileSync(absolutePath, 'utf-8')
           }
 
+          let highlightedCode = ''
+          if (demoCode) {
+            highlightedCode = highlighter.codeToHtml(demoCode, {
+              lang: 'vue',
+              themes: {
+                light: 'github-light',
+                dark: 'github-dark'
+              }
+            })
+          }
+
           demos.push({
             id: demoId,
             src,
             absolutePath: normalizePath(absolutePath),
             code: demoCode,
+            highlightedCode,
             title
           })
 
@@ -300,6 +350,11 @@ defineExpose({ frontmatter })
 
   // 对代码也使用 URI 编码 + Base64 处理 UTF-8
   const demoCodeMapStr = demos.map(d =>
+    `  '${d.id}': '${Buffer.from(encodeURIComponent(d.highlightedCode || '')).toString('base64')}'`
+  ).join(',\n')
+
+  // 原始代码 map，用于复制
+  const rawCodeMapStr = demos.map(d =>
     `  '${d.id}': '${Buffer.from(encodeURIComponent(d.code)).toString('base64')}'`
   ).join(',\n')
 
@@ -318,7 +373,7 @@ defineExpose({ frontmatter })
     const placeholder = `<!--DEMO_${demo.id}-->`
     processedHtml = processedHtml.replace(
       placeholder,
-      `<div class="ldoc-demo" id="ldoc-demo-${demo.id}"><div class="ldoc-demo-preview" id="ldoc-demo-preview-${demo.id}"></div><div class="ldoc-demo-actions"><button class="ldoc-demo-btn ldoc-demo-copy" data-demo-id="${demo.id}" title="复制代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg></button><button class="ldoc-demo-btn ldoc-demo-toggle" data-demo-id="${demo.id}" title="展开代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></button></div><div class="ldoc-demo-code" id="ldoc-demo-code-${demo.id}" style="display:none"><pre><code></code></pre></div></div>`
+      `<div class="ldoc-demo" id="ldoc-demo-${demo.id}"><div class="ldoc-demo-preview" id="ldoc-demo-preview-${demo.id}"></div><div class="ldoc-demo-actions"><button class="ldoc-demo-btn ldoc-demo-copy" data-demo-id="${demo.id}" title="复制代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg></button><button class="ldoc-demo-btn ldoc-demo-toggle" data-demo-id="${demo.id}" title="展开代码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></button></div><div class="ldoc-demo-code" id="ldoc-demo-code-${demo.id}" style="display:none"></div></div>`
     )
   }
 
@@ -337,9 +392,6 @@ ${demoImports}
 // UTF-8 安全的 Base64 解码
 const decodeBase64 = (str) => decodeURIComponent(atob(str))
 
-// 代码转义（简单版，不做复杂语法高亮避免正则问题）
-const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
 const componentId = '${componentId}'
 const frontmatter = ${frontmatterJson}
 const contentHtml = ref(typeof atob !== 'undefined' ? decodeBase64('${htmlEncoded}') : '')
@@ -347,6 +399,10 @@ const contentRef = ref(null)
 
 const demoCode = {
 ${demoCodeMapStr}
+}
+
+const rawCode = {
+${rawCodeMapStr}
 }
 
 const demoTypes = {
@@ -368,7 +424,11 @@ onMounted(() => {
     if (container) {
       if (demoType === 'html') {
         // HTML demo: 直接渲染 HTML
-        container.innerHTML = decodeBase64(code)
+        // 注意：HTML demo 的 code 是高亮后的代码，这里我们需要原始代码来展示预览
+        // 但这里我们只拿到了高亮后的代码... 这是一个逻辑漏洞
+        // 修正：HTML demo 的预览应该是 rawCode
+        const raw = rawCode[id] ? decodeBase64(rawCode[id]) : ''
+        container.innerHTML = raw
       } else if (demoComponents[id]) {
         // Vue demo: 挂载 Vue 组件
         const app = createApp({ render: () => h(demoComponents[id]) })
@@ -377,10 +437,10 @@ onMounted(() => {
       }
     }
     
-    // 填充代码（从 Base64 解码并高亮）
-    const codeEl = document.querySelector('#ldoc-demo-code-' + id + ' code')
-    if (codeEl && code) {
-      codeEl.innerHTML = escapeHtml(decodeBase64(code))
+    // 填充代码（直接插入高亮后的 HTML）
+    const codeContainer = document.getElementById('ldoc-demo-code-' + id)
+    if (codeContainer && code) {
+      codeContainer.innerHTML = decodeBase64(code)
     }
   }
   
@@ -398,7 +458,7 @@ onMounted(() => {
   document.querySelectorAll('.ldoc-demo-copy').forEach(btn => {
     btn.addEventListener('click', async () => {
       const demoId = btn.dataset.demoId
-      const code = demoCode[demoId] ? decodeBase64(demoCode[demoId]) : ''
+      const code = rawCode[demoId] ? decodeBase64(rawCode[demoId]) : ''
       if (code) {
         try {
           await navigator.clipboard.writeText(code)
@@ -489,35 +549,33 @@ defineExpose({ frontmatter })
 .dark .ldoc-demo-code {
   background: var(--ldoc-code-block-bg, #161b22);
 }
-.ldoc-demo-code::before {
-  content: 'Vue';
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ldoc-c-text-3, #9ca3af);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
 .ldoc-demo-code pre {
   margin: 0;
   padding: 20px;
   padding-top: 32px;
-  background: transparent;
-}
-.ldoc-demo-code code {
+  background: transparent !important;
   font-family: var(--ldoc-font-family-mono, 'JetBrains Mono', 'Fira Code', 'Consolas', monospace);
   font-size: 13px;
   line-height: 1.75;
-  color: var(--ldoc-code-block-text, #24292e);
-  white-space: pre;
-  display: block;
   tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
 }
-.dark .ldoc-demo-code code {
-  color: var(--ldoc-code-block-text, #e1e4e8);
+.ldoc-demo-code pre code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
+/* Shiki dual theme support */
+html.dark .shiki, 
+html.dark .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
 /* 滚动条样式 */
 .ldoc-demo-code::-webkit-scrollbar {
   width: 6px;
