@@ -100,13 +100,13 @@ const SocialShareBar = defineComponent({
         alignItems: 'center',
         gap: '8px',
         padding: '16px 0',
-        borderTop: '1px solid var(--vp-c-divider, #e5e7eb)'
+        borderTop: '1px solid var(--ldoc-c-divider, #e5e7eb)'
       }
     }, [
       h('span', {
         style: {
           fontSize: '14px',
-          color: 'var(--vp-c-text-2, #6b7280)',
+          color: 'var(--ldoc-c-text-2, #6b7280)',
           marginRight: '8px'
         }
       }, '分享到：'),
@@ -122,9 +122,9 @@ const SocialShareBar = defineComponent({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            border: '1px solid var(--vp-c-divider, #e5e7eb)',
-            background: 'var(--vp-c-bg, #fff)',
-            color: 'var(--vp-c-text-2, #6b7280)',
+            border: '1px solid var(--ldoc-c-divider, #e5e7eb)',
+            background: 'var(--ldoc-c-bg, #fff)',
+            color: 'var(--ldoc-c-text-2, #6b7280)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -133,13 +133,13 @@ const SocialShareBar = defineComponent({
           },
           onMouseenter: (e: MouseEvent) => {
             const el = e.target as HTMLElement
-            el.style.borderColor = 'var(--vp-c-brand, #3b82f6)'
-            el.style.color = 'var(--vp-c-brand, #3b82f6)'
+            el.style.borderColor = 'var(--ldoc-c-brand, #3b82f6)'
+            el.style.color = 'var(--ldoc-c-brand, #3b82f6)'
           },
           onMouseleave: (e: MouseEvent) => {
             const el = e.target as HTMLElement
-            el.style.borderColor = 'var(--vp-c-divider, #e5e7eb)'
-            el.style.color = 'var(--vp-c-text-2, #6b7280)'
+            el.style.borderColor = 'var(--ldoc-c-divider, #e5e7eb)'
+            el.style.color = 'var(--ldoc-c-text-2, #6b7280)'
           }
         }, [
           h('svg', {

@@ -54,7 +54,7 @@ const BackToTopButton = defineComponent({
           height: '44px',
           borderRadius: '50%',
           border: 'none',
-          background: 'var(--vp-c-brand, #3b82f6)',
+          background: 'var(--ldoc-c-brand, #3b82f6)',
           color: 'white',
           cursor: 'pointer',
           display: 'flex',
@@ -284,29 +284,29 @@ const TabsInitializer = defineComponent({
         // 创建标签头
         const header = document.createElement('div')
         header.className = 'tabs-header'
-        header.style.cssText = 'display: flex; gap: 0; border-bottom: 1px solid var(--vp-c-divider, #e5e7eb); margin-bottom: 16px;'
+        header.style.cssText = 'display: flex; gap: 0; border-bottom: 1px solid var(--ldoc-c-divider, #e5e7eb); margin-bottom: 16px;'
 
         tabs.forEach((tab, index) => {
           const label = tab.getAttribute('data-label') || `Tab ${index + 1}`
           const btn = document.createElement('button')
           btn.className = 'tab-button' + (index === 0 ? ' active' : '')
           btn.textContent = label
-          btn.style.cssText = 'padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--vp-c-text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;'
+          btn.style.cssText = 'padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--ldoc-c-text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;'
 
           if (index === 0) {
-            btn.style.color = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
-            btn.style.borderBottomColor = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+            btn.style.color = 'var(--ldoc-c-brand, #3b82f6)'
+            btn.style.borderBottomColor = 'var(--ldoc-c-brand, #3b82f6)'
           }
 
           btn.onclick = () => {
             // 更新按钮状态
             header.querySelectorAll('.tab-button').forEach(b => {
-              (b as HTMLElement).style.color = 'var(--vp-c-text-2)'
+              (b as HTMLElement).style.color = 'var(--ldoc-c-text-2)'
                 ; (b as HTMLElement).style.borderBottomColor = 'transparent'
               b.classList.remove('active')
             })
-            btn.style.color = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
-            btn.style.borderBottomColor = 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))'
+            btn.style.color = 'var(--ldoc-c-brand, #3b82f6)'
+            btn.style.borderBottomColor = 'var(--ldoc-c-brand, #3b82f6)'
             btn.classList.add('active')
 
             // 更新内容显示
@@ -380,7 +380,7 @@ const AnnouncementBar = defineComponent({
     }
 
     const colors: Record<string, { bg: string; text: string }> = {
-      info: { bg: 'var(--vp-c-brand-soft, #e0f2fe)', text: 'var(--vp-c-brand, #3b82f6)' },
+      info: { bg: 'var(--ldoc-c-brand-soft, #e0f2fe)', text: 'var(--ldoc-c-brand, #3b82f6)' },
       warning: { bg: '#fef3c7', text: '#d97706' },
       success: { bg: '#d1fae5', text: '#059669' },
       error: { bg: '#fee2e2', text: '#dc2626' }

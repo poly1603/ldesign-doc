@@ -27,7 +27,7 @@ export interface AnnouncementPluginOptions {
 }
 
 const typeColors = {
-  info: { bg: 'var(--ldoc-c-brand-soft, var(--vp-c-brand-soft, #e0f2fe))', text: 'var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6))' },
+  info: { bg: 'var(--ldoc-c-brand-soft, #e0f2fe)', text: 'var(--ldoc-c-brand, #3b82f6)' },
   warning: { bg: '#fef3c7', text: '#d97706' },
   success: { bg: '#d1fae5', text: '#059669' },
   error: { bg: '#fee2e2', text: '#dc2626' }

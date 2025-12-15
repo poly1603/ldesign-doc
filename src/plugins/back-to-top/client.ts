@@ -57,7 +57,7 @@ const BackToTopButton = defineComponent({
           height: '44px',
           borderRadius: '50%',
           border: 'none',
-          background: 'var(--vp-c-brand, #3b82f6)',
+          background: 'var(--ldoc-c-brand, #3b82f6)',
           color: 'white',
           cursor: 'pointer',
           display: 'flex',

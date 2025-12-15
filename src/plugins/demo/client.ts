@@ -66,7 +66,7 @@ export const DemoBox = defineComponent({
     return () => h('div', {
       class: 'ldoc-demo-box',
       style: {
-        border: '1px solid var(--vp-c-divider, #e5e7eb)',
+        border: '1px solid var(--ldoc-c-divider, #e5e7eb)',
         borderRadius: '8px',
         marginBottom: '16px',
         overflow: 'hidden'
@@ -79,9 +79,9 @@ export const DemoBox = defineComponent({
           padding: '12px 16px',
           fontSize: '14px',
           fontWeight: '500',
-          color: 'var(--vp-c-text-1, #1f2937)',
-          borderBottom: '1px solid var(--vp-c-divider, #e5e7eb)',
-          background: 'var(--vp-c-bg-soft, #f9fafb)'
+          color: 'var(--ldoc-c-text-1, #1f2937)',
+          borderBottom: '1px solid var(--ldoc-c-divider, #e5e7eb)',
+          background: 'var(--ldoc-c-bg-soft, #f9fafb)'
         }
       }, props.title),
 
@@ -91,8 +91,8 @@ export const DemoBox = defineComponent({
         style: {
           padding: '12px 16px',
           fontSize: '14px',
-          color: 'var(--vp-c-text-2, #6b7280)',
-          borderBottom: '1px solid var(--vp-c-divider, #e5e7eb)'
+          color: 'var(--ldoc-c-text-2, #6b7280)',
+          borderBottom: '1px solid var(--ldoc-c-divider, #e5e7eb)'
         }
       }, props.description),
 
@@ -106,7 +106,7 @@ export const DemoBox = defineComponent({
       }, [
         // 默认插槽 - 放置实际组件
         slots.default?.() || h('div', {
-          style: { color: 'var(--vp-c-text-3, #9ca3af)', fontSize: '14px' }
+          style: { color: 'var(--ldoc-c-text-3, #9ca3af)', fontSize: '14px' }
         }, '组件预览区')
       ]),
 
@@ -119,8 +119,8 @@ export const DemoBox = defineComponent({
           justifyContent: 'flex-end',
           gap: '8px',
           padding: '8px 16px',
-          borderTop: '1px solid var(--vp-c-divider, #e5e7eb)',
-          background: 'var(--vp-c-bg-soft, #f9fafb)'
+          borderTop: '1px solid var(--ldoc-c-divider, #e5e7eb)',
+          background: 'var(--ldoc-c-bg-soft, #f9fafb)'
         }
       }, [
         // 复制按钮
@@ -136,7 +136,7 @@ export const DemoBox = defineComponent({
             height: '32px',
             border: 'none',
             background: 'transparent',
-            color: copySuccess.value ? 'var(--vp-c-green, #10b981)' : 'var(--vp-c-text-2, #6b7280)',
+            color: copySuccess.value ? 'var(--ldoc-c-green, #10b981)' : 'var(--ldoc-c-text-2, #6b7280)',
             cursor: 'pointer',
             borderRadius: '4px',
             transition: 'color 0.2s'
@@ -168,7 +168,7 @@ export const DemoBox = defineComponent({
             height: '32px',
             border: 'none',
             background: 'transparent',
-            color: codeExpanded.value ? 'var(--vp-c-brand, #3b82f6)' : 'var(--vp-c-text-2, #6b7280)',
+            color: codeExpanded.value ? 'var(--ldoc-c-brand, #3b82f6)' : 'var(--ldoc-c-text-2, #6b7280)',
             cursor: 'pointer',
             borderRadius: '4px',
             transition: 'color 0.2s'
@@ -190,8 +190,8 @@ export const DemoBox = defineComponent({
       codeExpanded.value && h('div', {
         class: 'ldoc-demo-box-code',
         style: {
-          borderTop: '1px solid var(--vp-c-divider, #e5e7eb)',
-          background: 'var(--vp-code-block-bg, #1e1e1e)',
+          borderTop: '1px solid var(--ldoc-c-divider, #e5e7eb)',
+          background: 'var(--ldoc-code-block-bg, #1e1e1e)',
           overflow: 'auto',
           maxHeight: '400px'
         }

@@ -351,7 +351,7 @@ export default defineConfig({
     }),
     readingTimePlugin({ wordsPerMinute: 300 }),
     progressPlugin({
-      color: 'var(--vp-c-brand, #3b82f6)',
+      color: 'var(--ldoc-c-brand, #3b82f6)',
       height: 3,
       position: 'top',
       exclude: ['/']

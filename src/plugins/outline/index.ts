@@ -94,7 +94,7 @@ const OutlinePanel = defineComponent({
           maxHeight: 'calc(100vh - 140px)',
           overflowY: 'auto',
           padding: '16px',
-          backgroundColor: 'var(--vp-c-bg-soft, #f9fafb)',
+          backgroundColor: 'var(--ldoc-c-bg-soft, #f9fafb)',
           borderRadius: '8px',
           fontSize: '13px',
           zIndex: 50
@@ -104,7 +104,7 @@ const OutlinePanel = defineComponent({
           style: {
             fontWeight: '600',
             marginBottom: '12px',
-            color: 'var(--vp-c-text-1, #1f2937)'
+            color: 'var(--ldoc-c-text-1, #1f2937)'
           }
         }, props.title),
         h('nav', {
@@ -121,14 +121,14 @@ const OutlinePanel = defineComponent({
               display: 'block',
               padding: '4px 0',
               color: activeId.value === header.slug
-                ? 'var(--vp-c-brand, #3b82f6)'
-                : 'var(--vp-c-text-2, #6b7280)',
+                ? 'var(--ldoc-c-brand, #3b82f6)'
+                : 'var(--ldoc-c-text-2, #6b7280)',
               textDecoration: 'none',
               fontSize: '13px',
               lineHeight: '1.5',
               transition: 'color 0.2s',
               borderLeft: activeId.value === header.slug
-                ? '2px solid var(--vp-c-brand, #3b82f6)'
+                ? '2px solid var(--ldoc-c-brand, #3b82f6)'
                 : '2px solid transparent',
               marginLeft: '-8px',
               paddingLeft: `${(header.level - props.minLevel) * 12 + 8}px`
