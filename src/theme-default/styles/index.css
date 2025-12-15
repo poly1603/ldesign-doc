@@ -106,15 +106,23 @@
 
 /* 主题色预设 */
 :root[data-theme="blue"] {
+  --ldoc-c-brand-hue: 217;
+}
+
+:root[data-theme="indigo"] {
   --ldoc-c-brand-hue: 231;
 }
 
 :root[data-theme="purple"] {
-  --ldoc-c-brand-hue: 270;
+  --ldoc-c-brand-hue: 262;
 }
 
 :root[data-theme="pink"] {
   --ldoc-c-brand-hue: 330;
+}
+
+:root[data-theme="rose"] {
+  --ldoc-c-brand-hue: 350;
 }
 
 :root[data-theme="red"] {
@@ -122,15 +130,27 @@
 }
 
 :root[data-theme="orange"] {
-  --ldoc-c-brand-hue: 30;
+  --ldoc-c-brand-hue: 25;
+}
+
+:root[data-theme="amber"] {
+  --ldoc-c-brand-hue: 38;
 }
 
 :root[data-theme="green"] {
-  --ldoc-c-brand-hue: 150;
+  --ldoc-c-brand-hue: 142;
+}
+
+:root[data-theme="emerald"] {
+  --ldoc-c-brand-hue: 160;
 }
 
 :root[data-theme="teal"] {
-  --ldoc-c-brand-hue: 180;
+  --ldoc-c-brand-hue: 175;
+}
+
+:root[data-theme="cyan"] {
+  --ldoc-c-brand-hue: 190;
 }
 
 /* 

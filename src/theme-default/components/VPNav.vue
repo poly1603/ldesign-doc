@@ -870,6 +870,8 @@ onUnmounted(() => {
   padding: 8px;
   text-decoration: none;
   font-size: 18px;
+  display: flex;
+  align-items: center;
 }
 
 .vp-nav-hamburger {

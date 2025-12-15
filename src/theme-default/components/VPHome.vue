@@ -276,8 +276,10 @@ const getCanvasConfig = (): CanvasConfig => {
 
 const getThemeColor = () => {
   const style = getComputedStyle(document.documentElement)
-  const hue = style.getPropertyValue('--ldoc-c-brand-hue').trim() || '231'
-  return { hue: parseInt(hue) || 231, s: 70, l: 50 }
+  const hueStr = style.getPropertyValue('--ldoc-c-brand-hue').trim()
+  const hue = parseInt(hueStr)
+  // 0 是有效的 hue 值，所以不能用 || 231
+  return { hue: !isNaN(hue) ? hue : 231, s: 70, l: 50 }
 }
 
 // ========== 粒子网络动画 ==========

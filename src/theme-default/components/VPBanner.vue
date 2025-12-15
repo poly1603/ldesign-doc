@@ -55,9 +55,51 @@ const isExternal = (link: string) => /^https?:\/\//.test(link)
 
 // 获取主题色
 const getThemeColor = () => {
-  if (props.color) return props.color
+  if (props.color) return { type: 'custom', value: props.color }
+  
   const style = getComputedStyle(document.documentElement)
-  return style.getPropertyValue('--ldoc-c-brand').trim() || '#6366f1'
+  const brand = style.getPropertyValue('--ldoc-c-brand').trim() || '#6366f1'
+  
+  // 尝试解析 HSL
+  const hslMatch = brand.match(/hsla?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%/)
+  if (hslMatch) {
+    return { 
+      type: 'hsl', 
+      h: parseFloat(hslMatch[1]), 
+      s: parseFloat(hslMatch[2]), 
+      l: parseFloat(hslMatch[3]) 
+    }
+  }
+
+  // 尝试解析 RGB (浏览器可能将变量计算为 rgb)
+  const rgbMatch = brand.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
+  if (rgbMatch) {
+    return { 
+      type: 'rgb', 
+      r: parseInt(rgbMatch[1]), 
+      g: parseInt(rgbMatch[2]), 
+      b: parseInt(rgbMatch[3]) 
+    }
+  }
+  
+  // 如果是 hex
+  if (brand.startsWith('#')) return { type: 'hex', value: brand }
+  
+  // 其他格式
+  return { type: 'other', value: brand }
+}
+
+const getColorString = (color: any, alpha: number) => {
+  if (color.type === 'hsl') {
+    return `hsla(${color.h}, ${color.s}%, ${color.l}%, ${alpha})`
+  } else if (color.type === 'rgb') {
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+  } else if (color.type === 'hex' || color.type === 'custom') {
+    if (color.value.startsWith('#')) {
+      return `${color.value}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`
+    }
+  }
+  return color.value
 }
 
 // 粒子效果
@@ -91,8 +133,16 @@ const drawParticles = (width: number, height: number) => {
 
     ctx!.beginPath()
     ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-    ctx!.fillStyle = `${color}${Math.floor(p.opacity * 255).toString(16).padStart(2, '0')}`
+    
+    if (color.type === 'other') {
+      ctx!.globalAlpha = p.opacity
+      ctx!.fillStyle = color.value
+    } else {
+      ctx!.fillStyle = getColorString(color, p.opacity)
+    }
+    
     ctx!.fill()
+    if (color.type === 'other') ctx!.globalAlpha = 1
 
     // 连线
     particles.slice(i + 1).forEach(p2 => {
@@ -103,8 +153,17 @@ const drawParticles = (width: number, height: number) => {
         ctx!.beginPath()
         ctx!.moveTo(p.x, p.y)
         ctx!.lineTo(p2.x, p2.y)
-        ctx!.strokeStyle = `${color}${Math.floor((1 - dist / 120) * 0.3 * 255).toString(16).padStart(2, '0')}`
+        const alpha = (1 - dist / 120) * 0.3
+        
+        if (color.type === 'other') {
+          ctx!.globalAlpha = alpha
+          ctx!.strokeStyle = color.value
+        } else {
+          ctx!.strokeStyle = getColorString(color, alpha)
+        }
+        
         ctx!.stroke()
+        if (color.type === 'other') ctx!.globalAlpha = 1
       }
     })
   })
@@ -132,8 +191,17 @@ const drawWaves = (width: number, height: number) => {
 
     ctx.lineTo(width, height)
     ctx.closePath()
-    ctx.fillStyle = `${color}${Math.floor((0.1 - wave * 0.03) * 255).toString(16).padStart(2, '0')}`
+    
+    const alpha = 0.1 - wave * 0.03
+    if (color.type === 'other') {
+      ctx.globalAlpha = alpha
+      ctx.fillStyle = color.value
+    } else {
+      ctx.fillStyle = getColorString(color, alpha)
+    }
+    
     ctx.fill()
+    if (color.type === 'other') ctx.globalAlpha = 1
   }
 }
 
@@ -186,7 +254,14 @@ const drawGeometric = (width: number, height: number) => {
       else ctx!.lineTo(x, y)
     }
     ctx!.closePath()
-    ctx!.strokeStyle = `${color}${Math.floor(p.opacity * 255).toString(16).padStart(2, '0')}`
+    
+    if (color.type === 'other') {
+      ctx!.globalAlpha = p.opacity
+      ctx!.strokeStyle = color.value
+    } else {
+      ctx!.strokeStyle = getColorString(color, p.opacity)
+    }
+    
     ctx!.lineWidth = 2
     ctx!.stroke()
     ctx!.restore()
@@ -205,9 +280,23 @@ const drawGradient = (width: number, height: number) => {
     width * (0.7 + Math.cos(time) * 0.2),
     height
   )
-  gradient.addColorStop(0, `${color}20`)
-  gradient.addColorStop(0.5, `${color}10`)
-  gradient.addColorStop(1, `${color}05`)
+  
+  if (color.type === 'hsl') {
+    gradient.addColorStop(0, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0.2)`)
+    gradient.addColorStop(0.5, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0.1)`)
+    gradient.addColorStop(1, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0.05)`)
+  } else if (color.type === 'hex') {
+     // Hex fallback
+    gradient.addColorStop(0, `${color.value}33`) // 0.2 * 255 = 51 = 33
+    gradient.addColorStop(0.5, `${color.value}1a`) // 0.1 * 255 = 25.5 = 1a
+    gradient.addColorStop(1, `${color.value}0d`) // 0.05 * 255 = 12.75 = 0d
+  } else {
+    // Other - can't set opacity easily on gradient stops if base color has no alpha control
+    // Just use solid color with very low global alpha? No, gradient stops need color.
+    // Fallback to a safe color
+    gradient.addColorStop(0, 'rgba(100, 100, 255, 0.2)')
+    gradient.addColorStop(1, 'rgba(100, 100, 255, 0.05)')
+  }
 
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, width, height)
@@ -217,7 +306,15 @@ const drawGradient = (width: number, height: number) => {
     const x = width * (0.3 + i * 0.2 + Math.sin(time + i) * 0.1)
     const y = height * (0.4 + Math.cos(time + i) * 0.2)
     const glow = ctx.createRadialGradient(x, y, 0, x, y, 150)
-    glow.addColorStop(0, `${color}15`)
+    
+    if (color.type === 'hsl') {
+      glow.addColorStop(0, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0.15)`)
+    } else if (color.type === 'hex') {
+      glow.addColorStop(0, `${color.value}26`) // 0.15 * 255 = 38.25 = 26
+    } else {
+       glow.addColorStop(0, 'rgba(100, 100, 255, 0.15)')
+    }
+    
     glow.addColorStop(1, 'transparent')
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, width, height)
@@ -250,8 +347,17 @@ const drawStars = (width: number, height: number) => {
     p.opacity = 0.3 + Math.sin(time * p.twinkleSpeed * 100) * 0.5 + 0.2
     ctx!.beginPath()
     ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-    ctx!.fillStyle = `${color}${Math.floor(Math.max(0, Math.min(1, p.opacity)) * 255).toString(16).padStart(2, '0')}`
+    
+    const alpha = Math.max(0, Math.min(1, p.opacity))
+    if (color.type === 'other') {
+      ctx!.globalAlpha = alpha
+      ctx!.fillStyle = color.value
+    } else {
+      ctx!.fillStyle = getColorString(color, alpha)
+    }
+    
     ctx!.fill()
+    if (color.type === 'other') ctx!.globalAlpha = 1
   })
 
   // 流星
@@ -263,8 +369,18 @@ const drawStars = (width: number, height: number) => {
     }
     ctx.beginPath()
     const gradient = ctx.createLinearGradient(meteor.x, meteor.y, meteor.x + meteor.length, meteor.y + meteor.length)
-    gradient.addColorStop(0, `${color}00`)
-    gradient.addColorStop(1, `${color}60`)
+    
+    if (color.type === 'hsl') {
+      gradient.addColorStop(0, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0)`)
+      gradient.addColorStop(1, `hsla(${color.h}, ${color.s}%, ${color.l}%, 0.6)`)
+    } else if (color.type === 'hex') {
+      gradient.addColorStop(0, `${color.value}00`)
+      gradient.addColorStop(1, `${color.value}99`) // 0.6 * 255 = 153 = 99
+    } else {
+       gradient.addColorStop(0, 'rgba(100,100,255,0)')
+       gradient.addColorStop(1, 'rgba(100,100,255,0.6)')
+    }
+    
     ctx.strokeStyle = gradient
     ctx.lineWidth = 2
     ctx.moveTo(meteor.x, meteor.y)
@@ -304,8 +420,16 @@ const drawNetwork = (width: number, height: number) => {
 
     ctx!.beginPath()
     ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-    ctx!.fillStyle = `${color}40`
+    
+    if (color.type === 'other') {
+      ctx!.globalAlpha = 0.25 // 40 hex is ~0.25
+      ctx!.fillStyle = color.value
+    } else {
+      ctx!.fillStyle = getColorString(color, 0.25)
+    }
+    
     ctx!.fill()
+    if (color.type === 'other') ctx!.globalAlpha = 1
 
     particles.slice(i + 1).forEach(p2 => {
       const dx = p.x - p2.x
@@ -315,8 +439,17 @@ const drawNetwork = (width: number, height: number) => {
         ctx!.beginPath()
         ctx!.moveTo(p.x, p.y)
         ctx!.lineTo(p2.x, p2.y)
-        ctx!.strokeStyle = `${color}${Math.floor((1 - dist / 100) * 0.3 * 255).toString(16).padStart(2, '0')}`
+        
+        const alpha = (1 - dist / 100) * 0.3
+        if (color.type === 'other') {
+          ctx!.globalAlpha = alpha
+          ctx!.strokeStyle = color.value
+        } else {
+          ctx!.strokeStyle = getColorString(color, alpha)
+        }
+        
         ctx!.stroke()
+        if (color.type === 'other') ctx!.globalAlpha = 1
       }
     })
   })
