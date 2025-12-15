@@ -72,9 +72,11 @@ import VPFooter from './components/VPFooter.vue'
 import VPBackToTop from './components/VPBackToTop.vue'
 import VPReadingProgress from './components/VPReadingProgress.vue'
 import VPImageZoom from './components/VPImageZoom.vue'
+import { useSidebarItems } from './composables'
 
 const { frontmatter, theme } = useData()
 const route = useRoute()
+const sidebarItems = useSidebarItems()
 
 // 移动端检测
 const isMobile = ref(false)
@@ -138,8 +140,7 @@ const hasSidebar = computed(() => {
   if (frontmatter.value.sidebar === false) return false
   if (isHome.value) return false
 
-  const sidebar = (theme.value as { sidebar?: unknown }).sidebar
-  return !!sidebar
+  return sidebarItems.value.length > 0
 })
 
 // 是否为404页面

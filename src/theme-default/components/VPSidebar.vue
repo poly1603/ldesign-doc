@@ -52,19 +52,13 @@
 
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
-import { useData, useRoute, useSidebar } from '../composables'
+import { useData, useRoute, useSidebar, useSidebarItems, type SidebarItem } from '../composables'
 import { PluginSlot } from '@ldesign/doc/client'
-
-interface SidebarItem {
-  text: string
-  link?: string
-  items?: SidebarItem[]
-  collapsed?: boolean
-}
 
 const { site, theme } = useData()
 const route = useRoute()
 const { isOpen, close } = useSidebar()
+const sidebarItems = useSidebarItems()
 
 // 获取当前语言环境
 const currentLocale = computed(() => {
@@ -80,47 +74,8 @@ const currentLocale = computed(() => {
   return 'root'
 })
 
-// 获取语言环境感知的主题配置
-const localeTheme = computed(() => {
-  const baseTheme = theme.value as Record<string, unknown>
-  const locales = site.value.locales as Record<string, { themeConfig?: Record<string, unknown> }> | undefined
-  const localeConfig = locales?.[currentLocale.value]?.themeConfig
-
-  if (!localeConfig) return baseTheme
-
-  // 合并 sidebar 配置
-  const merged = { ...baseTheme }
-  if (localeConfig.sidebar) {
-    merged.sidebar = { ...(baseTheme.sidebar as object || {}), ...(localeConfig.sidebar as object) }
-  }
-  return merged
-})
-
 // 用于触发侧边栏动画的key
 const sidebarKey = ref(0)
-
-// 获取侧边栏配置 - 使用语言环境感知配置
-const sidebarItems = computed(() => {
-  const config = localeTheme.value as { sidebar?: Record<string, SidebarItem[]> | SidebarItem[] }
-  const sidebar = config.sidebar
-
-  if (!sidebar) return []
-
-  // 数组形式
-  if (Array.isArray(sidebar)) {
-    return sidebar
-  }
-
-  // 对象形式 - 根据路径匹配
-  const path = route.path
-  for (const [prefix, items] of Object.entries(sidebar)) {
-    if (path.startsWith(prefix)) {
-      return items
-    }
-  }
-
-  return []
-})
 
 // 监听侧边栏内容变化，触发动画
 watch(sidebarItems, () => {
