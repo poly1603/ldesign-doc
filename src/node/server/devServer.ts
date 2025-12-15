@@ -43,19 +43,37 @@ function getClientAlias(config: SiteConfig, userViteConfig: any): Record<string,
     Object.assign(alias, userAlias)
   }
 
-  // 智能解析 @ldesign/doc/client 路径
-  const nodeModulesPath = resolve(config.root, 'node_modules/@ldesign/doc/dist/es/client/index.js')
   // 检查是否在 @ldesign/doc 包内部开发
   const packageRoot = resolve(__dirname, '../../..')  // dist/es/node -> 包根目录
-  const localClientPath = resolve(packageRoot, 'dist/es/client/index.js')
-  const srcClientPath = resolve(packageRoot, 'src/client/index.ts')
+  const nodeModulesPath = resolve(config.root, 'node_modules/@ldesign/doc')
 
-  if (existsSync(nodeModulesPath)) {
-    alias['@ldesign/doc/client'] = nodeModulesPath
-  } else if (existsSync(localClientPath)) {
-    alias['@ldesign/doc/client'] = localClientPath
-  } else if (existsSync(srcClientPath)) {
-    alias['@ldesign/doc/client'] = srcClientPath
+  // 确定包的基础路径（开发模式或已安装模式）
+  let pkgBasePath: string | null = null
+  let useSrc = false
+
+  if (existsSync(resolve(nodeModulesPath, 'dist/es/client/index.js'))) {
+    // 已安装的包
+    pkgBasePath = nodeModulesPath
+    useSrc = false
+  } else if (existsSync(resolve(packageRoot, 'dist/es/client/index.js'))) {
+    // 本地开发 - 使用构建后的文件
+    pkgBasePath = packageRoot
+    useSrc = false
+  } else if (existsSync(resolve(packageRoot, 'src/client/index.ts'))) {
+    // 本地开发 - 使用源文件
+    pkgBasePath = packageRoot
+    useSrc = true
+  }
+
+  if (pkgBasePath) {
+    const basePath = useSrc ? resolve(pkgBasePath, 'src') : resolve(pkgBasePath, 'dist/es')
+    const ext = useSrc ? '.ts' : '.js'
+
+    // 设置常用模块的别名
+    alias['@ldesign/doc/client'] = resolve(basePath, `client/index${ext}`)
+    alias['@ldesign/doc/plugins/builtin-client'] = resolve(basePath, `plugins/builtin-client${ext}`)
+    alias['@ldesign/doc/plugins/comment/client'] = resolve(basePath, `plugins/comment/client${ext}`)
+    alias['@ldesign/doc/plugins/demo/client'] = resolve(basePath, `plugins/demo/client${ext}`)
   }
 
   return alias

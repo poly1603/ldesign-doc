@@ -3,8 +3,7 @@
  */
 
 import { definePlugin } from '../../plugin/definePlugin'
-import type { LDocPlugin, PageData } from '../../shared/types'
-import { defineComponent, h, ref, computed, onMounted } from 'vue'
+import type { LDocPlugin } from '../../shared/types'
 
 export type CommentProvider = 'giscus' | 'gitalk' | 'waline' | 'twikoo' | 'artalk' | 'custom'
 
@@ -108,265 +107,23 @@ export interface ArtalkOptions {
 }
 
 /**
- * 检查是否配置了有效的评论服务
+ * 序列化配置选项（过滤掉不可序列化的属性）
  */
-function isConfigured(options: CommentPluginOptions): boolean {
-  switch (options.provider) {
-    case 'giscus':
-      return !!(options.giscus?.repo && options.giscus?.repoId)
-    case 'gitalk':
-      return !!(options.gitalk?.clientID && options.gitalk?.repo)
-    case 'waline':
-      return !!options.waline?.serverURL
-    case 'twikoo':
-      return !!options.twikoo?.envId
-    case 'artalk':
-      return !!(options.artalk?.server && options.artalk?.site)
-    case 'custom':
-      return !!options.customComponent
-    default:
-      return false
-  }
-}
-
-/**
- * 演示模式评论组件 - 未配置时显示
- */
-const DemoCommentBox = defineComponent({
-  name: 'LDocDemoComment',
-  props: {
-    title: { type: String, default: '💬 评论' },
-    provider: { type: String, default: 'giscus' }
-  },
-  setup(props) {
-    const comments = ref([
-      { id: 1, author: '张三', avatar: '👨', time: '2 小时前', content: '这篇文档写得非常清晰，帮助我快速上手了！' },
-      { id: 2, author: '李四', avatar: '👩', time: '1 小时前', content: '请问这个功能支持自定义主题吗？' },
-      { id: 3, author: '作者', avatar: '✍️', time: '30 分钟前', content: '@李四 支持的，可以在配置中设置 theme 参数。' }
-    ])
-    const inputValue = ref('')
-
-    return () => h('div', { class: 'ldoc-comment ldoc-comment--demo' }, [
-      h('h3', { class: 'ldoc-comment__title' }, props.title),
-      h('div', { class: 'ldoc-comment__demo-notice' }, [
-        h('span', { class: 'ldoc-comment__demo-badge' }, '演示模式'),
-        h('span', {}, `评论系统尚未配置 (${props.provider})，以下为演示效果`)
-      ]),
-      h('div', { class: 'ldoc-comment__input-area' }, [
-        h('textarea', {
-          class: 'ldoc-comment__input',
-          placeholder: '写下你的评论...',
-          value: inputValue.value,
-          onInput: (e: Event) => { inputValue.value = (e.target as HTMLTextAreaElement).value }
-        }),
-        h('div', { class: 'ldoc-comment__input-actions' }, [
-          h('button', { class: 'ldoc-comment__submit', disabled: true }, '发表评论')
-        ])
-      ]),
-      h('div', { class: 'ldoc-comment__list' },
-        comments.value.map(c =>
-          h('div', { class: 'ldoc-comment__item', key: c.id }, [
-            h('div', { class: 'ldoc-comment__avatar' }, c.avatar),
-            h('div', { class: 'ldoc-comment__body' }, [
-              h('div', { class: 'ldoc-comment__meta' }, [
-                h('span', { class: 'ldoc-comment__author' }, c.author),
-                h('span', { class: 'ldoc-comment__time' }, c.time)
-              ]),
-              h('div', { class: 'ldoc-comment__content' }, c.content)
-            ])
-          ])
-        )
-      )
-    ])
-  }
-})
-
-/**
- * 评论组件
- */
-const CommentBox = defineComponent({
-  name: 'LDocComment',
-  props: {
-    options: {
-      type: Object as () => CommentPluginOptions,
-      required: true
+function serializeOptions(options: CommentPluginOptions): string {
+  const safeOptions = { ...options }
+  // 移除不可序列化的属性
+  delete safeOptions.customComponent
+  if (safeOptions.waline) {
+    const waline = { ...safeOptions.waline }
+    if (typeof waline.imageUploader === 'function') {
+      delete waline.imageUploader
     }
-  },
-  setup(props) {
-    const containerRef = ref<HTMLElement | null>(null)
-    const loaded = ref(false)
-    const error = ref<string | null>(null)
-
-    // 检查是否已配置
-    const configured = computed(() => isConfigured(props.options))
-
-    onMounted(async () => {
-      if (!containerRef.value || !configured.value) return
-
-      try {
-        switch (props.options.provider) {
-          case 'giscus':
-            await loadGiscus(containerRef.value, props.options.giscus!)
-            break
-          case 'gitalk':
-            await loadGitalk(containerRef.value, props.options.gitalk!)
-            break
-          case 'waline':
-            await loadWaline(containerRef.value, props.options.waline!)
-            break
-          case 'twikoo':
-            await loadTwikoo(containerRef.value, props.options.twikoo!)
-            break
-          case 'artalk':
-            await loadArtalk(containerRef.value, props.options.artalk!)
-            break
-        }
-        loaded.value = true
-      } catch (e) {
-        error.value = (e as Error).message
-        console.error('[ldoc:comment] Failed to load comment:', e)
-      }
-    })
-
-    return () => {
-      // 未配置时显示演示模式
-      if (!configured.value) {
-        return h(DemoCommentBox, {
-          title: props.options.title || '💬 评论',
-          provider: props.options.provider
-        })
-      }
-
-      return h('div', { class: 'ldoc-comment' }, [
-        props.options.title && h('h3', { class: 'ldoc-comment__title' }, props.options.title),
-        h('div', {
-          ref: containerRef,
-          class: 'ldoc-comment__container'
-        }),
-        error.value && h('div', { class: 'ldoc-comment__error' }, `评论加载失败: ${error.value}`)
-      ])
+    if (typeof waline.highlighter === 'function') {
+      delete waline.highlighter
     }
+    safeOptions.waline = waline
   }
-})
-
-// 加载 Giscus
-async function loadGiscus(container: HTMLElement, options: GiscusOptions) {
-  const script = document.createElement('script')
-  script.src = 'https://giscus.app/client.js'
-  script.setAttribute('data-repo', options.repo)
-  script.setAttribute('data-repo-id', options.repoId)
-  script.setAttribute('data-category', options.category)
-  script.setAttribute('data-category-id', options.categoryId)
-  script.setAttribute('data-mapping', options.mapping || 'pathname')
-  script.setAttribute('data-strict', String(options.strict ?? true))
-  script.setAttribute('data-reactions-enabled', String(options.reactionsEnabled ?? true))
-  script.setAttribute('data-emit-metadata', String(options.emitMetadata ?? false))
-  script.setAttribute('data-input-position', options.inputPosition || 'bottom')
-  script.setAttribute('data-theme', options.theme || 'preferred_color_scheme')
-  script.setAttribute('data-lang', options.lang || 'zh-CN')
-  script.crossOrigin = 'anonymous'
-  script.async = true
-
-  container.appendChild(script)
-}
-
-// 加载 Gitalk
-async function loadGitalk(container: HTMLElement, options: GitalkOptions) {
-  // 动态加载 CSS
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = 'https://unpkg.com/gitalk/dist/gitalk.css'
-  document.head.appendChild(link)
-
-  // 动态加载 JS
-  const script = document.createElement('script')
-  script.src = 'https://unpkg.com/gitalk/dist/gitalk.min.js'
-  script.onload = () => {
-    const gitalk = new (window as any).Gitalk({
-      ...options,
-      id: options.id || location.pathname
-    })
-    gitalk.render(container)
-  }
-  document.body.appendChild(script)
-}
-
-// 加载 Waline
-async function loadWaline(container: HTMLElement, options: WalineOptions) {
-  try {
-    // 动态导入 Waline（用户需要安装 @waline/client）
-    const walineModule = await import('@waline/client' as string)
-    const init = walineModule.init || walineModule.default?.init
-    if (init) {
-      init({
-        el: container,
-        serverURL: options.serverURL,
-        path: options.path || location.pathname,
-        lang: options.lang || 'zh-CN',
-        dark: options.dark || 'auto'
-      })
-    }
-  } catch {
-    // 如果 Waline 未安装，使用脚本方式加载
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://unpkg.com/@waline/client@v2/dist/waline.css'
-    document.head.appendChild(link)
-
-    const script = document.createElement('script')
-    script.src = 'https://unpkg.com/@waline/client@v2/dist/waline.js'
-    script.onload = () => {
-      const Waline = (window as any).Waline
-      if (Waline) {
-        Waline.init({
-          el: container,
-          serverURL: options.serverURL,
-          path: options.path || location.pathname,
-          lang: options.lang || 'zh-CN',
-          dark: options.dark || 'auto'
-        })
-      }
-    }
-    document.body.appendChild(script)
-  }
-}
-
-// 加载 Twikoo
-async function loadTwikoo(container: HTMLElement, options: TwikooOptions) {
-  const script = document.createElement('script')
-  script.src = 'https://cdn.staticfile.org/twikoo/1.6.16/twikoo.all.min.js'
-  script.onload = () => {
-    (window as any).twikoo.init({
-      envId: options.envId,
-      el: container,
-      region: options.region,
-      path: options.path || location.pathname,
-      lang: options.lang || 'zh-CN'
-    })
-  }
-  document.body.appendChild(script)
-}
-
-// 加载 Artalk
-async function loadArtalk(container: HTMLElement, options: ArtalkOptions) {
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = 'https://unpkg.com/artalk/dist/Artalk.css'
-  document.head.appendChild(link)
-
-  const script = document.createElement('script')
-  script.src = 'https://unpkg.com/artalk/dist/Artalk.js'
-  script.onload = () => {
-    (window as any).Artalk.init({
-      el: container,
-      server: options.server,
-      site: options.site,
-      pageKey: options.pageKey || location.pathname,
-      pageTitle: options.pageTitle || document.title,
-      darkMode: options.darkMode ?? 'auto'
-    })
-  }
-  document.body.appendChild(script)
+  return JSON.stringify(safeOptions)
 }
 
 /**
@@ -381,37 +138,25 @@ export function commentPlugin(options: CommentPluginOptions): LDocPlugin {
     title = '💬 评论'
   } = options
 
+  // 序列化配置用于客户端
+  const serializedOptions = serializeOptions({ ...options, title })
+
   return definePlugin({
     name: 'ldoc:comment',
 
-    slots: (ctx) => {
-      const path = ctx.route.path
+    // 客户端配置 - 生成内联代码，导入客户端组件并传入配置
+    clientConfigFile: `
+import { createCommentSlots, globalComponents } from '@ldesign/doc/plugins/comment/client'
 
-      // 检查是否应该显示
-      if (!showOnHome && path === '/') {
-        return {}
-      }
+// 评论插件配置
+const commentOptions = ${serializedOptions}
 
-      if (include && !include.some(p => path.startsWith(p))) {
-        return {}
-      }
+// 创建 slots 函数
+const slots = createCommentSlots(commentOptions)
 
-      if (exclude.some(p => path.startsWith(p))) {
-        return {}
-      }
-
-      return {
-        [position]: {
-          component: CommentBox,
-          props: { options: { ...options, title } },
-          order: 100
-        }
-      }
-    },
-
-    globalComponents: [
-      { name: 'LDocComment', component: CommentBox }
-    ],
+export { slots, globalComponents }
+export default { slots, globalComponents }
+`,
 
     // 注入评论样式
     headStyles: [
@@ -430,6 +175,32 @@ export function commentPlugin(options: CommentPluginOptions): LDocPlugin {
       .ldoc-comment__container {
         min-height: 200px;
       }
+      /* Artalk 样式覆盖修复 */
+      .artalk {
+        --at-color-bg: var(--ldoc-c-bg, #ffffff) !important;
+        --at-color-font: var(--ldoc-c-text-1, #1f2937) !important;
+        --at-color-meta: var(--ldoc-c-text-2, #4b5563) !important;
+        --at-color-border: var(--ldoc-c-divider, #e5e7eb) !important;
+        --at-color-main: var(--ldoc-c-brand, #3b82f6) !important;
+        background: transparent !important;
+      }
+      .dark .artalk {
+        --at-color-bg: var(--ldoc-c-bg, #1f2937) !important;
+        --at-color-font: var(--ldoc-c-text-1, #f9fafb) !important;
+        --at-color-meta: var(--ldoc-c-text-2, #9ca3af) !important;
+        --at-color-border: var(--ldoc-c-divider, #374151) !important;
+      }
+      /* 强制修复黑色背景问题 */
+      .atk-layer-wrap {
+         background: transparent !important;
+      }
+      .atk-main-editor {
+         background: var(--ldoc-c-bg, #ffffff) !important;
+      }
+      .dark .atk-main-editor {
+         background: var(--ldoc-c-bg, #1f2937) !important;
+      }
+      
       .ldoc-comment__error {
         padding: 16px;
         color: var(--ldoc-c-red-1, #ef4444);

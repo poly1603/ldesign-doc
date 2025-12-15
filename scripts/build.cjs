@@ -116,6 +116,8 @@ async function buildLibrary() {
           'plugin/index': resolve(rootDir, 'src/plugin/index.ts'),
           'plugins/index': resolve(rootDir, 'src/plugins/index.ts'),
           'plugins/builtin-client': resolve(rootDir, 'src/plugins/builtin-client.ts'),
+          'plugins/comment/client': resolve(rootDir, 'src/plugins/comment/client.ts'),
+          'plugins/demo/client': resolve(rootDir, 'src/plugins/demo/client.ts'),
           'markdown/index': resolve(rootDir, 'src/markdown/index.ts')
         },
         formats: ['es'],

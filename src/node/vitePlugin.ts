@@ -662,25 +662,64 @@ function createDemoPlugin(config: SiteConfig): Plugin {
 }
 
 /**
+ * 检测 clientConfigFile 是否为内联代码（而非文件路径）
+ */
+function isInlineCode(content: string): boolean {
+  const trimmed = content.trim()
+  // 内联代码通常以 import、export、const、// 或换行符开头
+  return trimmed.startsWith('import ') ||
+    trimmed.startsWith('export ') ||
+    trimmed.startsWith('const ') ||
+    trimmed.startsWith('//') ||
+    content.startsWith('\n')
+}
+
+/**
  * 虚拟模块插件
  */
 function createVirtualModulesPlugin(config: SiteConfig, pluginContainer: PluginContainer): Plugin {
-  // 收集有客户端配置文件的插件
-  const clientPlugins = config.userPlugins
-    .filter(p => p.clientConfigFile)
-    .map((plugin, index) => ({
-      name: plugin.name,
-      path: normalizePath(plugin.clientConfigFile!),
-      varName: `clientPlugin${index}`
-    }))
+  // 分离文件路径和内联代码的插件
+  const filePlugins: { name: string; path: string; varName: string }[] = []
+  const inlinePlugins: { name: string; code: string; varName: string; virtualId: string }[] = []
 
-  // 生成导入语句
-  const imports = clientPlugins
+  config.userPlugins
+    .filter(p => p.clientConfigFile)
+    .forEach((plugin, index) => {
+      const varName = `clientPlugin${index}`
+      if (isInlineCode(plugin.clientConfigFile!)) {
+        // 内联代码 - 创建虚拟模块
+        const virtualId = `virtual:ldoc/plugin-client/${plugin.name.replace(/[^a-zA-Z0-9]/g, '-')}`
+        inlinePlugins.push({
+          name: plugin.name,
+          code: plugin.clientConfigFile!,
+          varName,
+          virtualId
+        })
+      } else {
+        // 文件路径
+        filePlugins.push({
+          name: plugin.name,
+          path: normalizePath(plugin.clientConfigFile!),
+          varName
+        })
+      }
+    })
+
+  // 生成文件插件的导入语句
+  const fileImports = filePlugins
     .map(p => `import * as ${p.varName} from '${p.path}';`)
     .join('\n')
 
+  // 生成内联插件的导入语句
+  const inlineImports = inlinePlugins
+    .map(p => `import * as ${p.varName} from '${p.virtualId}';`)
+    .join('\n')
+
+  const imports = [fileImports, inlineImports].filter(Boolean).join('\n')
+
   // 生成插件数组
-  const pluginsPush = clientPlugins
+  const allPlugins = [...filePlugins, ...inlinePlugins]
+  const pluginsPush = allPlugins
     .map(p => `plugins.push({ name: '${p.name}', ...${p.varName} });`)
     .join('\n')
 
@@ -732,6 +771,11 @@ export * from '${normalizePath(config.themeDir)}/index'
     '@theme-styles': config.themePkg
       ? `import '@ldesign/doc/theme-default/styles/index.css'`
       : `import '${normalizePath(config.themeDir)}/styles/index.css'`
+  }
+
+  // 将内联插件的代码添加到虚拟模块中
+  for (const plugin of inlinePlugins) {
+    virtualModules[plugin.virtualId] = plugin.code
   }
 
   return {

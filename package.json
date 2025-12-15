@@ -42,6 +42,10 @@
       "types": "./dist/types/plugins/builtin-client.d.ts",
       "import": "./dist/es/plugins/builtin-client.js"
     },
+    "./plugins/comment/client": {
+      "types": "./dist/types/plugins/comment/client.d.ts",
+      "import": "./dist/es/plugins/comment/client.js"
+    },
     "./node": {
       "types": "./dist/types/node/index.d.ts",
       "import": "./dist/es/node/index.js"
