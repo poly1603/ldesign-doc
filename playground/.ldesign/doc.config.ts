@@ -12,17 +12,24 @@ import {
 } from '@ldesign/doc/plugins'
 
 export default defineConfig({
+  // ========================================
+  // 基础配置
+  // ========================================
   srcDir: '.ldesign/docs',
   title: 'LDoc 演示站点',
   description: '现代化文档系统演示',
   lang: 'zh-CN',
 
+  // ========================================
   // 多语言配置
+  // ========================================
   locales: {
+    // 默认语言（中文）
     root: {
       label: '简体中文',
       lang: 'zh-CN'
     },
+    // 英文
     en: {
       label: 'English',
       lang: 'en-US',
@@ -36,17 +43,6 @@ export default defineConfig({
           { text: 'Plugins', link: '/en/plugins/' },
           { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
         ],
-        footer: {
-          message: 'Released under the MIT License',
-          copyright: 'Copyright © 2024 LDesign'
-        },
-        outline: {
-          level: [1, 6],
-          label: 'On this page'
-        },
-        lastUpdated: {
-          text: 'Last updated'
-        },
         sidebar: {
           '/en/guide/': [
             {
@@ -95,9 +91,7 @@ export default defineConfig({
           '/en/examples/': [
             {
               text: 'Feature Examples',
-              items: [
-                { text: 'Overview', link: '/en/examples/' }
-              ]
+              items: [{ text: 'Overview', link: '/en/examples/' }]
             },
             {
               text: 'Markdown',
@@ -108,9 +102,7 @@ export default defineConfig({
             },
             {
               text: 'Containers',
-              items: [
-                { text: 'Info Containers', link: '/en/examples/containers/' }
-              ]
+              items: [{ text: 'Info Containers', link: '/en/examples/containers/' }]
             },
             {
               text: 'Media',
@@ -164,86 +156,35 @@ export default defineConfig({
               ]
             }
           ]
-        }
+        },
+        footer: {
+          message: 'Released under the MIT License',
+          copyright: 'Copyright © 2024 LDesign'
+        },
+        outline: { level: [1, 6], label: 'On this page' },
+        lastUpdated: { text: 'Last updated' }
       }
     }
   },
 
-  // 插件配置
-  // 内置插件（返回顶部、图片灯箱、公告栏）自动加载
-  plugins: [
-    // 评论插件
-    commentPlugin({
-      provider: 'artalk',
-      artalk: {
-        server: 'http://swimly.cn:8080/',
-        site: 'My Site',
-        pageKey: '',
-        darkMode: 'auto'
-      }
-    }),
-
-    // 阅读时间插件
-    readingTimePlugin({
-      wordsPerMinute: 300
-    }),
-
-    // 阅读进度条（非首页显示）
-    progressPlugin({
-      color: 'var(--vp-c-brand, #3b82f6)',
-      height: 3,
-      position: 'top',
-      exclude: ['/']
-    }),
-
-    // 代码复制按钮
-    copyCodePlugin({
-      showLanguage: true
-    }),
-
-    // 组件演示插件
-    demoPlugin({
-      defaultTitle: '示例',
-      defaultExpanded: false
-    }),
-
-    // 搜索插件
-    searchPlugin({
-      hotkeys: ['/', 'Ctrl+K']
-    }),
-
-    // 图片预览插件
-    imageViewerPlugin({
-      zoom: true
-    }),
-
-    // 最后更新时间
-    lastUpdatedPlugin({
-      useGitTime: false, // 演示环境可能没有git信息
-      text: '最后更新于'
-    }),
-
-    // 字数统计
-    wordCountPlugin()
-  ],
-
+  // ========================================
+  // 主题配置（默认语言：中文）
+  // ========================================
   themeConfig: {
     logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
     siteTitle: 'LDesign',
 
-    // 布局配置
+    // 布局
     layout: {
       sidebarWidth: 260,
       outlineWidth: 220,
       contentGap: 32,
       navHeight: 64,
-      maxWidth: 1580,
-      // 内容宽度：支持百分比或固定像素值
-      // 例如: '100%'（铺满）, '1200px'（固定宽度）, '90vw'（视口宽度）
+      maxWidth: 1600,
       contentWidth: '100%'
     },
 
-    // 导航栏 - 点击后跳转到侧边栏第一个页面
+    // 导航栏
     nav: [
       { text: '指南', link: '/guide/' },
       { text: '示例', link: '/examples/' },
@@ -253,6 +194,7 @@ export default defineConfig({
       { text: 'GitHub', link: 'https://github.com/polyester-design/ldesign' }
     ],
 
+    // 侧边栏
     sidebar: {
       '/guide/': [
         {
@@ -301,9 +243,7 @@ export default defineConfig({
       '/examples/': [
         {
           text: '功能示例',
-          items: [
-            { text: '示例总览', link: '/examples/' }
-          ]
+          items: [{ text: '示例总览', link: '/examples/' }]
         },
         {
           text: 'Markdown 增强',
@@ -314,9 +254,7 @@ export default defineConfig({
         },
         {
           text: '容器与提示',
-          items: [
-            { text: '信息容器', link: '/examples/containers/' }
-          ]
+          items: [{ text: '信息容器', link: '/examples/containers/' }]
         },
         {
           text: '媒体资源',
@@ -371,44 +309,72 @@ export default defineConfig({
         },
         {
           text: '开发主题',
-          items: [
-            { text: '主题开发指南', link: '/plugins/theme-dev' }
-          ]
+          items: [{ text: '主题开发指南', link: '/plugins/theme-dev' }]
         }
       ]
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/nicepkg/ldesign' }
-    ],
+    // 社交链接
+    socialLinks: [{ icon: 'github', link: 'https://github.com/nicepkg/ldesign' }],
 
+    // 页脚
     footer: {
       message: '基于 MIT 许可发布',
       copyright: '版权所有 © 2024 LDesign'
     },
 
+    // 编辑链接
     editLink: {
       pattern: 'https://github.com/nicepkg/ldesign/edit/main/docs/:path',
       text: '在 GitHub 上编辑此页'
     },
 
-    lastUpdated: {
-      text: '最后更新'
-    },
+    // 最后更新时间
+    lastUpdated: { text: '最后更新' },
 
-    outline: {
-      level: [1, 6],
-      label: '本页目录'
-    }
+    // 大纲
+    outline: { level: [1, 6], label: '本页目录' }
   },
 
+  // ========================================
+  // 插件配置
+  // ========================================
+  plugins: [
+    commentPlugin({
+      provider: 'artalk',
+      artalk: {
+        server: 'http://swimly.cn:8080/',
+        site: 'My Site',
+        pageKey: '',
+        darkMode: 'auto'
+      }
+    }),
+    readingTimePlugin({ wordsPerMinute: 300 }),
+    progressPlugin({
+      color: 'var(--vp-c-brand, #3b82f6)',
+      height: 3,
+      position: 'top',
+      exclude: ['/']
+    }),
+    copyCodePlugin({ showLanguage: true }),
+    demoPlugin({ defaultTitle: '示例', defaultExpanded: false }),
+    searchPlugin({ hotkeys: ['/', 'Ctrl+K'] }),
+    imageViewerPlugin({ zoom: true }),
+    lastUpdatedPlugin({ useGitTime: false, prefix: '最后更新于' }),
+    wordCountPlugin()
+  ],
+
+  // ========================================
+  // Markdown 配置
+  // ========================================
   markdown: {
     lineNumbers: true,
-    theme: {
-      light: 'github-light',
-      dark: 'github-dark'
-    }
+    theme: { light: 'github-light', dark: 'github-dark' }
   },
+
+  // ========================================
+  // Vite 配置
+  // ========================================
   vite: {
     server: {
       port: 8878,
@@ -417,11 +383,11 @@ export default defineConfig({
     }
   },
 
-  // 部署配置示例
+  // ========================================
+  // 部署配置
+  // ========================================
   deploy: {
     platform: 'surge',
-    surge: {
-      domain: 'ldoc-playground.surge.sh'
-    }
+    surge: { domain: 'ldoc-playground.surge.sh' }
   }
 })

@@ -4,11 +4,12 @@
 
 import { resolve, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
-import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, watch as fsWatch, FSWatcher } from 'fs'
 import { createRequire } from 'module'
 import { build } from 'esbuild'
-import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin, Theme } from '../shared/types'
+import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin, Theme, LocaleConfig, NavItem, Sidebar } from '../shared/types'
 import { deepMerge, normalizePath } from '../shared/utils'
+import * as logger from './logger'
 
 const require = createRequire(import.meta.url)
 
@@ -76,6 +77,81 @@ export function defineConfigWithTheme<T extends ThemeConfig>(
   config: UserConfig & { themeConfig?: T }
 ): UserConfig & { themeConfig?: T } {
   return config
+}
+
+/**
+ * 定义主题配置（带类型提示）
+ * 可用于单独定义 nav、sidebar 等配置
+ * 
+ * @example
+ * ```ts
+ * const themeConfig = defineThemeConfig({
+ *   nav: [...],
+ *   sidebar: {...}
+ * })
+ * ```
+ */
+export function defineThemeConfig(config: ThemeConfig): ThemeConfig {
+  return config
+}
+
+/**
+ * 定义语言配置（带类型提示）
+ * 用于单独定义某个语言的配置
+ * 
+ * @example
+ * ```ts
+ * const enLocale = defineLocaleConfig({
+ *   label: 'English',
+ *   lang: 'en-US',
+ *   link: '/en/',
+ *   themeConfig: {
+ *     nav: [...],
+ *     sidebar: {...}
+ *   }
+ * })
+ * 
+ * // 在配置中使用
+ * defineConfig({
+ *   locales: {
+ *     en: enLocale
+ *   }
+ * })
+ * ```
+ */
+export function defineLocaleConfig(config: LocaleConfig): LocaleConfig {
+  return config
+}
+
+/**
+ * 定义导航配置（带类型提示）
+ * 
+ * @example
+ * ```ts
+ * const nav = defineNav([
+ *   { text: '指南', link: '/guide/' },
+ *   { text: 'API', link: '/api/' }
+ * ])
+ * ```
+ */
+export function defineNav(nav: NavItem[]): NavItem[] {
+  return nav
+}
+
+/**
+ * 定义侧边栏配置（带类型提示）
+ * 
+ * @example
+ * ```ts
+ * const sidebar = defineSidebar({
+ *   '/guide/': [
+ *     { text: '开始', items: [...] }
+ *   ]
+ * })
+ * ```
+ */
+export function defineSidebar(sidebar: Sidebar): Sidebar {
+  return sidebar
 }
 
 /**
@@ -393,12 +469,102 @@ async function loadPluginFromPackage(root: string, pluginName: string): Promise<
 }
 
 /**
+ * 配置文件监听器
+ */
+let configWatcher: FSWatcher | null = null
+let configWatcherCallbacks: Array<(config: SiteConfig) => void> = []
+let lastConfigHash = ''
+
+/**
+ * 计算配置内容的哈希值
+ */
+function getConfigHash(configPath: string): string {
+  if (!existsSync(configPath)) return ''
+  try {
+    const content = readFileSync(configPath, 'utf-8')
+    // 简单哈希：使用内容长度和部分内容
+    return `${content.length}-${content.slice(0, 100)}-${content.slice(-100)}`
+  } catch {
+    return ''
+  }
+}
+
+/**
  * 监听配置变化
+ * 支持热更新配置而无需重启整个服务器
  */
 export function watchConfig(
   root: string,
   callback: (config: SiteConfig) => void
 ): () => void {
-  // TODO: 实现配置热更新
-  return () => { }
+  configWatcherCallbacks.push(callback)
+
+  // 如果已经有监听器在运行，直接返回
+  if (configWatcher) {
+    return () => {
+      const index = configWatcherCallbacks.indexOf(callback)
+      if (index > -1) configWatcherCallbacks.splice(index, 1)
+    }
+  }
+
+  // 查找配置文件
+  findConfigFile(root).then(({ configPath }) => {
+    if (!configPath) return
+
+    lastConfigHash = getConfigHash(configPath)
+
+    // 使用 fs.watch 监听配置文件变化
+    configWatcher = fsWatch(configPath, { persistent: true }, async (eventType) => {
+      if (eventType !== 'change') return
+
+      // 检查内容是否真的变化（防止重复触发）
+      const newHash = getConfigHash(configPath)
+      if (newHash === lastConfigHash) return
+      lastConfigHash = newHash
+
+      logger.printInfo('Config file changed, reloading...')
+
+      try {
+        // 重新解析配置
+        const newConfig = await resolveConfig(root, 'serve', 'development')
+
+        // 通知所有监听者
+        for (const cb of configWatcherCallbacks) {
+          try {
+            cb(newConfig)
+          } catch (err) {
+            logger.printError('Config reload callback error', String(err))
+          }
+        }
+
+        logger.printSuccess('Config reloaded successfully')
+      } catch (err) {
+        logger.printError('Failed to reload config', String(err))
+      }
+    })
+  })
+
+  // 返回清理函数
+  return () => {
+    const index = configWatcherCallbacks.indexOf(callback)
+    if (index > -1) configWatcherCallbacks.splice(index, 1)
+
+    // 如果没有更多监听者，停止监听
+    if (configWatcherCallbacks.length === 0 && configWatcher) {
+      configWatcher.close()
+      configWatcher = null
+    }
+  }
+}
+
+/**
+ * 停止所有配置监听
+ */
+export function stopConfigWatcher(): void {
+  if (configWatcher) {
+    configWatcher.close()
+    configWatcher = null
+  }
+  configWatcherCallbacks = []
+  lastConfigHash = ''
 }

@@ -718,24 +718,126 @@ export function usePageData() {
 
 /**
  * HMR 热更新插件
+ * 支持配置文件和 Markdown 文件的热更新
  */
 function createHMRPlugin(config: SiteConfig, pluginContainer: PluginContainer): Plugin {
+  // 配置缓存，用于检测真实变化
+  let lastConfigContent = ''
+  let configReloadDebounce: ReturnType<typeof setTimeout> | null = null
+
   return {
     name: 'ldoc:hmr',
 
-    handleHotUpdate(ctx) {
+    configureServer(server) {
+      // 配置文件变化时的处理逻辑
+      if (config.configPath) {
+        try {
+          lastConfigContent = readFileSync(config.configPath, 'utf-8')
+        } catch {
+          // 忽略读取错误
+        }
+
+        // 将配置文件添加到 Vite 的监听列表
+        server.watcher.add(config.configPath)
+
+        // 同时监听 srcDir
+        server.watcher.add(config.srcDir)
+      }
+    },
+
+    async handleHotUpdate(ctx) {
       const { file, server } = ctx
+      const normalizedFile = normalizePath(file)
+      const normalizedConfigPath = config.configPath ? normalizePath(config.configPath) : ''
 
       // 配置文件变化
-      if (config.configPath && file === config.configPath) {
-        console.log('[ldoc] config changed, restarting server...')
-        server.restart()
+      if (normalizedConfigPath && normalizedFile === normalizedConfigPath) {
+        // 检查内容是否真的变化
+        let newContent = ''
+        try {
+          newContent = readFileSync(file, 'utf-8')
+        } catch {
+          return []
+        }
+
+        if (newContent === lastConfigContent) {
+          return []
+        }
+        lastConfigContent = newContent
+
+        // 防抖处理
+        if (configReloadDebounce) {
+          clearTimeout(configReloadDebounce)
+        }
+
+        configReloadDebounce = setTimeout(async () => {
+          const logger = await import('./logger')
+          logger.printConfigReload('start')
+
+          try {
+            // 导入 resolveConfig
+            const { resolveConfig } = await import('./config')
+            const newConfig = await resolveConfig(config.root, 'serve', 'development')
+
+            // 更新配置引用（这些配置在运行时可以热更新）
+            Object.assign(config, {
+              title: newConfig.title,
+              description: newConfig.description,
+              themeConfig: newConfig.themeConfig,
+              locales: newConfig.locales,
+              head: newConfig.head,
+              markdown: newConfig.markdown
+            })
+
+            // 重新生成 siteData.ts
+            const { generateSiteDataCode } = await import('./core/siteData')
+            const siteDataCode = generateSiteDataCode(newConfig)
+            const { writeFileSync: fsWriteFileSync } = await import('fs')
+            const siteDataPath = resolve(config.tempDir, 'siteData.ts')
+            fsWriteFileSync(siteDataPath, siteDataCode)
+
+            // 通知客户端配置已更新
+            server.ws.send({
+              type: 'custom',
+              event: 'ldoc:config-update',
+              data: {
+                title: newConfig.title,
+                description: newConfig.description,
+                themeConfig: newConfig.themeConfig,
+                locales: newConfig.locales
+              }
+            })
+
+            // 触发 siteData 模块的 HMR
+            const siteDataModule = server.moduleGraph.getModuleById(siteDataPath)
+            if (siteDataModule) {
+              server.moduleGraph.invalidateModule(siteDataModule)
+              server.ws.send({
+                type: 'update',
+                updates: [{
+                  type: 'js-update',
+                  path: siteDataModule.url,
+                  acceptedPath: siteDataModule.url,
+                  timestamp: Date.now()
+                }]
+              })
+            }
+
+            logger.printConfigReload('success')
+          } catch (err) {
+            logger.printConfigReload('error', String(err))
+            server.restart()
+          }
+        }, 100)
+
         return []
       }
 
       // Markdown 文件变化
       if (file.endsWith('.md')) {
-        console.log('[ldoc] markdown changed:', file)
+        const logger = await import('./logger')
+        const relativePath = file.replace(config.srcDir, '').replace(/\\/g, '/')
+        logger.printHMRUpdate('markdown', relativePath)
 
         // 读取文件并解析 frontmatter
         const content = readFileSync(file, 'utf-8')

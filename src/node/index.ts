@@ -2,7 +2,18 @@
  * Node.js 端模块导出
  */
 
-export { resolveConfig, defineConfig, defineConfigWithTheme, watchConfig, defaultConfig } from './config'
+export {
+  resolveConfig,
+  defineConfig,
+  defineConfigWithTheme,
+  defineThemeConfig,
+  defineLocaleConfig,
+  defineNav,
+  defineSidebar,
+  watchConfig,
+  stopConfigWatcher,
+  defaultConfig
+} from './config'
 export { createLDoc } from './createLDoc'
 export { build } from './build'
 export { serve } from './serve'

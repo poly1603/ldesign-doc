@@ -8,7 +8,15 @@
 export type * from './shared/types'
 
 // 导出核心功能
-export { defineConfig, defineConfigWithTheme, resolvePlugins } from './node/config'
+export {
+  defineConfig,
+  defineConfigWithTheme,
+  defineThemeConfig,
+  defineLocaleConfig,
+  defineNav,
+  defineSidebar,
+  resolvePlugins
+} from './node/config'
 export { createLDoc } from './node/createLDoc'
 export { build } from './node/build'
 export { serve } from './node/serve'

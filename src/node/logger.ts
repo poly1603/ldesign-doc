@@ -91,7 +91,6 @@ export function printServerInfo(options: {
   const networkUrl = host ? `http://${host}:${port}${base}` : `http://0.0.0.0:${port}${base}`
 
   const typeLabel = type === 'dev' ? 'Development' : 'Preview'
-  const icon = type === 'dev' ? icons.rocket : icons.preview
 
   console.log()
   console.log(`  ${brand.success(icons.success)} ${brand.bold(brand.success(`${typeLabel} server running`))}`)
@@ -221,6 +220,48 @@ export function printInitComplete(root: string): void {
 // 打印端口占用提示
 export function printPortInUse(port: number): void {
   console.log(`  ${brand.warning(icons.warning)} Port ${brand.white(String(port))} is in use, trying another...`)
+}
+
+// 打印 HMR 更新信息
+export function printHMRUpdate(type: 'config' | 'markdown' | 'style', file?: string): void {
+  const now = new Date()
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+
+  const typeColors = {
+    config: brand.primary,
+    markdown: brand.success,
+    style: brand.info
+  }
+
+  const typeLabels = {
+    config: '⚙️  config',
+    markdown: '📄 markdown',
+    style: '🎨 style'
+  }
+
+  const color = typeColors[type]
+  const label = typeLabels[type]
+  const fileInfo = file ? ` ${brand.dim(file)}` : ''
+
+  console.log(`  ${brand.dim(time)} ${color(icons.arrow)} ${color(label)}${fileInfo}`)
+}
+
+// 打印配置重载状态
+export function printConfigReload(status: 'start' | 'success' | 'error', error?: string): void {
+  if (status === 'start') {
+    console.log()
+    console.log(`  ${brand.primary('⚡')} ${brand.bold(brand.primary('Config changed, hot reloading...'))}`)
+  } else if (status === 'success') {
+    console.log(`  ${brand.success(icons.success)} ${brand.success('Config reloaded successfully')}`)
+    console.log()
+  } else if (status === 'error') {
+    console.log(`  ${brand.error(icons.error)} ${brand.error('Failed to reload config')}`)
+    if (error) {
+      console.log(`  ${brand.dim(error)}`)
+    }
+    console.log(`  ${brand.warning(icons.warning)} ${brand.warning('Falling back to server restart...')}`)
+    console.log()
+  }
 }
 
 // 打印分隔线

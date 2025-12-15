@@ -53,6 +53,38 @@ export interface ExtraDocsSource {
   pattern?: string
 }
 
+/**
+ * 用户配置
+ * 
+ * 多语言配置说明：
+ * - `themeConfig`: 默认/根语言的主题配置（nav、sidebar 等）
+ * - `locales`: 其他语言的配置，每个语言可有自己的 themeConfig
+ * 
+ * @example
+ * ```ts
+ * // 简化的多语言配置方式
+ * defineConfig({
+ *   lang: 'zh-CN',
+ *   // 默认语言（中文）的主题配置
+ *   themeConfig: {
+ *     nav: [...],
+ *     sidebar: {...}
+ *   },
+ *   // 其他语言配置
+ *   locales: {
+ *     en: {
+ *       label: 'English',
+ *       lang: 'en-US',
+ *       link: '/en/',
+ *       themeConfig: {
+ *         nav: [...],
+ *         sidebar: {...}
+ *       }
+ *     }
+ *   }
+ * })
+ * ```
+ */
 export interface UserConfig {
   // 基础配置
   srcDir?: string
@@ -70,9 +102,18 @@ export interface UserConfig {
 
   // 主题配置
   theme?: string | Theme | ThemeConfig
+  /**
+   * 默认/根语言的主题配置
+   * 包含 nav、sidebar、footer 等配置
+   * 其他语言的主题配置放在 locales[lang].themeConfig 中
+   */
   themeConfig?: ThemeConfig
 
-  // 多语言配置
+  /**
+   * 多语言配置
+   * key 为语言标识（如 'en'、'zh'）
+   * 'root' 表示默认语言，可与 themeConfig 配合使用
+   */
   locales?: Record<string, LocaleConfig>
 
   // Markdown 配置
@@ -125,14 +166,47 @@ export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins
   buildEnd?: (siteConfig: SiteConfig) => Promise<void> | void
 }
 
+/**
+ * 单个语言的配置
+ * 
+ * @example
+ * ```ts
+ * const enLocale: LocaleConfig = {
+ *   label: 'English',
+ *   lang: 'en-US',
+ *   link: '/en/',
+ *   themeConfig: {
+ *     nav: [
+ *       { text: 'Guide', link: '/en/guide/' },
+ *       { text: 'API', link: '/en/api/' }
+ *     ],
+ *     sidebar: {
+ *       '/en/guide/': [...]
+ *     }
+ *   }
+ * }
+ * ```
+ */
 export interface LocaleConfig {
+  /** 语言切换器中显示的标签 */
   label?: string
+  /** 语言代码，如 'en-US'、'zh-CN' */
   lang?: string
+  /** 文本方向，'ltr' 或 'rtl' */
   dir?: string
+  /** 该语言的链接前缀，如 '/en/' */
   link?: string
+  /** 该语言的站点标题 */
   title?: string
+  /** 该语言的站点描述 */
   description?: string
+  /** 该语言特有的 head 标签 */
   head?: HeadConfig[]
+  /**
+   * 该语言的主题配置
+   * 包含 nav、sidebar、footer 等
+   * 会与根级 themeConfig 合并
+   */
   themeConfig?: ThemeConfig
 }
 
