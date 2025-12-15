@@ -1,5 +1,5 @@
 <template>
-  <div class="vp-home">
+  <div class="vp-home" :class="{ 'vp-home--animated': isHomeAnimating }">
     <!-- Hero 前插槽 -->
     <PluginSlot name="home-hero-before" />
 
@@ -196,6 +196,7 @@ const { frontmatter } = useData()
 // Canvas 动画背景 - 支持多种动画效果
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
+const isHomeAnimating = ref(false)
 
 // 动画类型: particles(粒子网络), waves(波浪), gradient(渐变), bubbles(气泡), constellation(星座), none(无)
 type CanvasAnimationType = 'particles' | 'waves' | 'gradient' | 'bubbles' | 'constellation' | 'none'
@@ -521,6 +522,10 @@ onMounted(() => {
       cleanup = initCanvas()
     })
   })
+
+  requestAnimationFrame(() => {
+    isHomeAnimating.value = true
+  })
 })
 
 // 监听 frontmatter 变化，重新初始化 canvas
@@ -535,6 +540,7 @@ watch(() => frontmatter.value.hero, () => {
 
 onUnmounted(() => {
   cleanup?.()
+  isHomeAnimating.value = false
 })
 
 interface HeroAction {
@@ -703,6 +709,21 @@ const onFeatureLeave = (e: MouseEvent) => {
 <style scoped>
 .vp-home {
   width: 100%;
+}
+
+.vp-home--animated {
+  animation: vp-home-fade-in 0.45s ease-out;
+}
+
+@keyframes vp-home-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .vp-home-inner {
