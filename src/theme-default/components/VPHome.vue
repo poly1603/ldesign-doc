@@ -105,6 +105,67 @@
         </div>
       </section>
 
+      <!-- 快速上手区域 -->
+      <section v-if="quickStart" class="vp-home-quickstart">
+        <div class="vp-home-section-header">
+          <h2>{{ quickStart.title || '快速上手' }}</h2>
+          <p v-if="quickStart.description">{{ quickStart.description }}</p>
+        </div>
+        <div class="vp-home-quickstart-content">
+          <div class="vp-home-quickstart-steps">
+            <div v-for="(step, index) in quickStart.steps" :key="index" class="vp-home-quickstart-step">
+              <div class="vp-home-quickstart-step-index">{{ index + 1 }}</div>
+              <div class="vp-home-quickstart-step-icon" v-html="getFeatureIcon(step.icon)"></div>
+              <div class="vp-home-quickstart-step-info">
+                <div class="vp-home-quickstart-step-title">{{ step.title }}</div>
+                <div class="vp-home-quickstart-step-desc">{{ step.description }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="vp-home-quickstart-commands">
+            <div v-for="cmd in quickStart.commands" :key="cmd.name" class="vp-home-quickstart-cmd">
+              <div class="vp-home-quickstart-cmd-header">
+                <span class="vp-home-quickstart-cmd-name">{{ cmd.name }}</span>
+                <span v-if="cmd.recommended" class="vp-home-quickstart-cmd-badge">推荐</span>
+              </div>
+              <pre class="vp-home-quickstart-cmd-code"><code>{{ cmd.code.trim() }}</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 路线图区域 -->
+      <section v-if="roadmap" class="vp-home-roadmap">
+        <div class="vp-home-section-header">
+          <h2>{{ roadmap.title || '开发路线图' }}</h2>
+        </div>
+        <div class="vp-home-roadmap-container">
+          <div v-for="item in roadmap.items" :key="item.version" class="vp-home-roadmap-card" :class="item.status">
+            <div class="vp-home-roadmap-card-icon" v-html="getFeatureIcon(item.icon)"></div>
+            <div class="vp-home-roadmap-card-body">
+              <div class="vp-home-roadmap-card-version">{{ item.version }}</div>
+              <div class="vp-home-roadmap-card-title">{{ item.title }}</div>
+              <div class="vp-home-roadmap-card-status">{{ getStatusText(item.status) }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 社区支持区域 -->
+      <section v-if="community" class="vp-home-community">
+        <div class="vp-home-section-header">
+          <h2>{{ community.title || '社区与支持' }}</h2>
+        </div>
+        <div class="vp-home-community-container">
+          <a v-for="card in community.cards" :key="card.title" :href="card.link" target="_blank" rel="noopener noreferrer" class="vp-home-community-card">
+            <div class="vp-home-community-card-icon" v-html="getFeatureIcon(card.icon)"></div>
+            <h3 class="vp-home-community-card-title">{{ card.title }}</h3>
+            <p class="vp-home-community-card-desc">{{ card.description }}</p>
+            <span class="vp-home-community-card-link">{{ card.linkText }} →</span>
+          </a>
+        </div>
+      </section>
+
       <!-- 代码示例展示区域 -->
       <section v-if="codeExample" class="vp-home-code-example">
         <div class="vp-home-section-header">
@@ -595,6 +656,50 @@ interface Banner {
   linkText?: string
 }
 
+interface QuickStartStep {
+  icon?: string
+  title: string
+  description: string
+}
+
+interface QuickStartCommand {
+  name: string
+  recommended?: boolean
+  code: string
+}
+
+interface QuickStart {
+  title?: string
+  description?: string
+  steps: QuickStartStep[]
+  commands: QuickStartCommand[]
+}
+
+interface RoadmapItem {
+  version: string
+  title: string
+  status: 'done' | 'active' | 'planned'
+  icon?: string
+}
+
+interface Roadmap {
+  title?: string
+  items: RoadmapItem[]
+}
+
+interface CommunityCard {
+  icon?: string
+  title: string
+  description: string
+  link: string
+  linkText: string
+}
+
+interface Community {
+  title?: string
+  cards: CommunityCard[]
+}
+
 // HMR 更新计数器 - 强制重新计算 computed
 const hmrUpdateKey = ref(0)
 
@@ -641,6 +746,28 @@ const banner = computed<Banner | undefined>(() => {
   return frontmatter.value.banner as Banner
 })
 
+const quickStart = computed<QuickStart | undefined>(() => {
+  return frontmatter.value.quickStart as QuickStart
+})
+
+const roadmap = computed<Roadmap | undefined>(() => {
+  return frontmatter.value.roadmap as Roadmap
+})
+
+const community = computed<Community | undefined>(() => {
+  return frontmatter.value.community as Community
+})
+
+// 获取状态文本
+const getStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    done: '已完成',
+    active: '进行中',
+    planned: '计划中'
+  }
+  return statusMap[status] || status
+}
+
 // 判断是否为外部链接
 const isExternalLink = (link: string) => {
   return /^https?:\/\//.test(link)
@@ -679,6 +806,14 @@ const iconMap: Record<string, string> = {
   'sparkles': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
   'terminal': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>',
   'cpu': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>',
+  'folder-plus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+  'package': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 9.4-9-5.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>',
+  'play': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+  'check-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  'message-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+  'bug': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>',
+  'git-pull-request': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" x2="6" y1="9" y2="21"/></svg>',
+  'server': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>',
 }
 
 // 获取图标HTML
@@ -1306,5 +1441,295 @@ const onFeatureLeave = (e: MouseEvent) => {
 .vp-home-banner-action:hover {
   background: var(--ldoc-c-brand-dark);
   transform: translateY(-2px);
+}
+
+/* 快速上手 */
+.vp-home-quickstart {
+  padding: 64px 0;
+}
+
+.vp-home-quickstart-content {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.vp-home-quickstart-steps {
+  background: var(--ldoc-c-bg-soft);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 1px solid var(--ldoc-c-divider);
+}
+
+.vp-home-quickstart-step {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vp-home-quickstart-step-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ldoc-c-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.vp-home-quickstart-step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--ldoc-c-brand-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ldoc-c-brand);
+  flex-shrink: 0;
+}
+
+.vp-home-quickstart-step-icon :deep(svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.vp-home-quickstart-step-title {
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+}
+
+.vp-home-quickstart-step-desc {
+  font-size: 13px;
+  color: var(--ldoc-c-text-2);
+  margin-top: 2px;
+}
+
+.vp-home-quickstart-commands {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.vp-home-quickstart-cmd {
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.vp-home-quickstart-cmd:hover {
+  border-color: var(--ldoc-c-brand);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.vp-home-quickstart-cmd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.vp-home-quickstart-cmd-name {
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+}
+
+.vp-home-quickstart-cmd-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ldoc-c-brand-soft);
+  color: var(--ldoc-c-brand);
+  font-weight: 500;
+}
+
+.vp-home-quickstart-cmd-code {
+  margin: 0;
+  padding: 12px;
+  background: var(--ldoc-c-bg-soft);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.vp-home-quickstart-cmd-code code {
+  font-family: var(--ldoc-font-mono);
+  color: var(--ldoc-c-text-1);
+}
+
+/* 路线图 */
+.vp-home-roadmap {
+  padding: 64px 0;
+}
+
+.vp-home-roadmap-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.vp-home-roadmap-card {
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s;
+}
+
+.vp-home-roadmap-card:hover {
+  border-color: var(--ldoc-c-brand);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.vp-home-roadmap-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ldoc-c-brand-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ldoc-c-brand);
+  flex-shrink: 0;
+}
+
+.vp-home-roadmap-card-icon :deep(svg) {
+  width: 22px;
+  height: 22px;
+}
+
+.vp-home-roadmap-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vp-home-roadmap-card-version {
+  font-weight: 600;
+  color: var(--ldoc-c-brand);
+  font-size: 14px;
+}
+
+.vp-home-roadmap-card-title {
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+}
+
+.vp-home-roadmap-card-status {
+  font-size: 12px;
+  color: var(--ldoc-c-text-3);
+}
+
+.vp-home-roadmap-card.done {
+  background: var(--ldoc-c-brand-soft);
+}
+
+.vp-home-roadmap-card.done .vp-home-roadmap-card-status {
+  color: var(--ldoc-c-brand);
+}
+
+.vp-home-roadmap-card.active {
+  border-color: var(--ldoc-c-brand);
+  box-shadow: 0 0 0 3px var(--ldoc-c-brand-soft);
+}
+
+.vp-home-roadmap-card.active .vp-home-roadmap-card-status {
+  color: var(--ldoc-c-brand);
+  font-weight: 500;
+}
+
+/* 社区支持 */
+.vp-home-community {
+  padding: 64px 0;
+}
+
+.vp-home-community-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.vp-home-community-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.vp-home-community-card:hover {
+  border-color: var(--ldoc-c-brand);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.vp-home-community-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--ldoc-c-brand-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ldoc-c-brand);
+  margin-bottom: 16px;
+}
+
+.vp-home-community-card-icon :deep(svg) {
+  width: 28px;
+  height: 28px;
+}
+
+.vp-home-community-card-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+}
+
+.vp-home-community-card-desc {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--ldoc-c-text-2);
+  line-height: 1.5;
+}
+
+.vp-home-community-card-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ldoc-c-brand);
+}
+
+@media (max-width: 768px) {
+  .vp-home-quickstart-content {
+    grid-template-columns: 1fr;
+  }
+
+  .vp-home-roadmap-container {
+    grid-template-columns: 1fr;
+  }
+
+  .vp-home-community-container {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
