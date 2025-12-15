@@ -3,7 +3,7 @@
 export const routes = [
   {
     path: '/',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/index.md'),
     meta: { 
       title: 'LDoc 现代化文档框架',
       frontmatter: {"layout":"home","title":"LDoc 现代化文档框架","hero":{"name":"LDesign Doc","text":"现代化文档生成框架","tagline":"基于 Vite，支持 Vue/React，开箱即用","canvas":{"type":"particles","speed":1,"density":1},"actions":[{"theme":"brand","text":"快速开始","link":"/guide/getting-started"},{"theme":"alt","text":"在 GitHub 上查看","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite 驱动","details":"享受 Vite 带来的极速开发体验，毫秒级热更新，开发效率提升 10 倍"},{"icon":"file-text","title":"Markdown 增强","details":"代码高亮、容器语法、数学公式、Mermaid 图表、Emoji 表情等丰富扩展"},{"icon":"palette","title":"高度可定制","details":"灵活的主题系统，支持 Vue/React 组件，自定义布局和样式"},{"icon":"plug","title":"插件生态","details":"评论系统、搜索、阅读时间、图片预览等 10+ 内置插件"},{"icon":"search","title":"全文搜索","details":"内置搜索插件，支持快捷键唤起，毫秒级响应"},{"icon":"code","title":"代码演示","details":"支持 Vue/React 组件实时预览，代码与效果并排展示"},{"icon":"globe","title":"多语言支持","details":"内置国际化支持，轻松构建多语言文档站点"},{"icon":"smartphone","title":"响应式设计","details":"移动端友好，任何设备上都有出色的阅读体验"},{"icon":"terminal","title":"CLI 工具","details":"一键创建项目，快速启动开发，支持模板定制"},{"icon":"sparkles","title":"主题切换动画","details":"多种主题切换动画效果，圆形扩散、淡入淡出、翻转等"},{"icon":"cpu","title":"TypeScript 优先","details":"完整的类型定义，智能代码补全，开发体验极佳"},{"icon":"box","title":"组件库文档","details":"专为组件库设计，支持 Props 表格、Slots、Events 文档生成"}]}
@@ -11,7 +11,7 @@ export const routes = [
   },
   {
     path: '/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/index.md'),
     meta: { 
       title: 'API 参考',
       frontmatter: {"title":"API 参考"}
@@ -19,7 +19,7 @@ export const routes = [
   },
   {
     path: '/api/client',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/client.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/client.md'),
     meta: { 
       title: '客户端 API',
       frontmatter: {"title":"客户端 API"}
@@ -27,7 +27,7 @@ export const routes = [
   },
   {
     path: '/api/components',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/components.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/components.md'),
     meta: { 
       title: 'components',
       frontmatter: {}
@@ -35,7 +35,7 @@ export const routes = [
   },
   {
     path: '/api/composables',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/composables.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/composables.md'),
     meta: { 
       title: 'composables',
       frontmatter: {}
@@ -43,7 +43,7 @@ export const routes = [
   },
   {
     path: '/api/examples/Button',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/examples/Button.vue'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/examples/Button.vue'),
     meta: { 
       title: 'Button',
       frontmatter: {"title":"Button","layout":"page"}
@@ -51,7 +51,7 @@ export const routes = [
   },
   {
     path: '/api/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/frontmatter.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/frontmatter.md'),
     meta: { 
       title: 'frontmatter',
       frontmatter: {}
@@ -59,7 +59,7 @@ export const routes = [
   },
   {
     path: '/api/plugin',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/plugin.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/plugin.md'),
     meta: { 
       title: '插件 API',
       frontmatter: {"title":"插件 API"}
@@ -67,7 +67,7 @@ export const routes = [
   },
   {
     path: '/api/site-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/site-config.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/site-config.md'),
     meta: { 
       title: 'site-config',
       frontmatter: {}
@@ -75,7 +75,7 @@ export const routes = [
   },
   {
     path: '/api/theme',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/theme.md'),
     meta: { 
       title: 'theme',
       frontmatter: {}
@@ -83,7 +83,7 @@ export const routes = [
   },
   {
     path: '/api/theme-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/api/theme-config.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/api/theme-config.md'),
     meta: { 
       title: 'theme-config',
       frontmatter: {}
@@ -91,7 +91,7 @@ export const routes = [
   },
   {
     path: '/components',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/components/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/components/index.md'),
     meta: { 
       title: '',
       frontmatter: {}
@@ -99,7 +99,7 @@ export const routes = [
   },
   {
     path: '/components/button',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/components/button.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/components/button.md'),
     meta: { 
       title: 'button',
       frontmatter: {}
@@ -107,7 +107,7 @@ export const routes = [
   },
   {
     path: '/en',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/index.md'),
     meta: { 
       title: 'LDoc Modern Documentation Framework',
       frontmatter: {"layout":"home","title":"LDoc Modern Documentation Framework","hero":{"name":"LDesign Doc","text":"Modern Documentation Framework","tagline":"Powered by Vite, supports Vue/React, out of the box","canvas":{"type":"particles","speed":1,"density":1},"actions":[{"theme":"brand","text":"Get Started","link":"/en/guide/getting-started"},{"theme":"alt","text":"View on GitHub","link":"https://github.com/polyester-design/ldesign"}]},"features":[{"icon":"zap","title":"Vite Powered","details":"Enjoy ultra-fast development with instant HMR, 10x productivity boost"},{"icon":"file-text","title":"Enhanced Markdown","details":"Code highlighting, containers, math formulas, Mermaid diagrams, Emoji and more"},{"icon":"palette","title":"Highly Customizable","details":"Flexible theming, Vue/React components, custom layouts and styles"},{"icon":"plug","title":"Plugin Ecosystem","details":"10+ built-in plugins including comments, search, reading time, image viewer"},{"icon":"search","title":"Full-text Search","details":"Built-in search plugin with keyboard shortcuts, instant results"},{"icon":"code","title":"Code Demo","details":"Live preview Vue/React components, side-by-side code and output"}]}
@@ -115,7 +115,7 @@ export const routes = [
   },
   {
     path: '/en/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/index.md'),
     meta: { 
       title: '',
       frontmatter: {}
@@ -123,7 +123,7 @@ export const routes = [
   },
   {
     path: '/en/api/components',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/components.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/components.md'),
     meta: { 
       title: 'components',
       frontmatter: {}
@@ -131,7 +131,7 @@ export const routes = [
   },
   {
     path: '/en/api/composables',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/composables.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/composables.md'),
     meta: { 
       title: 'composables',
       frontmatter: {}
@@ -139,7 +139,7 @@ export const routes = [
   },
   {
     path: '/en/api/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/frontmatter.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/frontmatter.md'),
     meta: { 
       title: 'frontmatter',
       frontmatter: {}
@@ -147,7 +147,7 @@ export const routes = [
   },
   {
     path: '/en/api/site-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/site-config.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/site-config.md'),
     meta: { 
       title: 'site-config',
       frontmatter: {}
@@ -155,7 +155,7 @@ export const routes = [
   },
   {
     path: '/en/api/theme-config',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/api/theme-config.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/api/theme-config.md'),
     meta: { 
       title: 'theme-config',
       frontmatter: {}
@@ -163,7 +163,7 @@ export const routes = [
   },
   {
     path: '/en/examples',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/index.md'),
     meta: { 
       title: '',
       frontmatter: {}
@@ -171,7 +171,7 @@ export const routes = [
   },
   {
     path: '/en/examples/advanced/diagrams',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/diagrams.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/diagrams.md'),
     meta: { 
       title: 'diagrams',
       frontmatter: {}
@@ -179,7 +179,7 @@ export const routes = [
   },
   {
     path: '/en/examples/advanced/math',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/math.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/advanced/math.md'),
     meta: { 
       title: 'math',
       frontmatter: {}
@@ -187,7 +187,7 @@ export const routes = [
   },
   {
     path: '/en/examples/containers',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/containers/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/containers/index.md'),
     meta: { 
       title: '',
       frontmatter: {}
@@ -195,7 +195,7 @@ export const routes = [
   },
   {
     path: '/en/examples/markdown/code',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/code.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/code.md'),
     meta: { 
       title: 'code',
       frontmatter: {}
@@ -203,7 +203,7 @@ export const routes = [
   },
   {
     path: '/en/examples/markdown/containers',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/containers.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/markdown/containers.md'),
     meta: { 
       title: 'containers',
       frontmatter: {}
@@ -211,7 +211,7 @@ export const routes = [
   },
   {
     path: '/en/examples/media/icons',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/icons.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/icons.md'),
     meta: { 
       title: 'icons',
       frontmatter: {}
@@ -219,7 +219,7 @@ export const routes = [
   },
   {
     path: '/en/examples/media/images',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/images.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/images.md'),
     meta: { 
       title: 'images',
       frontmatter: {}
@@ -227,7 +227,7 @@ export const routes = [
   },
   {
     path: '/en/examples/media/videos',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/videos.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/media/videos.md'),
     meta: { 
       title: 'videos',
       frontmatter: {}
@@ -235,7 +235,7 @@ export const routes = [
   },
   {
     path: '/en/examples/vue/basic',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/basic.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/basic.md'),
     meta: { 
       title: 'basic',
       frontmatter: {}
@@ -243,7 +243,7 @@ export const routes = [
   },
   {
     path: '/en/examples/vue/interactive',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/interactive.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/examples/vue/interactive.md'),
     meta: { 
       title: 'interactive',
       frontmatter: {}
@@ -251,7 +251,7 @@ export const routes = [
   },
   {
     path: '/en/guide',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/index.md'),
     meta: { 
       title: 'Introduction',
       frontmatter: {"title":"Introduction"}
@@ -259,7 +259,7 @@ export const routes = [
   },
   {
     path: '/en/guide/assets',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/assets.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/assets.md'),
     meta: { 
       title: 'assets',
       frontmatter: {}
@@ -267,7 +267,7 @@ export const routes = [
   },
   {
     path: '/en/guide/configuration',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/configuration.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/configuration.md'),
     meta: { 
       title: 'configuration',
       frontmatter: {}
@@ -275,7 +275,7 @@ export const routes = [
   },
   {
     path: '/en/guide/deploy',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/deploy.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/deploy.md'),
     meta: { 
       title: 'deploy',
       frontmatter: {}
@@ -283,7 +283,7 @@ export const routes = [
   },
   {
     path: '/en/guide/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/frontmatter.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/frontmatter.md'),
     meta: { 
       title: 'frontmatter',
       frontmatter: {}
@@ -291,7 +291,7 @@ export const routes = [
   },
   {
     path: '/en/guide/getting-started',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/getting-started.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/getting-started.md'),
     meta: { 
       title: 'getting-started',
       frontmatter: {}
@@ -299,7 +299,7 @@ export const routes = [
   },
   {
     path: '/en/guide/i18n',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/i18n.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/i18n.md'),
     meta: { 
       title: 'i18n',
       frontmatter: {}
@@ -307,7 +307,7 @@ export const routes = [
   },
   {
     path: '/en/guide/markdown',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/markdown.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/markdown.md'),
     meta: { 
       title: 'markdown',
       frontmatter: {}
@@ -315,7 +315,7 @@ export const routes = [
   },
   {
     path: '/en/guide/theme',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/theme.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/guide/theme.md'),
     meta: { 
       title: 'theme',
       frontmatter: {}
@@ -323,7 +323,7 @@ export const routes = [
   },
   {
     path: '/en/plugins',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/index.md'),
     meta: { 
       title: '',
       frontmatter: {}
@@ -331,7 +331,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/api.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/api.md'),
     meta: { 
       title: 'api',
       frontmatter: {}
@@ -339,7 +339,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/comment',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/comment.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/comment.md'),
     meta: { 
       title: 'comment',
       frontmatter: {}
@@ -347,7 +347,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/copy-code',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/copy-code.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/copy-code.md'),
     meta: { 
       title: 'copy-code',
       frontmatter: {}
@@ -355,7 +355,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/demo',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/demo.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/demo.md'),
     meta: { 
       title: 'demo',
       frontmatter: {}
@@ -363,7 +363,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/development',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/development.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/development.md'),
     meta: { 
       title: 'development',
       frontmatter: {}
@@ -371,7 +371,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/image-viewer',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/image-viewer.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/image-viewer.md'),
     meta: { 
       title: 'image-viewer',
       frontmatter: {}
@@ -379,7 +379,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/last-updated',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/last-updated.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/last-updated.md'),
     meta: { 
       title: 'last-updated',
       frontmatter: {}
@@ -387,7 +387,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/progress',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/progress.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/progress.md'),
     meta: { 
       title: 'progress',
       frontmatter: {}
@@ -395,7 +395,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/reading-time',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/reading-time.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/reading-time.md'),
     meta: { 
       title: 'reading-time',
       frontmatter: {}
@@ -403,7 +403,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/search',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/search.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/search.md'),
     meta: { 
       title: 'search',
       frontmatter: {}
@@ -411,7 +411,7 @@ export const routes = [
   },
   {
     path: '/en/plugins/using',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/using.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/en/plugins/using.md'),
     meta: { 
       title: 'using',
       frontmatter: {}
@@ -419,7 +419,7 @@ export const routes = [
   },
   {
     path: '/examples',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/index.md'),
     meta: { 
       title: '功能示例',
       frontmatter: {"title":"功能示例"}
@@ -427,7 +427,7 @@ export const routes = [
   },
   {
     path: '/examples/advanced/diagrams',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/advanced/diagrams.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/advanced/diagrams.md'),
     meta: { 
       title: '流程图与图表',
       frontmatter: {"title":"流程图与图表"}
@@ -435,7 +435,7 @@ export const routes = [
   },
   {
     path: '/examples/advanced/math',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/advanced/math.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/advanced/math.md'),
     meta: { 
       title: '数学公式',
       frontmatter: {"title":"数学公式"}
@@ -443,7 +443,7 @@ export const routes = [
   },
   {
     path: '/examples/containers',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/containers/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/containers/index.md'),
     meta: { 
       title: '信息容器',
       frontmatter: {"title":"信息容器"}
@@ -451,7 +451,7 @@ export const routes = [
   },
   {
     path: '/examples/markdown/code',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/markdown/code.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/markdown/code.md'),
     meta: { 
       title: '代码块',
       frontmatter: {"title":"代码块"}
@@ -459,7 +459,7 @@ export const routes = [
   },
   {
     path: '/examples/markdown/containers',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/markdown/containers.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/markdown/containers.md'),
     meta: { 
       title: 'containers',
       frontmatter: {}
@@ -467,7 +467,7 @@ export const routes = [
   },
   {
     path: '/examples/media/icons',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/icons.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/icons.md'),
     meta: { 
       title: '图标使用',
       frontmatter: {"title":"图标使用"}
@@ -475,7 +475,7 @@ export const routes = [
   },
   {
     path: '/examples/media/images',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/images.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/images.md'),
     meta: { 
       title: '图片展示',
       frontmatter: {"title":"图片展示"}
@@ -483,7 +483,7 @@ export const routes = [
   },
   {
     path: '/examples/media/videos',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/videos.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/media/videos.md'),
     meta: { 
       title: '视频嵌入',
       frontmatter: {"title":"视频嵌入"}
@@ -491,7 +491,7 @@ export const routes = [
   },
   {
     path: '/examples/vue/basic',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/basic.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/basic.md'),
     meta: { 
       title: '基础 Vue 组件',
       frontmatter: {"title":"基础 Vue 组件"}
@@ -499,7 +499,7 @@ export const routes = [
   },
   {
     path: '/examples/vue/interactive',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/interactive.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/interactive.md'),
     meta: { 
       title: '交互式组件',
       frontmatter: {"title":"交互式组件"}
@@ -507,7 +507,7 @@ export const routes = [
   },
   {
     path: '/guide',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/index.md'),
     meta: { 
       title: '介绍',
       frontmatter: {"title":"介绍"}
@@ -515,7 +515,7 @@ export const routes = [
   },
   {
     path: '/guide/assets',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/assets.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/assets.md'),
     meta: { 
       title: '资源处理',
       frontmatter: {"title":"资源处理"}
@@ -523,7 +523,7 @@ export const routes = [
   },
   {
     path: '/guide/configuration',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/configuration.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/configuration.md'),
     meta: { 
       title: 'configuration',
       frontmatter: {}
@@ -531,7 +531,7 @@ export const routes = [
   },
   {
     path: '/guide/deploy',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/deploy.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/deploy.md'),
     meta: { 
       title: 'deploy',
       frontmatter: {}
@@ -539,7 +539,7 @@ export const routes = [
   },
   {
     path: '/guide/frontmatter',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/frontmatter.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/frontmatter.md'),
     meta: { 
       title: 'Frontmatter',
       frontmatter: {"title":"Frontmatter"}
@@ -547,7 +547,7 @@ export const routes = [
   },
   {
     path: '/guide/getting-started',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/getting-started.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/getting-started.md'),
     meta: { 
       title: '快速开始',
       frontmatter: {"title":"快速开始"}
@@ -555,7 +555,7 @@ export const routes = [
   },
   {
     path: '/guide/i18n',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/i18n.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/i18n.md'),
     meta: { 
       title: '国际化',
       frontmatter: {"title":"国际化"}
@@ -563,7 +563,7 @@ export const routes = [
   },
   {
     path: '/guide/markdown',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/markdown.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/markdown.md'),
     meta: { 
       title: 'Markdown 扩展',
       frontmatter: {"title":"Markdown 扩展"}
@@ -571,7 +571,7 @@ export const routes = [
   },
   {
     path: '/guide/plugin',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/plugin.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/plugin.md'),
     meta: { 
       title: 'plugin',
       frontmatter: {}
@@ -579,7 +579,7 @@ export const routes = [
   },
   {
     path: '/guide/structure',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/structure.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/structure.md'),
     meta: { 
       title: '目录结构',
       frontmatter: {"title":"目录结构"}
@@ -587,7 +587,7 @@ export const routes = [
   },
   {
     path: '/guide/theme',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/guide/theme.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/guide/theme.md'),
     meta: { 
       title: 'theme',
       frontmatter: {}
@@ -595,7 +595,7 @@ export const routes = [
   },
   {
     path: '/plugins',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/index.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/index.md'),
     meta: { 
       title: '插件概述',
       frontmatter: {"title":"插件概述"}
@@ -603,7 +603,7 @@ export const routes = [
   },
   {
     path: '/plugins/api',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/api.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/api.md'),
     meta: { 
       title: 'api',
       frontmatter: {}
@@ -611,7 +611,7 @@ export const routes = [
   },
   {
     path: '/plugins/built-in',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/built-in.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/built-in.md'),
     meta: { 
       title: '内置插件',
       frontmatter: {"title":"内置插件"}
@@ -619,7 +619,7 @@ export const routes = [
   },
   {
     path: '/plugins/comment',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/comment.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/comment.md'),
     meta: { 
       title: 'comment',
       frontmatter: {}
@@ -627,7 +627,7 @@ export const routes = [
   },
   {
     path: '/plugins/copy-code',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/copy-code.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/copy-code.md'),
     meta: { 
       title: 'copy-code',
       frontmatter: {}
@@ -635,7 +635,7 @@ export const routes = [
   },
   {
     path: '/plugins/demo',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/demo.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/demo.md'),
     meta: { 
       title: 'demo',
       frontmatter: {}
@@ -643,7 +643,7 @@ export const routes = [
   },
   {
     path: '/plugins/development',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/development.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/development.md'),
     meta: { 
       title: '插件开发',
       frontmatter: {"title":"插件开发"}
@@ -651,7 +651,7 @@ export const routes = [
   },
   {
     path: '/plugins/image-viewer',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/image-viewer.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/image-viewer.md'),
     meta: { 
       title: 'image-viewer',
       frontmatter: {}
@@ -659,7 +659,7 @@ export const routes = [
   },
   {
     path: '/plugins/last-updated',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/last-updated.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/last-updated.md'),
     meta: { 
       title: 'last-updated',
       frontmatter: {}
@@ -667,7 +667,7 @@ export const routes = [
   },
   {
     path: '/plugins/progress',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/progress.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/progress.md'),
     meta: { 
       title: 'progress',
       frontmatter: {}
@@ -675,7 +675,7 @@ export const routes = [
   },
   {
     path: '/plugins/reading-time',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/reading-time.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/reading-time.md'),
     meta: { 
       title: 'reading-time',
       frontmatter: {}
@@ -683,7 +683,7 @@ export const routes = [
   },
   {
     path: '/plugins/search',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/search.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/search.md'),
     meta: { 
       title: 'search',
       frontmatter: {}
@@ -691,7 +691,7 @@ export const routes = [
   },
   {
     path: '/plugins/theme-dev',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/theme-dev.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/theme-dev.md'),
     meta: { 
       title: 'theme-dev',
       frontmatter: {}
@@ -699,7 +699,7 @@ export const routes = [
   },
   {
     path: '/plugins/using',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/plugins/using.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/using.md'),
     meta: { 
       title: 'using',
       frontmatter: {}
@@ -707,7 +707,7 @@ export const routes = [
   },
   {
     path: '/src-demo',
-    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/src-demo.md'),
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/src-demo.md'),
     meta: { 
       title: '源码示例',
       frontmatter: {"title":"源码示例"}

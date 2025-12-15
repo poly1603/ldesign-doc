@@ -4,8 +4,9 @@
 
 import { resolve, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'fs'
 import { createRequire } from 'module'
+import { build } from 'esbuild'
 import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin, Theme } from '../shared/types'
 import { deepMerge, normalizePath } from '../shared/utils'
 
@@ -183,10 +184,18 @@ async function findConfigFile(root: string): Promise<{
 
 /**
  * 加载配置文件
+ * 支持 .ts/.mts 文件通过 esbuild 即时编译
  */
 async function loadConfigFile(configPath: string): Promise<UserConfig> {
   try {
-    // 使用动态 import 加载 ESM 配置
+    const ext = configPath.split('.').pop()?.toLowerCase()
+
+    // 对于 TypeScript 配置文件，使用 esbuild 编译后加载
+    if (ext === 'ts' || ext === 'mts') {
+      return await loadTsConfigFile(configPath)
+    }
+
+    // 对于 JS/MJS 配置文件，直接加载
     const configUrl = pathToFileURL(configPath).href
     const mod = await import(configUrl)
     return mod.default || mod
@@ -194,6 +203,51 @@ async function loadConfigFile(configPath: string): Promise<UserConfig> {
     console.error(`Failed to load config file: ${configPath}`)
     console.error(error)
     return {}
+  }
+}
+
+/**
+ * 使用 esbuild 编译并加载 TypeScript 配置文件
+ */
+async function loadTsConfigFile(configPath: string): Promise<UserConfig> {
+  const configDir = dirname(configPath)
+  const tempDir = resolve(configDir, '.doc-cache', 'config-temp')
+  const tempFile = resolve(tempDir, `config-${Date.now()}.mjs`)
+
+  try {
+    // 确保临时目录存在
+    mkdirSync(tempDir, { recursive: true })
+
+    // 使用 esbuild 编译 TypeScript 配置
+    const result = await build({
+      entryPoints: [configPath],
+      outfile: tempFile,
+      bundle: true,
+      platform: 'node',
+      format: 'esm',
+      target: 'node18',
+      write: true,
+      // 外部化所有 node_modules 依赖
+      packages: 'external',
+      // 不包含 source map
+      sourcemap: false,
+      // 静默模式
+      logLevel: 'silent'
+    })
+
+    // 加载编译后的配置
+    const configUrl = pathToFileURL(tempFile).href
+    // 添加时间戳避免缓存
+    const mod = await import(`${configUrl}?t=${Date.now()}`)
+
+    return mod.default || mod
+  } finally {
+    // 清理临时文件
+    try {
+      rmSync(tempFile, { force: true })
+    } catch {
+      // 忽略清理错误
+    }
   }
 }
 
