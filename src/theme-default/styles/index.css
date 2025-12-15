@@ -474,6 +474,117 @@ button {
   background: var(--ldoc-c-text-3);
 }
 
+/* 演示容器 (新版) */
+.ldoc-demo-box {
+  margin: 16px 0;
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: var(--ldoc-radius-md);
+  overflow: hidden;
+  background-color: var(--ldoc-c-bg);
+  transition: border-color 0.2s;
+}
+
+.ldoc-demo-box:hover {
+  border-color: var(--ldoc-c-brand-light);
+}
+
+.ldoc-demo-box-title {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+  background-color: var(--ldoc-c-bg-soft);
+}
+
+.ldoc-demo-box-desc {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--ldoc-c-text-2);
+  border-bottom: 1px solid var(--ldoc-c-divider);
+  line-height: 1.5;
+}
+
+.ldoc-demo-box-preview {
+  padding: 24px;
+  min-height: 60px;
+  background-color: var(--ldoc-c-bg);
+  background-image: radial-gradient(var(--ldoc-c-divider-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.ldoc-demo-box-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ldoc-c-divider);
+  background-color: var(--ldoc-c-bg-soft);
+}
+
+.ldoc-demo-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--ldoc-c-text-2);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.ldoc-demo-action:hover {
+  background-color: var(--ldoc-c-bg-mute);
+  color: var(--ldoc-c-brand);
+}
+
+.ldoc-demo-box-code {
+  border-top: 1px solid var(--ldoc-c-divider);
+  background-color: var(--ldoc-code-block-bg);
+  overflow: hidden;
+}
+
+.ldoc-demo-box-code pre {
+  margin: 0 !important;
+  padding: 16px !important;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 400px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.ldoc-demo-box-code code,
+.ldoc-demo-code-content {
+  color: var(--ldoc-code-block-text) !important;
+  font-family: var(--ldoc-font-family-mono);
+  background-color: transparent !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+}
+
+/* Code block text color fallback */
+code {
+  color: var(--ldoc-code-block-text);
+}
+
+/* 代码块变量 */
+:root {
+  --ldoc-code-block-bg: #f6f8fa;
+  --ldoc-code-block-text: #24292e;
+}
+
+.dark {
+  --ldoc-code-block-bg: #161b22;
+  --ldoc-code-block-text: #e1e4e8;
+}
+
 /* 兼容旧版代码块样式 - 为旧的渲染结果提供基础样式 */
 [class^="language-"] pre,
 [class*=" language-"] pre {
@@ -1222,6 +1333,7 @@ mark {
 
 /* ==================== 移动端布局修复 ==================== */
 @media (max-width: 768px) {
+
   /* 布局容器改为块级 */
   .ldoc-layout-content {
     display: block !important;

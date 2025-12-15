@@ -64,83 +64,38 @@ export const DemoBox = defineComponent({
     })
 
     return () => h('div', {
-      class: 'ldoc-demo-box',
-      style: {
-        border: '1px solid var(--ldoc-c-divider, #e5e7eb)',
-        borderRadius: '8px',
-        marginBottom: '16px',
-        overflow: 'hidden'
-      }
+      class: 'ldoc-demo-box'
     }, [
       // 标题
       props.title && h('div', {
-        class: 'ldoc-demo-box-title',
-        style: {
-          padding: '12px 16px',
-          fontSize: '14px',
-          fontWeight: '500',
-          color: 'var(--ldoc-c-text-1, #1f2937)',
-          borderBottom: '1px solid var(--ldoc-c-divider, #e5e7eb)',
-          background: 'var(--ldoc-c-bg-soft, #f9fafb)'
-        }
+        class: 'ldoc-demo-box-title'
       }, props.title),
 
       // 描述
       props.description && h('div', {
-        class: 'ldoc-demo-box-desc',
-        style: {
-          padding: '12px 16px',
-          fontSize: '14px',
-          color: 'var(--ldoc-c-text-2, #6b7280)',
-          borderBottom: '1px solid var(--ldoc-c-divider, #e5e7eb)'
-        }
+        class: 'ldoc-demo-box-desc'
       }, props.description),
 
       // 预览区域
       h('div', {
-        class: 'ldoc-demo-box-preview',
-        style: {
-          padding: '24px',
-          minHeight: '60px'
-        }
+        class: 'ldoc-demo-box-preview'
       }, [
         // 默认插槽 - 放置实际组件
         slots.default?.() || h('div', {
-          style: { color: 'var(--ldoc-c-text-3, #9ca3af)', fontSize: '14px' }
+          style: { color: 'var(--ldoc-c-text-3)', fontSize: '14px' }
         }, '组件预览区')
       ]),
 
       // 操作按钮
       h('div', {
-        class: 'ldoc-demo-box-actions',
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          gap: '8px',
-          padding: '8px 16px',
-          borderTop: '1px solid var(--ldoc-c-divider, #e5e7eb)',
-          background: 'var(--ldoc-c-bg-soft, #f9fafb)'
-        }
+        class: 'ldoc-demo-box-actions'
       }, [
         // 复制按钮
         h('button', {
           class: 'ldoc-demo-action',
           title: copySuccess.value ? '已复制！' : '复制代码',
           onClick: copyCode,
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            border: 'none',
-            background: 'transparent',
-            color: copySuccess.value ? 'var(--ldoc-c-green, #10b981)' : 'var(--ldoc-c-text-2, #6b7280)',
-            cursor: 'pointer',
-            borderRadius: '4px',
-            transition: 'color 0.2s'
-          }
+          style: copySuccess.value ? { color: 'var(--ldoc-c-green)' } : {}
         }, [
           h('svg', {
             width: 16,
@@ -160,19 +115,7 @@ export const DemoBox = defineComponent({
           class: 'ldoc-demo-action',
           title: codeExpanded.value ? '收起代码' : '展开代码',
           onClick: toggleCode,
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            border: 'none',
-            background: 'transparent',
-            color: codeExpanded.value ? 'var(--ldoc-c-brand, #3b82f6)' : 'var(--ldoc-c-text-2, #6b7280)',
-            cursor: 'pointer',
-            borderRadius: '4px',
-            transition: 'color 0.2s'
-          }
+          style: codeExpanded.value ? { color: 'var(--ldoc-c-brand)' } : {}
         }, [
           h('svg', {
             width: 16,
@@ -188,29 +131,11 @@ export const DemoBox = defineComponent({
 
       // 代码区域（可折叠）
       codeExpanded.value && h('div', {
-        class: 'ldoc-demo-box-code',
-        style: {
-          borderTop: '1px solid var(--ldoc-c-divider, #e5e7eb)',
-          background: 'var(--ldoc-code-block-bg, #1e1e1e)',
-          overflow: 'auto',
-          maxHeight: '400px'
-        }
+        class: 'ldoc-demo-box-code'
       }, [
-        h('pre', {
-          style: {
-            margin: 0,
-            padding: '16px',
-            fontSize: '13px',
-            lineHeight: '1.6',
-            overflow: 'auto'
-          }
-        }, [
+        h('pre', {}, [
           h('code', {
-            class: `language-${props.language}`,
-            style: {
-              color: 'var(--vp-code-block-color, #d4d4d4)',
-              fontFamily: 'var(--vp-font-family-mono, monospace)'
-            },
+            class: [`language-${props.language}`, 'ldoc-demo-code-content'],
             innerHTML: highlightedCode.value
           })
         ])

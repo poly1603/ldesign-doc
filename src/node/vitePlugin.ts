@@ -438,15 +438,16 @@ defineExpose({ frontmatter })
 
 <style>
 .ldoc-demo {
-  border: 1px solid var(--vp-c-divider, #e5e7eb);
+  border: 1px solid var(--ldoc-c-divider, #e5e7eb);
   border-radius: 12px;
   margin: 20px 0;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  background: var(--ldoc-c-bg, #fff);
 }
 .ldoc-demo-preview {
   padding: 32px 24px;
-  background: var(--vp-c-bg, #fff);
+  background: var(--ldoc-c-bg, #fff);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -458,8 +459,8 @@ defineExpose({ frontmatter })
   justify-content: flex-end;
   gap: 8px;
   padding: 10px 16px;
-  border-top: 1px solid var(--vp-c-divider, #e5e7eb);
-  background: var(--vp-c-bg-soft, #f9fafb);
+  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb);
+  background: var(--ldoc-c-bg-soft, #f9fafb);
 }
 .ldoc-demo-btn {
   display: flex;
@@ -469,20 +470,24 @@ defineExpose({ frontmatter })
   height: 32px;
   border: none;
   background: transparent;
-  color: var(--vp-c-text-2, #6b7280);
+  color: var(--ldoc-c-text-2, #6b7280);
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 .ldoc-demo-btn:hover {
-  background: var(--vp-c-bg-mute, #f3f4f6);
-  color: var(--ldoc-c-brand, var(--vp-c-brand, #3b82f6));
+  background: var(--ldoc-c-bg-mute, #f3f4f6);
+  color: var(--ldoc-c-brand, #3b82f6);
 }
 .ldoc-demo-code {
-  background: #1a1a1a;
+  background: var(--ldoc-code-block-bg, #f6f8fa);
   max-height: 400px;
   overflow: auto;
   position: relative;
+  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb);
+}
+.dark .ldoc-demo-code {
+  background: var(--ldoc-code-block-bg, #161b22);
 }
 .ldoc-demo-code::before {
   content: 'Vue';
@@ -491,7 +496,7 @@ defineExpose({ frontmatter })
   right: 12px;
   font-size: 11px;
   font-weight: 500;
-  color: #666;
+  color: var(--ldoc-c-text-3, #9ca3af);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -499,15 +504,19 @@ defineExpose({ frontmatter })
   margin: 0;
   padding: 20px;
   padding-top: 32px;
+  background: transparent;
 }
 .ldoc-demo-code code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-family: var(--ldoc-font-family-mono, 'JetBrains Mono', 'Fira Code', 'Consolas', monospace);
   font-size: 13px;
   line-height: 1.75;
-  color: #e1e1e1;
+  color: var(--ldoc-code-block-text, #24292e);
   white-space: pre;
   display: block;
   tab-size: 2;
+}
+.dark .ldoc-demo-code code {
+  color: var(--ldoc-code-block-text, #e1e4e8);
 }
 /* 滚动条样式 */
 .ldoc-demo-code::-webkit-scrollbar {
@@ -515,7 +524,7 @@ defineExpose({ frontmatter })
   height: 6px;
 }
 .ldoc-demo-code::-webkit-scrollbar-thumb {
-  background: #444;
+  background: var(--ldoc-c-divider, #d1d5db);
   border-radius: 3px;
 }
 .ldoc-demo-code::-webkit-scrollbar-track {
