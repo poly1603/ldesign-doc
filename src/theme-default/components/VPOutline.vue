@@ -259,30 +259,27 @@ watch(() => route.path, (newPath, oldPath) => {
   activeId.value = ''
   observer?.disconnect()
 
-  // 等待新内容渲染完成后提取标题
-  nextTick(() => {
-    setTimeout(() => {
-      extractHeaders()
-      setupObserver()
-      // 延迟显示，确保内容已完全加载
-      setTimeout(() => {
-        isReady.value = true
-      }, 50)
-    }, 300)
-  })
-}, { immediate: true })
-
-onMounted(() => {
-  setTimeout(() => {
+  // 尝试提取标题（带重试机制，应对过渡动画延迟）
+  const tryExtract = (retries = 5, delay = 200) => {
     extractHeaders()
     setupObserver()
-    // 页面加载时选中第一个标题
-    if (tocHeaders.value.length > 0 && !activeId.value) {
-      activeId.value = tocHeaders.value[0].slug
+    
+    if (tocHeaders.value.length > 0) {
+      isReady.value = true
+      // 页面加载时选中第一个标题
+      if (!activeId.value) {
+        activeId.value = tocHeaders.value[0].slug
+      }
+    } else if (retries > 0) {
+      setTimeout(() => tryExtract(retries - 1, delay), delay)
     }
-    isReady.value = true
-  }, 400)
-})
+  }
+
+  // 等待过渡动画（约 300ms）后开始尝试
+  setTimeout(() => {
+    tryExtract()
+  }, 300)
+}, { immediate: true })
 
 onUnmounted(() => {
   observer?.disconnect()
