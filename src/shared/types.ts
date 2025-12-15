@@ -183,6 +183,19 @@ export interface LayoutConfig {
   navHeight?: number
   /** 最大内容宽度，默认 1400px */
   maxWidth?: number
+  /** 
+   * 内容区域宽度，支持百分比或固定像素值
+   * 例如: '100%', '1200px', '90vw'
+   * 默认: '100%'（铺满可用空间）
+   */
+  contentWidth?: string
+  /**
+   * 导航栏是否与内容宽度保持一致
+   * true: 导航栏宽度跟随 contentWidth
+   * false: 导航栏始终 100% 宽度
+   * 默认: true
+   */
+  navFullWidth?: boolean
 }
 
 export interface ThemeLogo {

@@ -237,7 +237,10 @@ export default defineConfig({
       outlineWidth: 220,
       contentGap: 32,
       navHeight: 64,
-      maxWidth: 1400
+      maxWidth: 1580,
+      // 内容宽度：支持百分比或固定像素值
+      // 例如: '100%'（铺满）, '1200px'（固定宽度）, '90vw'（视口宽度）
+      contentWidth: '100%'
     },
 
     // 导航栏 - 点击后跳转到侧边栏第一个页面

@@ -98,13 +98,17 @@ watch(() => route.path, () => {
 
 // 布局配置
 const layoutConfig = computed(() => {
-  const config = (theme.value as { layout?: { sidebarWidth?: number; outlineWidth?: number; contentGap?: number; navHeight?: number; maxWidth?: number } }).layout || {}
+  const config = (theme.value as { layout?: { sidebarWidth?: number; outlineWidth?: number; contentGap?: number; navHeight?: number; maxWidth?: number; contentWidth?: string; navFullWidth?: boolean } }).layout || {}
   return {
     sidebarWidth: config.sidebarWidth || 260,
     outlineWidth: config.outlineWidth || 220,
     contentGap: config.contentGap || 32,
     navHeight: config.navHeight || 64,
-    maxWidth: config.maxWidth || 1400
+    maxWidth: config.maxWidth || 1400,
+    // 内容宽度：支持百分比或固定像素值
+    contentWidth: config.contentWidth || '100%',
+    // 导航栏是否铺满宽度（默认跟随内容宽度）
+    navFullWidth: config.navFullWidth !== false
   }
 })
 
@@ -114,7 +118,9 @@ const layoutStyles = computed(() => ({
   '--ldoc-outline-width': `${layoutConfig.value.outlineWidth}px`,
   '--ldoc-content-gap': `${layoutConfig.value.contentGap}px`,
   '--ldoc-nav-height': `${layoutConfig.value.navHeight}px`,
-  '--ldoc-layout-max-width': `${layoutConfig.value.maxWidth}px`
+  '--ldoc-layout-max-width': `${layoutConfig.value.maxWidth}px`,
+  '--ldoc-content-width': layoutConfig.value.contentWidth,
+  '--ldoc-nav-full-width': layoutConfig.value.navFullWidth ? '1' : '0'
 }))
 
 // 是否为首页
@@ -349,13 +355,11 @@ onUnmounted(() => {
   }
 }
 
-/* 响应式 - 大屏设备 */
-@media (min-width: 1600px) {
-  .ldoc-layout-content {
-    max-width: var(--ldoc-layout-max-width, 1440px);
-    margin: 0 auto;
-    width: 100%;
-  }
+/* 内容区域宽度控制 */
+.ldoc-layout-content {
+  width: var(--ldoc-content-width, 100%);
+  max-width: var(--ldoc-layout-max-width, 1440px);
+  margin: 0 auto;
 }
 
 /* 有侧边栏时的布局 */

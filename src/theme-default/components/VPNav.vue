@@ -430,8 +430,10 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  max-width: 100%;
-  margin: 0;
+  /* 导航栏宽度跟随内容宽度配置 */
+  width: var(--ldoc-content-width, 100%);
+  max-width: var(--ldoc-layout-max-width, 1440px);
+  margin: 0 auto;
   padding: 0;
 }
 

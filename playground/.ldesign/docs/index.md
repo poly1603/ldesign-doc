@@ -2,7 +2,7 @@
 layout: home
 title: LDoc 现代化文档框架
 hero:
-  name: LDesign Doc
+  name: LDesign Doc1
   text: 现代化文档生成框架
   tagline: 基于 Vite，支持 Vue/React，开箱即用
   canvas:
