@@ -1,6 +1,6 @@
 {
   "name": "@ldesign/doc",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "LDesign 文档系统 - 支持 Vue/React 组件渲染、主题系统、插件系统的现代化文档框架",
   "type": "module",
   "exports": {
@@ -72,7 +72,8 @@
     "build:types": "tsc --emitDeclarationOnly",
     "preview": "node bin/ldoc.js preview",
     "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx,.vue"
+    "lint": "eslint src --ext .ts,.tsx,.vue",
+    "release": "pnpm publish --no-git-checks --force"
   },
   "peerDependencies": {
     "react": "^18.0.0",
@@ -150,5 +151,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ldesign/doc"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "http://npm.longrise.cn:6286/"
   }
 }
