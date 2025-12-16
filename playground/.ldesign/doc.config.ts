@@ -65,6 +65,17 @@ export default defineConfig({
   themeConfig: {
     logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
     siteTitle: 'LDesign',
+    // 顶部公告栏配置
+    announcement: {
+      content: [
+        { text: '🎉 <strong>LDoc 1.0</strong> 正式发布！全新的文档体验，欢迎体验！', link: '/guide/' },
+        { text: '✨ 支持 Vue / React 组件实时预览', link: '/guide/markdown' },
+        { text: '🚀 基于 Vite 的极速开发体验' }
+      ],
+      type: 'info',
+      closable: true,
+      storageKey: 'ldoc-v1.0-new'
+    },
     nav: zhNav,
     sidebar: zhSidebar,
 

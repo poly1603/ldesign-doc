@@ -4,9 +4,10 @@
  * 这个文件导出所有内置插件的客户端配置（slots、globalComponents 等）
  * 将被虚拟模块导入
  */
-import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport, watch, nextTick, inject } from 'vue'
+import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport, watch, nextTick, inject, Transition } from 'vue'
 import type { PluginSlots, PluginGlobalComponent } from '../shared/types'
 import { useRoute } from 'vue-router'
+import { siteDataSymbol } from '../client/composables'
 
 // ============== 返回顶部按钮 ==============
 // 注意：已禁用此组件，因为 Layout.vue 已经有 VPBackToTop 组件
@@ -285,7 +286,7 @@ const TabsInitializer = defineComponent({
 const AnnouncementBar = defineComponent({
   name: 'LDocAnnouncement',
   props: {
-    content: { type: String, default: '' },
+    content: { type: [String, Array], default: '' },
     contentEn: { type: String, default: '' },
     type: { type: String, default: 'info' },
     closable: { type: Boolean, default: true },
@@ -294,31 +295,129 @@ const AnnouncementBar = defineComponent({
   setup(props) {
     const visible = ref(true)
     const route = useRoute()
+    const siteData = inject(siteDataSymbol)
+    const currentIndex = ref(0)
+
+    // 标准化内容项接口
+    interface AnnouncementItem {
+      text: string
+      link?: string
+    }
+
+    // 获取最终配置
+    const config = computed(() => {
+      // 1. 优先使用 props
+      if (props.content || props.contentEn) return props
+
+      // 2. 尝试从 themeConfig 获取
+      const themeConfig = siteData?.value?.themeConfig || {}
+      return (themeConfig as any).announcement || null
+    })
 
     // 检测当前是否为英文环境
     const isEnglish = computed(() => {
       return route.path.startsWith('/en/')
     })
 
-    // 根据语言环境选择内容
-    const displayContent = computed(() => {
-      if (isEnglish.value && props.contentEn) {
-        return props.contentEn
+    // 获取当前展示的内容列表
+    const contentList = computed<AnnouncementItem[]>(() => {
+      if (!config.value) return []
+
+      const rawContent = (isEnglish.value && config.value.contentEn)
+        ? config.value.contentEn
+        : config.value.content
+
+      if (!rawContent) return []
+
+      if (Array.isArray(rawContent)) {
+        return rawContent.map(item => {
+          if (typeof item === 'string') return { text: item }
+          return item
+        })
       }
-      return props.content
+
+      return [{ text: rawContent }]
+    })
+
+    // 定时滚动逻辑
+    let timer: any
+
+    const startTimer = () => {
+      if (contentList.value.length <= 1) return
+      clearInterval(timer)
+      timer = setInterval(() => {
+        currentIndex.value = (currentIndex.value + 1) % contentList.value.length
+      }, 3000)
+    }
+
+    const stopTimer = () => {
+      clearInterval(timer)
+    }
+
+    watch(() => contentList.value.length, () => {
+      currentIndex.value = 0
+      startTimer()
+    }, { immediate: true })
+
+    onUnmounted(() => {
+      stopTimer()
     })
 
     onMounted(() => {
-      if (props.storageKey) {
-        const closed = localStorage.getItem(`ldoc-announcement-${props.storageKey}`)
+      const storageKey = config.value?.storageKey
+      if (storageKey) {
+        const closed = localStorage.getItem(`ldoc-announcement-${storageKey}`)
         if (closed === 'true') visible.value = false
+      }
+
+      // 注入动画样式
+      const styleId = 'ldoc-announcement-style'
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style')
+        style.id = styleId
+        style.textContent = `
+          .ldoc-slide-up-enter-active,
+          .ldoc-slide-up-leave-active {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .ldoc-slide-up-enter-from {
+            opacity: 0;
+            transform: translateY(100%);
+          }
+          .ldoc-slide-up-leave-to {
+            opacity: 0;
+            transform: translateY(-100%);
+          }
+          .ldoc-announcement-content {
+            position: relative;
+            height: 24px;
+            overflow: hidden;
+            flex: 1;
+            display: grid;
+            place-items: center;
+          }
+          .ldoc-announcement-item {
+            grid-area: 1 / 1;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .ldoc-announcement-link:hover {
+            text-decoration: underline;
+            opacity: 0.9;
+          }
+        `
+        document.head.appendChild(style)
       }
     })
 
     const close = () => {
       visible.value = false
-      if (props.storageKey) {
-        localStorage.setItem(`ldoc-announcement-${props.storageKey}`, 'true')
+      const storageKey = config.value?.storageKey
+      if (storageKey) {
+        localStorage.setItem(`ldoc-announcement-${storageKey}`, 'true')
       }
     }
 
@@ -329,90 +428,82 @@ const AnnouncementBar = defineComponent({
       error: { bg: '#fee2e2', text: '#dc2626' }
     }
 
-    // 检测是否为移动端
-    const isMobile = ref(false)
-    const checkMobile = () => {
-      isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
-    }
-
-    onMounted(() => {
-      checkMobile()
-      window.addEventListener('resize', checkMobile)
-    })
-
-    onUnmounted(() => {
-      window.removeEventListener('resize', checkMobile)
-    })
-
     return () => {
-      if (!visible.value || !displayContent.value) return null
+      if (!visible.value || contentList.value.length === 0) return null
 
-      const color = colors[props.type] || colors.info
+      const currentConfig = config.value || {}
+      const color = colors[currentConfig.type || 'info'] || colors.info
+      const showClose = currentConfig.closable !== false
 
-      // 移动端使用跑马灯效果
-      const contentStyle = isMobile.value ? {
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        animation: 'ldoc-marquee 15s linear infinite',
-        paddingLeft: '100%'
-      } : {}
+      const currentItem = contentList.value[currentIndex.value]
 
       return h('div', {
         class: 'ldoc-announcement-bar',
         style: {
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           gap: '12px',
           padding: '10px 16px',
           backgroundColor: color.bg,
           color: color.text,
           fontSize: '14px',
           fontWeight: '500',
-          overflow: 'hidden',
-          position: 'relative'
-        }
+          position: 'relative',
+          minHeight: '44px',
+          zIndex: 20
+        },
+        onMouseenter: stopTimer,
+        onMouseleave: startTimer
       }, [
-        // 内容区域
-        h('div', {
-          style: {
-            flex: 1,
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            minWidth: 0
-          }
-        }, [
-          h('span', {
-            innerHTML: displayContent.value,
-            style: contentStyle
+        // 内容区域容器
+        h('div', { class: 'ldoc-announcement-content' }, [
+          h(Transition, { name: 'ldoc-slide-up' }, {
+            default: () => {
+              if (!currentItem) return null
+
+              const contentVNode = h('span', {
+                innerHTML: currentItem.text
+              })
+
+              // 如果有链接，包裹 a 标签
+              if (currentItem.link) {
+                return h('a', {
+                  key: currentIndex.value,
+                  href: currentItem.link,
+                  class: 'ldoc-announcement-item ldoc-announcement-link',
+                  style: { color: 'inherit', textDecoration: 'none' }
+                }, [contentVNode])
+              }
+
+              return h('div', {
+                key: currentIndex.value,
+                class: 'ldoc-announcement-item'
+              }, [contentVNode])
+            }
           })
         ]),
+
         // 关闭按钮
-        props.closable && h('button', {
+        showClose && h('button', {
           onClick: close,
           style: {
-            padding: '4px 8px',
+            position: 'absolute',
+            right: '16px',
+            padding: '4px',
             border: 'none',
             background: 'transparent',
             color: color.text,
             cursor: 'pointer',
-            flexShrink: 0,
-            fontSize: '16px',
+            fontSize: '18px',
             lineHeight: 1,
-            opacity: 0.7,
-            transition: 'opacity 0.2s'
+            opacity: 0.6,
+            transition: 'opacity 0.2s',
+            zIndex: 10
           },
           onMouseenter: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '1' },
-          onMouseleave: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '0.7' }
-        }, '×'),
-        // 注入跑马灯动画 CSS
-        isMobile.value && h('style', {}, `
-          @keyframes ldoc-marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-          }
-        `)
+          onMouseleave: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '0.6' }
+        }, '×')
       ])
     }
   }
@@ -554,8 +645,8 @@ export interface BuiltinPluginConfig {
   backToTop?: boolean
   lightbox?: boolean
   announcement?: {
-    content: string
-    contentEn?: string
+    content: string | string[]
+    contentEn?: string | string[]
     type?: 'info' | 'warning' | 'success' | 'error'
     closable?: boolean
     storageKey?: string
@@ -581,12 +672,10 @@ export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
     ]
   }
 
-  // 公告栏
-  if (config.announcement) {
-    slots['layout-top'] = [
-      { component: AnnouncementBar, props: config.announcement, order: -100 }
-    ]
-  }
+  // 公告栏 - 始终添加，组件内部决定是否显示
+  slots['layout-top'] = [
+    { component: AnnouncementBar, props: config.announcement || {}, order: -100 }
+  ]
 
   // KaTeX 数学公式渲染
   const bottomSlots = slots['layout-bottom'] || []
@@ -626,14 +715,7 @@ export function getBuiltinComponents(): PluginGlobalComponent[] {
 export default {
   slots: getBuiltinSlots({
     backToTop: true,
-    lightbox: true,
-    announcement: {
-      content: '🎉 <strong>LDoc 1.0</strong> 正式发布！全新的文档体验，欢迎体验！',
-      contentEn: '🎉 <strong>LDoc 1.0</strong> is released! A brand new documentation experience, try it now!',
-      type: 'info',
-      closable: true,
-      storageKey: 'ldoc-v1.0'
-    }
+    lightbox: true
   }),
   globalComponents: getBuiltinComponents()
 }

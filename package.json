@@ -1,6 +1,6 @@
 {
   "name": "@ldesign/doc",
-  "version": "0.0.6",
+  "version": "0.0.10",
   "description": "LDesign 文档系统 - 支持 Vue/React 组件渲染、主题系统、插件系统的现代化文档框架",
   "type": "module",
   "exports": {

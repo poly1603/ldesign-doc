@@ -95,9 +95,9 @@ const is4K = ref(false)
 
 const checkBreakpoints = () => {
   if (typeof window === 'undefined') return
-  
+
   const width = window.innerWidth
-  
+
   // 移动端: < 768px
   isMobile.value = width < 768
   // 平板: 768px - 1023px
@@ -213,7 +213,7 @@ const handleCopyClick = async (e: Event) => {
   const htmlCode = copyBtn.dataset.code
 
   let decodedCode = ''
-  
+
   if (base64Code) {
     // Base64 解码
     try {
@@ -293,10 +293,14 @@ onUnmounted(() => {
   }
 }
 
+.has-sidebar .ldoc-main {
+  padding: 24px;
+}
+
 .ldoc-main {
   flex: 1;
   min-width: 0;
-  padding: 24px;
+  padding: 24px 24px 24px 0;
 }
 
 /* 首页样式 */
@@ -384,7 +388,7 @@ onUnmounted(() => {
   }
 
   /* 移动端侧边栏固定定位，不占用布局空间 */
-  .ldoc-layout-content > .vp-sidebar,
+  .ldoc-layout-content>.vp-sidebar,
   .ldoc-layout-content :deep(.vp-sidebar) {
     position: fixed !important;
     top: var(--ldoc-nav-height, 64px);
@@ -396,13 +400,13 @@ onUnmounted(() => {
     background: var(--ldoc-c-bg);
   }
 
-  .ldoc-layout-content > .vp-sidebar.open,
+  .ldoc-layout-content>.vp-sidebar.open,
   .ldoc-layout-content :deep(.vp-sidebar.open) {
     transform: translateX(0);
   }
 
   /* 移动端隐藏右侧大纲 */
-  .ldoc-layout-content > .vp-outline,
+  .ldoc-layout-content>.vp-outline,
   .ldoc-layout-content :deep(.vp-outline) {
     display: none !important;
   }
@@ -440,6 +444,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1280px) {
+
   /* 当TOC隐藏时，main 仍然自适应 */
   .ldoc-layout.has-sidebar .ldoc-main {
     padding-left: var(--ldoc-content-gap, 32px);
@@ -601,19 +606,20 @@ onUnmounted(() => {
 
 /* ==================== 触摸设备优化 ==================== */
 @media (hover: none) and (pointer: coarse) {
+
   /* 增大可点击区域 */
   .ldoc-layout a,
   .ldoc-layout button {
     min-height: var(--ldoc-touch-target, 44px);
     min-width: var(--ldoc-touch-target, 44px);
   }
-  
+
   /* 移除 hover 效果 */
   .ldoc-layout a:hover,
   .ldoc-layout button:hover {
     transform: none;
   }
-  
+
   /* 添加触摸反馈 */
   .ldoc-layout a:active,
   .ldoc-layout button:active {
@@ -627,13 +633,13 @@ onUnmounted(() => {
     padding-top: env(safe-area-inset-top);
     height: calc(var(--ldoc-nav-height, 56px) + env(safe-area-inset-top));
   }
-  
+
   .ldoc-layout.is-mobile .vp-sidebar {
     padding-left: env(safe-area-inset-left);
     top: calc(var(--ldoc-nav-height, 56px) + env(safe-area-inset-top)) !important;
     height: calc(100vh - var(--ldoc-nav-height, 56px) - env(safe-area-inset-top)) !important;
   }
-  
+
   .ldoc-layout.is-mobile .ldoc-main {
     padding-left: max(env(safe-area-inset-left), 12px);
     padding-right: max(env(safe-area-inset-right), 12px);
@@ -643,6 +649,7 @@ onUnmounted(() => {
 
 /* ==================== 打印样式优化 ==================== */
 @media print {
+
   .ldoc-layout .vp-nav,
   .ldoc-layout .vp-sidebar,
   .ldoc-layout .vp-outline,
@@ -651,13 +658,13 @@ onUnmounted(() => {
   .ldoc-layout .ldoc-comment {
     display: none !important;
   }
-  
+
   .ldoc-layout .ldoc-main {
     padding: 0 !important;
     margin: 0 !important;
     max-width: 100% !important;
   }
-  
+
   .ldoc-layout .vp-doc-body {
     font-size: 12pt;
     line-height: 1.5;
@@ -666,6 +673,7 @@ onUnmounted(() => {
 
 /* ==================== 减少动画偏好 ==================== */
 @media (prefers-reduced-motion: reduce) {
+
   .ldoc-layout,
   .ldoc-layout * {
     animation-duration: 0.01ms !important;

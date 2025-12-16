@@ -7,12 +7,20 @@ import pc from 'picocolors'
 import * as logger from './logger'
 
 // 版本号 - 构建时会被替换或从包信息获取
-const version = '1.0.0'
+const version = '0.0.10'
 
 const cli = cac('ldoc')
 
 // 版本信息
 cli.version(version)
+
+// version 命令
+cli
+  .command('version', 'Show version')
+  .action(() => {
+    logger.printBanner(true)
+    console.log()
+  })
 
 // dev 命令
 cli

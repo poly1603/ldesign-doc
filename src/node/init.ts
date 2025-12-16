@@ -144,7 +144,11 @@ import {
   progressPlugin,
   copyCodePlugin,
   imageViewerPlugin,
-  readingTimePlugin
+  readingTimePlugin,
+  wordCountPlugin,
+  lastUpdatedPlugin,
+  demoPlugin,
+  commentPlugin
 } from '@ldesign/doc/plugins'
 
 export default defineConfig({
@@ -153,6 +157,8 @@ export default defineConfig({
   lang: 'zh-CN',
 
   themeConfig: {
+    logo: 'https://wuhan.yxybb.com/ldesign/source/npm-logo.svg',
+    siteTitle: '${projectName}',
     nav: [
       { text: '首页', link: '/' },
       { text: '指南', link: '/guide/' },
@@ -182,11 +188,32 @@ export default defineConfig({
   },
 
   plugins: [
+    // 搜索插件
     searchPlugin({ hotkeys: ['/', 'Ctrl+K'] }),
+    // 顶部进度条
     progressPlugin({ color: 'var(--ldoc-c-brand)', height: 3 }),
+    // 代码复制
     copyCodePlugin({ showLanguage: true }),
+    // 图片查看器
     imageViewerPlugin({ zoom: true }),
-    readingTimePlugin({ wordsPerMinute: 300 })
+    // 阅读时间
+    readingTimePlugin({ wordsPerMinute: 300 }),
+    // 字数统计
+    wordCountPlugin(),
+    // 最后更新时间
+    lastUpdatedPlugin({ useGitTime: false }),
+    // 组件演示
+    demoPlugin({ defaultTitle: '示例', defaultExpanded: false }),
+    // 评论系统 (默认关闭，取消注释以启用)
+    /*
+    commentPlugin({
+      provider: 'artalk',
+      artalk: {
+        server: 'https://your-artalk-server.com',
+        site: 'Your Site Name'
+      }
+    })
+    */
   ]
 })
 `
@@ -208,9 +235,6 @@ export default defineConfig({
 
   // 更新或创建 package.json 脚本
   await updatePackageJson(targetDir, pkgPath)
-
-  // 打印成功信息
-  printSuccess()
 }
 
 /**
@@ -267,7 +291,7 @@ async function updatePackageJson(targetDir: string, pkgPath: string): Promise<vo
       pkg.dependencies = pkg.dependencies || {}
 
       if (!pkg.dependencies['@ldesign/doc'] && !pkg.devDependencies['@ldesign/doc']) {
-        pkg.devDependencies['@ldesign/doc'] = '^0.0.6'
+        pkg.devDependencies['@ldesign/doc'] = '^0.0.10'
         console.log(pc.gray(`  Added: @ldesign/doc to devDependencies`))
         scriptsChanged = true
       }
@@ -292,32 +316,13 @@ async function updatePackageJson(targetDir: string, pkgPath: string): Promise<vo
         'docs:preview': 'ldoc preview'
       },
       devDependencies: {
-        '@ldesign/doc': '^0.0.6'
+        '@ldesign/doc': '^0.0.10'
       }
     }
 
     writeFileSync(pkgPath, JSON.stringify(newPkg, null, 2) + '\n')
     console.log(pc.green('  ✓ Created package.json'))
   }
-}
-
-/**
- * 打印成功信息
- */
-function printSuccess(): void {
-  console.log()
-  console.log(pc.green('  ✓ 文档系统初始化完成！'))
-  console.log()
-  console.log('  下一步:')
-  console.log()
-  console.log(`  1. 安装依赖:`)
-  console.log(pc.cyan(`     pnpm install`))
-  console.log()
-  console.log(`  2. 启动开发服务器:`)
-  console.log(pc.cyan(`     pnpm docs:dev`))
-  console.log()
-  console.log(pc.gray('  📁 文档目录: .ldesign/docs/'))
-  console.log(pc.gray('  📄 配置文件: .ldesign/doc.config.ts'))
 }
 
 /**
@@ -439,9 +444,6 @@ pnpm docs:dev
 
   // 更新 package.json
   await updatePackageJson(targetDir, pkgPath)
-
-  // 打印成功信息
-  printSuccess()
 }
 
 export default initProject
