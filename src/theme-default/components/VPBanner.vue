@@ -550,6 +550,18 @@ watch(() => props.effect, init)
   height: v-bind(height);
   overflow: hidden;
   background: var(--ldoc-c-bg-soft);
+  /* 确保 Banner 铺满屏幕，无边距 */
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保父容器中 Banner 铺满宽度 */
+:global(.vp-home) .vp-banner,
+:global(.ldoc-home) .vp-banner,
+:global(.is-home) .vp-banner {
+  margin-left: calc(-1 * var(--ldoc-content-gap, 24px));
+  margin-right: calc(-1 * var(--ldoc-content-gap, 24px));
+  width: calc(100% + 2 * var(--ldoc-content-gap, 24px));
 }
 
 .vp-banner-canvas {
@@ -625,10 +637,20 @@ watch(() => props.effect, init)
   color: var(--ldoc-c-brand);
 }
 
+/* 移动端响应式 */
 @media (max-width: 768px) {
   .vp-banner {
     height: auto;
     min-height: 200px;
+    /* 移动端铺满屏幕 */
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+    border-radius: 0;
+  }
+
+  .vp-banner-content {
+    padding: 24px 16px;
   }
 
   .vp-banner-title {
@@ -637,6 +659,42 @@ watch(() => props.effect, init)
 
   .vp-banner-description {
     font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .vp-banner-action {
+    padding: 12px 20px;
+    min-height: 44px;
+  }
+}
+
+/* 平板横屏 - 内容100%宽度 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .vp-banner {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+  }
+}
+
+/* 大屏幕 */
+@media (min-width: 1920px) {
+  .vp-banner-content {
+    padding: 48px;
+  }
+
+  .vp-banner-title {
+    font-size: 36px;
+  }
+
+  .vp-banner-description {
+    font-size: 18px;
+    max-width: 700px;
+  }
+
+  .vp-banner-action {
+    padding: 12px 28px;
+    font-size: 15px;
   }
 }
 </style>

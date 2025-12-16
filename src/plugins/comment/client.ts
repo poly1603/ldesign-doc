@@ -10,14 +10,71 @@ import type { PluginSlots, PluginGlobalComponent } from '../../shared/types'
 // ============== 样式注入 ==============
 
 const COMMENT_STYLES = `
-/* 评论容器 */
-.ldoc-comment { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--ldoc-c-divider, #e5e7eb); }
-.ldoc-comment__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.ldoc-comment__title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-weight: 600; color: var(--ldoc-c-text-1, #1f2937); }
-.ldoc-comment__title svg { color: var(--ldoc-c-brand, #3b82f6); }
-.ldoc-comment__container { min-height: 100px; }
+/* ==================== 评论系统 - 现代化设计 ==================== */
 
-/* Artalk 主题适配 (覆盖默认 CSS 变量) */
+/* 评论容器 */
+.ldoc-comment {
+  margin-top: clamp(32px, 5vw, 64px);
+  padding-top: clamp(24px, 4vw, 48px);
+  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb);
+}
+
+/* 评论头部 */
+.ldoc-comment__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(20px, 3vw, 32px);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ldoc-comment__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 700;
+  color: var(--ldoc-c-text-1, #1f2937);
+  letter-spacing: -0.02em;
+}
+
+.ldoc-comment__title svg {
+  color: var(--ldoc-c-brand, #3b82f6);
+  flex-shrink: 0;
+  width: clamp(20px, 3vw, 28px);
+  height: clamp(20px, 3vw, 28px);
+}
+
+.ldoc-comment__title-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.1));
+  color: var(--ldoc-c-brand, #3b82f6);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-left: 8px;
+}
+
+/* 评论容器 */
+.ldoc-comment__container {
+  min-height: 120px;
+  border-radius: var(--ldoc-radius-xl, 16px);
+  background: var(--ldoc-c-bg-soft, #f9fafb);
+  padding: clamp(16px, 3vw, 24px);
+  transition: all 0.3s ease;
+}
+
+.ldoc-comment__container:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== Artalk 主题适配 ==================== */
 .artalk {
   --at-color-main: var(--ldoc-c-brand) !important;
   --at-color-font: var(--ldoc-c-text-1) !important;
@@ -28,13 +85,114 @@ const COMMENT_STYLES = `
   --at-color-border: var(--ldoc-c-divider) !important;
   --at-color-bg: var(--ldoc-c-bg) !important;
   --at-color-bg-transl: rgba(255, 255, 255, 0) !important;
-  
-  /* 阴影与圆角 */
-  --at-border-radius: 8px !important;
-  
-  /* 输入框 */
-  --at-color-input-bg: var(--ldoc-c-bg-soft) !important;
+  --at-border-radius: 12px !important;
+  --at-color-input-bg: var(--ldoc-c-bg) !important;
   --at-color-input-text: var(--ldoc-c-text-1) !important;
+  font-family: inherit !important;
+}
+
+/* Artalk 输入框优化 */
+.artalk .atk-editor {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--ldoc-c-divider) !important;
+  transition: all 0.2s ease !important;
+}
+
+.artalk .atk-editor:focus-within {
+  border-color: var(--ldoc-c-brand) !important;
+  box-shadow: 0 0 0 3px var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.15)) !important;
+}
+
+.artalk .atk-editor-textarea {
+  min-height: 100px !important;
+  padding: 16px !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+/* Artalk 按钮优化 */
+.artalk .atk-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  min-height: 40px !important;
+  padding: 8px 20px !important;
+}
+
+.artalk .atk-btn-primary {
+  background: var(--ldoc-c-brand) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+.artalk .atk-btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+}
+
+/* Artalk 评论列表优化 */
+.artalk .atk-list {
+  margin-top: 24px !important;
+}
+
+.artalk .atk-comment {
+  padding: 20px !important;
+  margin-bottom: 16px !important;
+  background: var(--ldoc-c-bg) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--ldoc-c-divider) !important;
+  transition: all 0.2s ease !important;
+}
+
+.artalk .atk-comment:hover {
+  border-color: var(--ldoc-c-brand-light, #93c5fd) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Artalk 头像优化 */
+.artalk .atk-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.artalk .atk-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Artalk 用户名优化 */
+.artalk .atk-nick {
+  font-weight: 600 !important;
+  color: var(--ldoc-c-text-1) !important;
+  font-size: 15px !important;
+}
+
+/* Artalk 时间戳优化 */
+.artalk .atk-date {
+  font-size: 13px !important;
+  color: var(--ldoc-c-text-3) !important;
+}
+
+/* Artalk 评论内容优化 */
+.artalk .atk-content {
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  color: var(--ldoc-c-text-2) !important;
+  margin-top: 12px !important;
+}
+
+.artalk .atk-content p {
+  margin: 0 0 12px !important;
+}
+
+.artalk .atk-content p:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* 深色模式适配 */
@@ -45,26 +203,185 @@ const COMMENT_STYLES = `
   --at-color-border: var(--ldoc-c-divider) !important;
 }
 
-/* 隐藏 Artalk 自带的深色模式切换按钮，交由文档系统控制 */
+.dark .artalk .atk-editor {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .artalk .atk-comment:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 隐藏 Artalk 自带的深色模式切换按钮 */
 .atk-header .atk-dark-mode-btn { display: none !important; }
 
-/* 状态组件 */
-.ldoc-comment__loading { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 40px; color: var(--ldoc-c-text-3, #9ca3af); font-size: 14px; }
-.ldoc-comment__spinner { width: 20px; height: 20px; border: 2px solid var(--ldoc-c-divider, #e5e7eb); border-top-color: var(--ldoc-c-brand, #3b82f6); border-radius: 50%; animation: ldoc-comment-spin 0.8s linear infinite; }
-@keyframes ldoc-comment-spin { to { transform: rotate(360deg); } }
-.ldoc-comment__error-box { display: flex; flex-direction: column; align-items: center; padding: 40px; background: var(--ldoc-c-bg-soft, #fef2f2); border: 1px solid var(--ldoc-c-divider, #fecaca); border-radius: 16px; text-align: center; }
-.ldoc-comment__error-icon { margin-bottom: 16px; color: #ef4444; opacity: 0.8; }
-.ldoc-comment__error-title { font-size: 16px; font-weight: 600; color: #dc2626; margin: 0 0 8px; }
-.ldoc-comment__error-text { font-size: 14px; color: #b91c1c; margin-bottom: 24px; opacity: 0.8; }
-.ldoc-comment__retry { padding: 10px 24px; background: var(--ldoc-c-brand, #3b82f6); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-.ldoc-comment__retry:hover { opacity: 0.9; transform: translateY(-1px); }
+/* ==================== Giscus 主题适配 ==================== */
+.giscus {
+  width: 100%;
+}
 
-/* 深色模式状态组件 */
+.giscus-frame {
+  border-radius: 12px !important;
+  border: none !important;
+}
+
+/* ==================== 加载状态 ==================== */
+.ldoc-comment__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: clamp(40px, 8vw, 80px) 24px;
+  color: var(--ldoc-c-text-3, #9ca3af);
+  text-align: center;
+}
+
+.ldoc-comment__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--ldoc-c-divider, #e5e7eb);
+  border-top-color: var(--ldoc-c-brand, #3b82f6);
+  border-radius: 50%;
+  animation: ldoc-comment-spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.ldoc-comment__loading-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ldoc-c-text-2);
+}
+
+@keyframes ldoc-comment-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== 错误状态 ==================== */
+.ldoc-comment__error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(32px, 6vw, 56px) clamp(20px, 4vw, 40px);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--ldoc-radius-xl, 16px);
+  text-align: center;
+}
+
+.ldoc-comment__error-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  color: #ef4444;
+  opacity: 0.8;
+  animation: ldoc-error-shake 0.5s ease-in-out;
+}
+
+@keyframes ldoc-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.ldoc-comment__error-title {
+  font-size: clamp(16px, 2vw, 18px);
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 8px;
+}
+
+.ldoc-comment__error-text {
+  font-size: 14px;
+  color: #b91c1c;
+  margin-bottom: 24px;
+  opacity: 0.8;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+.ldoc-comment__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.ldoc-comment__retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.ldoc-comment__retry:active {
+  transform: translateY(0);
+}
+
+/* ==================== 深色模式状态组件 ==================== */
 .dark .ldoc-comment__title { color: var(--ldoc-c-text-1, #f9fafb); }
-.dark .ldoc-comment__error-box { background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.2); }
+.dark .ldoc-comment__container { background: var(--ldoc-c-bg-soft, #1f1f1f); }
+.dark .ldoc-comment__error-box {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
 .dark .ldoc-comment__error-icon { color: #f87171; }
 .dark .ldoc-comment__error-title { color: #fca5a5; }
 .dark .ldoc-comment__error-text { color: #fecaca; }
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 768px) {
+  .ldoc-comment__container {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .artalk .atk-comment {
+    padding: 14px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .artalk .atk-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+  }
+  
+  .artalk .atk-editor-textarea {
+    min-height: 80px !important;
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ldoc-comment__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ldoc-comment__title-badge {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .ldoc-comment__retry {
+    min-height: 48px;
+    padding: 14px 32px;
+  }
+  
+  .artalk .atk-btn {
+    min-height: 48px !important;
+  }
+}
 `
 
 // 注入样式（只执行一次）
@@ -418,44 +735,76 @@ const CommentBox = defineComponent({
     }
 
     return () => h('div', { class: 'ldoc-comment' }, [
-      // 标题
+      // 标题区域
       h('div', { class: 'ldoc-comment__header' }, [
         h('h3', { class: 'ldoc-comment__title' }, [
-          h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-            h('path', { d: 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z' })
+          // 聊天气泡图标
+          h('svg', {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            'stroke-width': 2,
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round'
+          }, [
+            h('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
           ]),
-          ' ',
-          props.options.title || '评论'
+          props.options.title || '评论交流'
         ])
       ]),
 
-      // 加载状态
+      // 评论容器 - 必须始终存在以便加载评论系统
+      h('div', {
+        ref: containerRef,
+        class: 'ldoc-comment__container',
+        style: { display: error.value ? 'none' : 'block' }
+      }),
+
+      // 加载状态 - 更现代的设计
       loading.value && h('div', { class: 'ldoc-comment__loading' }, [
         h('div', { class: 'ldoc-comment__spinner' }),
-        '评论加载中...'
+        h('span', { class: 'ldoc-comment__loading-text' }, '正在加载评论系统...')
       ]),
 
-      // 错误提示
+      // 错误提示 - 更友好的设计
       error.value && h('div', { class: 'ldoc-comment__error-box' }, [
-        h('svg', { class: 'ldoc-comment__error-icon', width: 48, height: 48, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.5 }, [
+        h('svg', {
+          class: 'ldoc-comment__error-icon',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          'stroke-width': 1.5,
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round'
+        }, [
           h('circle', { cx: 12, cy: 12, r: 10 }),
           h('line', { x1: 12, y1: 8, x2: 12, y2: 12 }),
           h('line', { x1: 12, y1: 16, x2: 12.01, y2: 16 })
         ]),
-        h('h4', { class: 'ldoc-comment__error-title' }, '无法加载评论'),
+        h('h4', { class: 'ldoc-comment__error-title' }, '评论加载失败'),
         h('div', { class: 'ldoc-comment__error-text' }, error.value),
         h('button', {
           class: 'ldoc-comment__retry',
           onClick: loadComment
-        }, '重新加载')
-      ]),
-
-      // 评论容器（各个 SDK 会渲染到这里）
-      h('div', {
-        ref: containerRef,
-        class: 'ldoc-comment__container',
-        style: { minHeight: loading.value ? '0' : '200px' }
-      })
+        }, [
+          h('svg', {
+            width: 16,
+            height: 16,
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            'stroke-width': 2,
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round'
+          }, [
+            h('path', { d: 'M21 2v6h-6' }),
+            h('path', { d: 'M3 12a9 9 0 0 1 15-6.7L21 8' }),
+            h('path', { d: 'M3 22v-6h6' }),
+            h('path', { d: 'M21 12a9 9 0 0 1-15 6.7L3 16' })
+          ]),
+          '重新加载'
+        ])
+      ])
     ])
   }
 })

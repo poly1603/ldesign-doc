@@ -1,6 +1,14 @@
 <template>
-  <div class="ldoc-layout" :class="{ 'has-sidebar': hasSidebar, 'is-404': is404, 'is-home': isHome, 'is-mobile': isMobile }"
-    :style="layoutStyles">
+  <div class="ldoc-layout" :class="{
+    'has-sidebar': hasSidebar,
+    'is-404': is404,
+    'is-home': isHome,
+    'is-mobile': isMobile,
+    'is-tablet': isTablet,
+    'is-desktop': isDesktop,
+    'is-2k': is2K,
+    'is-4k': is4K
+  }" :style="layoutStyles">
     <!-- 布局顶部插槽（导航栏上方，可用于公告栏） -->
     <PluginSlot name="layout-top" />
 
@@ -78,17 +86,47 @@ const { frontmatter, theme } = useData()
 const route = useRoute()
 const sidebarItems = useSidebarItems()
 
-// 移动端检测
+// 响应式断点检测
 const isMobile = ref(false)
-const checkMobile = () => {
-  isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
+const isTablet = ref(false)
+const isDesktop = ref(true)
+const is2K = ref(false)
+const is4K = ref(false)
+
+const checkBreakpoints = () => {
+  if (typeof window === 'undefined') return
+  
+  const width = window.innerWidth
+  
+  // 移动端: < 768px
+  isMobile.value = width < 768
+  // 平板: 768px - 1023px
+  isTablet.value = width >= 768 && width < 1024
+  // 桌面: 1024px - 1919px
+  isDesktop.value = width >= 1024 && width < 1920
+  // 2K: 1920px - 2559px
+  is2K.value = width >= 1920 && width < 2560
+  // 4K: >= 2560px
+  is4K.value = width >= 2560
 }
+
+// 使用节流优化性能
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
+const throttledCheckBreakpoints = () => {
+  if (resizeTimer) return
+  resizeTimer = setTimeout(() => {
+    checkBreakpoints()
+    resizeTimer = null
+  }, 100)
+}
+
 onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
+  checkBreakpoints()
+  window.addEventListener('resize', throttledCheckBreakpoints)
 })
 onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
+  window.removeEventListener('resize', throttledCheckBreakpoints)
+  if (resizeTimer) clearTimeout(resizeTimer)
 })
 
 // 路由切换时滚动到顶部
@@ -442,9 +480,9 @@ onUnmounted(() => {
 }
 </style>
 
-<!-- 全局移动端样式 - 使用 JavaScript 检测的 .is-mobile 类 -->
+<!-- 全局响应式样式 - 使用 JavaScript 检测的断点类 -->
 <style>
-/* 移动端布局 - 通过 JS 检测应用 */
+/* ==================== 移动端布局 (< 768px) ==================== */
 .ldoc-layout.is-mobile .ldoc-layout-content {
   display: block !important;
   width: 100% !important;
@@ -452,28 +490,187 @@ onUnmounted(() => {
 
 .ldoc-layout.is-mobile .vp-sidebar {
   position: fixed !important;
-  top: var(--ldoc-nav-height, 64px) !important;
+  top: var(--ldoc-nav-height, 56px) !important;
   left: 0 !important;
-  width: var(--ldoc-sidebar-width, 260px) !important;
-  height: calc(100vh - var(--ldoc-nav-height, 64px)) !important;
+  width: var(--ldoc-sidebar-width, min(280px, 85vw)) !important;
+  height: calc(100vh - var(--ldoc-nav-height, 56px)) !important;
   transform: translateX(-100%) !important;
   z-index: 200 !important;
   background: var(--ldoc-c-bg) !important;
   border-right: 1px solid var(--ldoc-c-divider);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ldoc-layout.is-mobile .vp-sidebar.open {
   transform: translateX(0) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
 }
 
 .ldoc-layout.is-mobile .ldoc-main {
   width: 100% !important;
   max-width: 100vw !important;
   margin-left: 0 !important;
-  padding: 16px !important;
+  padding: clamp(12px, 4vw, 20px) !important;
 }
 
 .ldoc-layout.is-mobile .vp-outline {
   display: none !important;
+}
+
+/* 移动端侧边栏遮罩 */
+.ldoc-layout.is-mobile .sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  top: var(--ldoc-nav-height, 56px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.ldoc-layout.is-mobile .sidebar-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==================== 平板布局 (768px - 1023px) ==================== */
+.ldoc-layout.is-tablet .ldoc-layout-content {
+  padding: 0 clamp(16px, 3vw, 24px);
+}
+
+.ldoc-layout.is-tablet .vp-sidebar {
+  width: var(--ldoc-sidebar-width, 260px);
+}
+
+.ldoc-layout.is-tablet .vp-outline {
+  display: none !important;
+}
+
+.ldoc-layout.is-tablet .ldoc-main {
+  padding: clamp(16px, 3vw, 24px);
+}
+
+/* ==================== 桌面布局 (1024px - 1919px) ==================== */
+.ldoc-layout.is-desktop .ldoc-layout-content {
+  padding: 0 clamp(20px, 2vw, 32px);
+}
+
+.ldoc-layout.is-desktop .ldoc-main {
+  padding: clamp(20px, 2vw, 32px);
+}
+
+/* ==================== 2K 显示器布局 (1920px - 2559px) ==================== */
+.ldoc-layout.is-2k .ldoc-layout-content {
+  padding: 0 clamp(32px, 2vw, 48px);
+}
+
+.ldoc-layout.is-2k .ldoc-main {
+  padding: clamp(28px, 2vw, 40px);
+  font-size: 17px;
+}
+
+.ldoc-layout.is-2k .vp-doc-title {
+  font-size: clamp(34px, 2.5vw, 42px);
+}
+
+/* ==================== 4K 显示器布局 (>= 2560px) ==================== */
+.ldoc-layout.is-4k .ldoc-layout-content {
+  padding: 0 clamp(40px, 2vw, 64px);
+}
+
+.ldoc-layout.is-4k .ldoc-main {
+  padding: clamp(36px, 2vw, 56px);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.ldoc-layout.is-4k .vp-doc-title {
+  font-size: clamp(38px, 2.5vw, 52px);
+}
+
+.ldoc-layout.is-4k .vp-doc-body h2 {
+  font-size: clamp(26px, 2vw, 34px);
+}
+
+.ldoc-layout.is-4k .vp-doc-body h3 {
+  font-size: clamp(22px, 1.5vw, 28px);
+}
+
+/* ==================== 触摸设备优化 ==================== */
+@media (hover: none) and (pointer: coarse) {
+  /* 增大可点击区域 */
+  .ldoc-layout a,
+  .ldoc-layout button {
+    min-height: var(--ldoc-touch-target, 44px);
+    min-width: var(--ldoc-touch-target, 44px);
+  }
+  
+  /* 移除 hover 效果 */
+  .ldoc-layout a:hover,
+  .ldoc-layout button:hover {
+    transform: none;
+  }
+  
+  /* 添加触摸反馈 */
+  .ldoc-layout a:active,
+  .ldoc-layout button:active {
+    opacity: 0.7;
+  }
+}
+
+/* ==================== 安全区域适配 (刘海屏等) ==================== */
+@supports (padding: env(safe-area-inset-top)) {
+  .ldoc-layout.is-mobile .vp-nav {
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--ldoc-nav-height, 56px) + env(safe-area-inset-top));
+  }
+  
+  .ldoc-layout.is-mobile .vp-sidebar {
+    padding-left: env(safe-area-inset-left);
+    top: calc(var(--ldoc-nav-height, 56px) + env(safe-area-inset-top)) !important;
+    height: calc(100vh - var(--ldoc-nav-height, 56px) - env(safe-area-inset-top)) !important;
+  }
+  
+  .ldoc-layout.is-mobile .ldoc-main {
+    padding-left: max(env(safe-area-inset-left), 12px);
+    padding-right: max(env(safe-area-inset-right), 12px);
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+}
+
+/* ==================== 打印样式优化 ==================== */
+@media print {
+  .ldoc-layout .vp-nav,
+  .ldoc-layout .vp-sidebar,
+  .ldoc-layout .vp-outline,
+  .ldoc-layout .vp-back-to-top,
+  .ldoc-layout .vp-footer,
+  .ldoc-layout .ldoc-comment {
+    display: none !important;
+  }
+  
+  .ldoc-layout .ldoc-main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  .ldoc-layout .vp-doc-body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+}
+
+/* ==================== 减少动画偏好 ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .ldoc-layout,
+  .ldoc-layout * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

@@ -9,71 +9,14 @@ import type { PluginSlots, PluginGlobalComponent } from '../shared/types'
 import { useRoute } from 'vue-router'
 
 // ============== 返回顶部按钮 ==============
+// 注意：已禁用此组件，因为 Layout.vue 已经有 VPBackToTop 组件
+// 避免页面上出现两个返回顶部按钮
 
 const BackToTopButton = defineComponent({
   name: 'LDocBackToTop',
   setup() {
-    const visible = ref(false)
-    const threshold = 300
-
-    const checkScroll = () => {
-      visible.value = window.scrollY > threshold
-    }
-
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-
-    onMounted(() => {
-      window.addEventListener('scroll', checkScroll, { passive: true })
-      checkScroll()
-    })
-
-    onUnmounted(() => {
-      window.removeEventListener('scroll', checkScroll)
-    })
-
-    return () => h('div', {
-      class: 'ldoc-back-to-top',
-      style: {
-        position: 'fixed',
-        bottom: '40px',
-        right: '40px',
-        zIndex: 100,
-        opacity: visible.value ? 1 : 0,
-        visibility: visible.value ? 'visible' : 'hidden',
-        transform: visible.value ? 'translateY(0)' : 'translateY(10px)',
-        transition: 'all 0.3s ease'
-      }
-    }, [
-      h('button', {
-        title: '返回顶部',
-        onClick: scrollToTop,
-        style: {
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
-          border: 'none',
-          background: 'var(--ldoc-c-brand, #3b82f6)',
-          color: 'white',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-        }
-      }, [
-        h('svg', {
-          width: 20,
-          height: 20,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          'stroke-width': '2.5',
-          innerHTML: '<path d="M18 15l-6-6-6 6"/>'
-        })
-      ])
-    ])
+    // 返回空组件，避免重复
+    return () => null
   }
 })
 
@@ -386,35 +329,90 @@ const AnnouncementBar = defineComponent({
       error: { bg: '#fee2e2', text: '#dc2626' }
     }
 
+    // 检测是否为移动端
+    const isMobile = ref(false)
+    const checkMobile = () => {
+      isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
+    }
+
+    onMounted(() => {
+      checkMobile()
+      window.addEventListener('resize', checkMobile)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', checkMobile)
+    })
+
     return () => {
       if (!visible.value || !displayContent.value) return null
 
       const color = colors[props.type] || colors.info
 
+      // 移动端使用跑马灯效果
+      const contentStyle = isMobile.value ? {
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+        animation: 'ldoc-marquee 15s linear infinite',
+        paddingLeft: '100%'
+      } : {}
+
       return h('div', {
+        class: 'ldoc-announcement-bar',
         style: {
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'space-between',
           gap: '12px',
           padding: '10px 16px',
           backgroundColor: color.bg,
           color: color.text,
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: '500',
+          overflow: 'hidden',
+          position: 'relative'
         }
       }, [
-        h('span', { innerHTML: displayContent.value }),
+        // 内容区域
+        h('div', {
+          style: {
+            flex: 1,
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            minWidth: 0
+          }
+        }, [
+          h('span', {
+            innerHTML: displayContent.value,
+            style: contentStyle
+          })
+        ]),
+        // 关闭按钮
         props.closable && h('button', {
           onClick: close,
           style: {
-            padding: '4px',
+            padding: '4px 8px',
             border: 'none',
             background: 'transparent',
             color: color.text,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            flexShrink: 0,
+            fontSize: '16px',
+            lineHeight: 1,
+            opacity: 0.7,
+            transition: 'opacity 0.2s'
+          },
+          onMouseenter: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '1' },
+          onMouseleave: (e: MouseEvent) => { (e.target as HTMLElement).style.opacity = '0.7' }
+        }, '×'),
+        // 注入跑马灯动画 CSS
+        isMobile.value && h('style', {}, `
+          @keyframes ldoc-marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
           }
-        }, '✕')
+        `)
       ])
     }
   }

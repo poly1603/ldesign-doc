@@ -385,4 +385,217 @@ const formatDate = (timestamp: number) => {
   font-weight: 500;
   color: var(--ldoc-c-brand);
 }
+
+/* ==================== 响应式优化 ==================== */
+
+/* 移动端 (< 768px) */
+@media (max-width: 767px) {
+  .vp-doc {
+    padding: 16px 0;
+  }
+
+  .vp-doc-breadcrumb {
+    font-size: 13px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .vp-doc-title {
+    font-size: clamp(24px, 6vw, 28px);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .vp-doc-meta {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .vp-doc-body {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .vp-doc-body :deep(h2) {
+    font-size: 20px;
+    margin: 32px 0 12px;
+  }
+
+  .vp-doc-body :deep(h3) {
+    font-size: 17px;
+    margin: 24px 0 10px;
+  }
+
+  .vp-doc-body :deep(pre) {
+    margin: 12px -16px;
+    padding: 12px 16px;
+    border-radius: 0;
+    font-size: 12px;
+  }
+
+  .vp-doc-body :deep(table) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vp-doc-pagination {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .vp-doc-pagination-prev,
+  .vp-doc-pagination-next {
+    padding: 14px;
+  }
+
+  .vp-doc-pagination-next {
+    text-align: left;
+  }
+
+  .vp-doc-edit {
+    margin-top: 32px;
+    padding-top: 16px;
+  }
+}
+
+/* 平板 (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .vp-doc-title {
+    font-size: clamp(28px, 4vw, 32px);
+  }
+
+  .vp-doc-body :deep(h2) {
+    font-size: 22px;
+  }
+
+  .vp-doc-body :deep(h3) {
+    font-size: 18px;
+  }
+}
+
+/* 大屏幕 (>= 1920px) */
+@media (min-width: 1920px) {
+  .vp-doc {
+    padding: 32px 0;
+  }
+
+  .vp-doc-breadcrumb {
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+
+  .vp-doc-title {
+    font-size: clamp(36px, 2.5vw, 44px);
+    margin-bottom: 20px;
+  }
+
+  .vp-doc-meta {
+    margin-bottom: 28px;
+    font-size: 15px;
+  }
+
+  .vp-doc-body {
+    font-size: 17px;
+    line-height: 1.75;
+  }
+
+  .vp-doc-body :deep(h2) {
+    font-size: 28px;
+    margin: 56px 0 20px;
+  }
+
+  .vp-doc-body :deep(h3) {
+    font-size: 22px;
+    margin: 40px 0 16px;
+  }
+
+  .vp-doc-body :deep(p) {
+    margin: 20px 0;
+  }
+
+  .vp-doc-pagination {
+    gap: 24px;
+    margin-top: 48px;
+  }
+}
+
+/* 4K 显示器 (>= 2560px) */
+@media (min-width: 2560px) {
+  .vp-doc {
+    padding: 40px 0;
+  }
+
+  .vp-doc-title {
+    font-size: clamp(42px, 2.5vw, 56px);
+    margin-bottom: 24px;
+  }
+
+  .vp-doc-body {
+    font-size: 18px;
+    line-height: 1.8;
+  }
+
+  .vp-doc-body :deep(h2) {
+    font-size: 32px;
+    margin: 64px 0 24px;
+  }
+
+  .vp-doc-body :deep(h3) {
+    font-size: 26px;
+    margin: 48px 0 18px;
+  }
+
+  .vp-doc-body :deep(pre) {
+    padding: 20px;
+    font-size: 15px;
+  }
+
+  .vp-doc-body :deep(code) {
+    font-size: 0.92em;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .vp-doc-pagination-prev,
+  .vp-doc-pagination-next {
+    min-height: 60px;
+    padding: 16px;
+  }
+
+  .vp-doc-edit a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 0;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .vp-doc {
+    padding: 0;
+  }
+
+  .vp-doc-breadcrumb,
+  .vp-doc-meta,
+  .vp-doc-edit,
+  .vp-doc-pagination {
+    display: none;
+  }
+
+  .vp-doc-title {
+    font-size: 24pt;
+    margin-bottom: 12pt;
+  }
+
+  .vp-doc-body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+}
 </style>

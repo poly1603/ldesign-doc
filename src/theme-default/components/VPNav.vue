@@ -75,8 +75,8 @@
         </button>
 
         <!-- 语言切换 -->
-        <div v-if="locales && Object.keys(locales).length > 1" class="vp-nav-lang">
-          <button class="vp-nav-lang-trigger" title="切换语言">
+        <div v-if="locales && Object.keys(locales).length > 1" class="vp-nav-lang" :class="{ open: isLangMenuOpen }">
+          <button class="vp-nav-lang-trigger" title="切换语言" @click.stop="toggleLangMenu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <line x1="2" y1="12" x2="22" y2="12" />
@@ -88,39 +88,51 @@
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
-          <div class="vp-nav-lang-menu">
-            <a v-for="(locale, key) in locales" :key="key" :href="getLocaleLink(key as string)" class="vp-nav-lang-item"
-              :class="{ active: isCurrentLocale(key as string) }">
-              {{ locale.label }}
-            </a>
-          </div>
+          <Transition name="dropdown">
+            <div v-show="isLangMenuOpen" class="vp-nav-lang-menu">
+              <a v-for="(locale, key) in locales" :key="key" :href="getLocaleLink(key as string)" class="vp-nav-lang-item"
+                :class="{ active: isCurrentLocale(key as string) }" @click="closeAllDropdowns">
+                {{ locale.label }}
+              </a>
+            </div>
+          </Transition>
+          <!-- 移动端遮罩 -->
+          <Transition name="fade">
+            <div v-show="isLangMenuOpen" class="vp-nav-dropdown-overlay" @click="closeAllDropdowns"></div>
+          </Transition>
         </div>
 
         <!-- 主题色选择 -->
-        <div class="vp-nav-theme-color">
-          <button class="vp-nav-theme-color-trigger" title="选择主题色">
+        <div class="vp-nav-theme-color" :class="{ open: isThemeColorOpen }">
+          <button class="vp-nav-theme-color-trigger" title="选择主题色" @click.stop="toggleThemeColor">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <circle cx="12" cy="12" r="4" fill="var(--ldoc-c-brand)" />
             </svg>
           </button>
-          <div class="vp-nav-theme-color-panel">
-            <div class="vp-theme-color-header">选择主题色</div>
-            <div class="vp-theme-color-grid">
-              <button v-for="color in themeColors" :key="color.name" class="vp-theme-color-card"
-                :class="{ active: currentThemeColor === color.name }" @click="setThemeColor(color.name)">
-                <span class="vp-theme-color-dot" :style="{ background: `hsl(${color.hue}, 70%, 55%)` }"></span>
-                <span class="vp-theme-color-info">
-                  <span class="vp-theme-color-label">{{ color.label }}</span>
-                  <span class="vp-theme-color-desc">{{ color.desc }}</span>
-                </span>
-                <svg v-if="currentThemeColor === color.name" class="vp-theme-color-check" width="16" height="16"
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
+          <Transition name="dropdown">
+            <div v-show="isThemeColorOpen" class="vp-nav-theme-color-panel">
+              <div class="vp-theme-color-header">选择主题色</div>
+              <div class="vp-theme-color-grid">
+                <button v-for="color in themeColors" :key="color.name" class="vp-theme-color-card"
+                  :class="{ active: currentThemeColor === color.name }" @click="setThemeColor(color.name); closeAllDropdowns()">
+                  <span class="vp-theme-color-dot" :style="{ background: `hsl(${color.hue}, 70%, 55%)` }"></span>
+                  <span class="vp-theme-color-info">
+                    <span class="vp-theme-color-label">{{ color.label }}</span>
+                    <span class="vp-theme-color-desc">{{ color.desc }}</span>
+                  </span>
+                  <svg v-if="currentThemeColor === color.name" class="vp-theme-color-check" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
+          </Transition>
+          <!-- 移动端遮罩 -->
+          <Transition name="fade">
+            <div v-show="isThemeColorOpen" class="vp-nav-dropdown-overlay" @click="closeAllDropdowns"></div>
+          </Transition>
         </div>
 
         <!-- 暗黑模式切换 -->
@@ -169,8 +181,8 @@
         <PluginSlot name="nav-bar-content-after" />
 
         <!-- 移动端菜单按钮 -->
-        <button class="vp-nav-hamburger" @click="toggleSidebar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button class="vp-nav-hamburger" @click="toggleSidebar" aria-label="打开菜单">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -396,20 +408,58 @@ const openSearch = () => {
   isSearchOpen.value = true
 }
 
+// 下拉菜单状态管理
+const isLangMenuOpen = ref(false)
+const isThemeColorOpen = ref(false)
+
+const toggleLangMenu = () => {
+  isLangMenuOpen.value = !isLangMenuOpen.value
+  if (isLangMenuOpen.value) {
+    isThemeColorOpen.value = false
+  }
+}
+
+const toggleThemeColor = () => {
+  isThemeColorOpen.value = !isThemeColorOpen.value
+  if (isThemeColorOpen.value) {
+    isLangMenuOpen.value = false
+  }
+}
+
+const closeAllDropdowns = () => {
+  isLangMenuOpen.value = false
+  isThemeColorOpen.value = false
+}
+
+// 点击外部关闭下拉菜单
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  // 检查是否点击在下拉菜单内部
+  if (!target.closest('.vp-nav-lang') && !target.closest('.vp-nav-theme-color')) {
+    closeAllDropdowns()
+  }
+}
+
 // 全局快捷键 Ctrl+K 打开搜索
 const handleKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault()
     isSearchOpen.value = !isSearchOpen.value
   }
+  // ESC 关闭下拉菜单
+  if (e.key === 'Escape') {
+    closeAllDropdowns()
+  }
 }
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -674,17 +724,12 @@ onUnmounted(() => {
   border: 1px solid var(--ldoc-c-divider);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: all 0.2s;
   z-index: 100;
 }
 
-.vp-nav-lang:hover .vp-nav-lang-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+/* 下拉菜单遮罩 - 默认隐藏 */
+.vp-nav-dropdown-overlay {
+  display: none;
 }
 
 .vp-nav-lang-item {
@@ -744,16 +789,30 @@ onUnmounted(() => {
   border: 1px solid var(--ldoc-c-divider);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
 }
 
-.vp-nav-theme-color:hover .vp-nav-theme-color-panel {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+/* 下拉菜单过渡动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* 淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .vp-theme-color-header {
@@ -883,16 +942,252 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+/* ==================== 移动端导航优化 ==================== */
 @media (max-width: 768px) {
+  .vp-nav {
+    height: var(--ldoc-nav-height, 56px);
+  }
 
-  .vp-nav-links,
-  .vp-nav-search,
-  .vp-nav-social {
+  .vp-nav-container {
+    padding: 0 12px;
+  }
+
+  .vp-nav-left {
+    width: auto;
+    padding-left: 0;
+    flex: 1;
+  }
+
+  .vp-nav-logo {
+    font-size: 16px;
+  }
+
+  .vp-nav-logo-img {
+    height: 28px;
+  }
+
+  .vp-nav-center {
     display: none;
   }
 
+  .vp-nav-links,
+  .vp-nav-search-text,
+  .vp-nav-search-shortcut,
+  .vp-nav-lang-label,
+  .vp-nav-lang-arrow,
+  .vp-nav-social {
+    display: none !important;
+  }
+
+  .vp-nav-right {
+    gap: 2px;
+    padding-right: 0;
+  }
+
+  /* 搜索按钮 - 仅图标 */
+  .vp-nav-search {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+  }
+
+  /* 语言选择 - 仅图标 */
+  .vp-nav-lang-trigger {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* 主题色选择 - 统一尺寸 */
+  .vp-nav-theme-color-trigger {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* 暗黑模式切换 - 统一尺寸 */
+  .vp-nav-theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .vp-nav-theme-toggle svg,
+  .vp-nav-theme-color-trigger svg,
+  .vp-nav-lang-trigger svg,
+  .vp-nav-search svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* 汉堡菜单 - 统一尺寸 */
   .vp-nav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-left: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--ldoc-c-text-1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .vp-nav-hamburger svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .vp-nav-hamburger:hover {
+    background: var(--ldoc-c-bg-soft);
+  }
+
+  .vp-nav-hamburger:active {
+    background: var(--ldoc-c-bg-mute);
+  }
+
+  /* 下拉菜单移动端优化 */
+  .vp-nav-theme-color-panel,
+  .vp-nav-lang-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 75vh;
+    border-radius: 20px 20px 0 0;
+    margin-top: 0;
+    z-index: 1001;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+  }
+
+  /* 移动端遮罩层 - 移动端显示 */
+  .vp-nav-dropdown-overlay {
     display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+  }
+
+  /* 主题色面板内边距调整 */
+  .vp-theme-color-header {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+
+  .vp-theme-color-grid {
+    padding: 8px 12px 24px;
+  }
+
+  .vp-theme-color-card {
+    padding: 14px 16px;
+  }
+}
+
+/* 平板设备优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .vp-nav-left {
+    width: auto;
+    min-width: 200px;
+    padding-left: 16px;
+  }
+
+  .vp-nav-center {
+    padding-left: 20px;
+  }
+
+  .vp-nav-right {
+    padding-right: 16px;
+    gap: 6px;
+  }
+}
+
+/* 大屏显示器优化 */
+@media (min-width: 1920px) {
+  .vp-nav {
+    height: var(--ldoc-nav-height, 68px);
+  }
+
+  .vp-nav-logo {
+    font-size: 20px;
+  }
+
+  .vp-nav-logo-img {
+    height: 36px;
+  }
+
+  .vp-nav-link {
+    font-size: 15px;
+    padding: 6px 12px;
+  }
+
+  .vp-nav-search {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* 4K 显示器优化 */
+@media (min-width: 2560px) {
+  .vp-nav {
+    height: var(--ldoc-nav-height, 72px);
+  }
+
+  .vp-nav-container {
+    padding: 0 48px;
+  }
+
+  .vp-nav-logo {
+    font-size: 22px;
+  }
+
+  .vp-nav-logo-img {
+    height: 40px;
+  }
+
+  .vp-nav-link {
+    font-size: 16px;
+    padding: 8px 14px;
+  }
+
+  .vp-nav-search {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .vp-nav-theme-toggle,
+  .vp-nav-theme-color-trigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .vp-nav-theme-toggle svg,
+  .vp-nav-theme-color-trigger svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .vp-nav-hamburger,
+  .vp-nav-theme-toggle,
+  .vp-nav-theme-color-trigger,
+  .vp-nav-search {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 </style>
