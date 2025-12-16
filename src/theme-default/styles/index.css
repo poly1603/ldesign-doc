@@ -13,14 +13,14 @@
   --ldoc-c-gray-3: #ebebef;
   --ldoc-c-gray-soft: rgba(142, 150, 170, 0.14);
 
-  /* 主题色 - 默认蓝色 */
+  /* 主题色 - 默认蓝色（降低亮度使颜色更深，适合作为背景色） */
   --ldoc-c-brand-hue: 231;
-  --ldoc-c-brand: hsl(var(--ldoc-c-brand-hue), 100%, 70%);
-  --ldoc-c-brand-light: hsl(var(--ldoc-c-brand-hue), 100%, 76%);
-  --ldoc-c-brand-lighter: hsl(var(--ldoc-c-brand-hue), 100%, 82%);
-  --ldoc-c-brand-dark: hsl(var(--ldoc-c-brand-hue), 60%, 45%);
-  --ldoc-c-brand-darker: hsl(var(--ldoc-c-brand-hue), 50%, 36%);
-  --ldoc-c-brand-soft: hsla(var(--ldoc-c-brand-hue), 100%, 70%, 0.14);
+  --ldoc-c-brand: hsl(var(--ldoc-c-brand-hue), 85%, 55%);
+  --ldoc-c-brand-light: hsl(var(--ldoc-c-brand-hue), 85%, 62%);
+  --ldoc-c-brand-lighter: hsl(var(--ldoc-c-brand-hue), 85%, 70%);
+  --ldoc-c-brand-dark: hsl(var(--ldoc-c-brand-hue), 75%, 42%);
+  --ldoc-c-brand-darker: hsl(var(--ldoc-c-brand-hue), 65%, 32%);
+  --ldoc-c-brand-soft: hsla(var(--ldoc-c-brand-hue), 85%, 55%, 0.14);
 
   --ldoc-c-green: #42b883;
   --ldoc-c-green-light: #42d392;

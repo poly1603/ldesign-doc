@@ -158,163 +158,366 @@ export { slots, globalComponents }
 export default { slots, globalComponents }
 `,
 
-    // 注入评论样式
+    // 注入评论样式 - 完全自定义 UI
     headStyles: [
       `
+      /* ============== 评论容器 ============== */
       .ldoc-comment {
         margin-top: 48px;
         padding-top: 32px;
         border-top: 1px solid var(--ldoc-c-divider, #e5e7eb);
       }
-      .ldoc-comment__title {
+      .ldoc-comment__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-bottom: 24px;
+      }
+      .ldoc-comment__title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
         font-size: 20px;
         font-weight: 600;
         color: var(--ldoc-c-text-1, #1f2937);
       }
-      .ldoc-comment__container {
-        min-height: 200px;
+      .ldoc-comment__title svg {
+        color: var(--ldoc-c-brand, #3b82f6);
       }
-      /* Artalk 样式覆盖修复 */
-      .artalk {
-        --at-color-bg: var(--ldoc-c-bg, #ffffff) !important;
-        --at-color-font: var(--ldoc-c-text-1, #1f2937) !important;
-        --at-color-meta: var(--ldoc-c-text-2, #4b5563) !important;
-        --at-color-border: var(--ldoc-c-divider, #e5e7eb) !important;
-        --at-color-main: var(--ldoc-c-brand, #3b82f6) !important;
-        background: transparent !important;
+      .ldoc-comment__count {
+        font-size: 14px;
+        color: var(--ldoc-c-text-3, #9ca3af);
       }
-      .dark .artalk {
-        --at-color-bg: var(--ldoc-c-bg, #1f2937) !important;
-        --at-color-font: var(--ldoc-c-text-1, #f9fafb) !important;
-        --at-color-meta: var(--ldoc-c-text-2, #9ca3af) !important;
-        --at-color-border: var(--ldoc-c-divider, #374151) !important;
-      }
-      /* 强制修复黑色背景问题 */
-      .atk-layer-wrap {
-         background: transparent !important;
-      }
-      .atk-main-editor {
-         background: var(--ldoc-c-bg, #ffffff) !important;
-      }
-      .dark .atk-main-editor {
-         background: var(--ldoc-c-bg, #1f2937) !important;
+      .ldoc-comment__divider {
+        height: 1px;
+        background: var(--ldoc-c-divider, #e5e7eb);
+        margin: 32px 0;
       }
       
-      .ldoc-comment__error {
-        padding: 16px;
-        color: var(--ldoc-c-red-1, #ef4444);
-        background: var(--ldoc-c-red-soft, #fef2f2);
-        border-radius: 8px;
-      }
-      .dark .ldoc-comment__title {
-        color: var(--ldoc-c-text-1, #f9fafb);
-      }
-      /* Demo mode styles */
-      .ldoc-comment--demo {
+      /* ============== 评论编辑器 ============== */
+      .ldoc-comment-editor {
         background: var(--ldoc-c-bg-soft, #f9fafb);
         border-radius: 12px;
-        padding: 24px;
+        padding: 20px;
       }
-      .ldoc-comment__demo-notice {
+      .ldoc-comment-editor__reply-hint {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-        padding: 12px 16px;
-        background: var(--ldoc-c-yellow-soft, #fef3c7);
+        justify-content: space-between;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        background: var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.1));
         border-radius: 8px;
         font-size: 14px;
-        color: var(--ldoc-c-yellow-dark, #92400e);
+        color: var(--ldoc-c-brand, #3b82f6);
       }
-      .ldoc-comment__demo-badge {
-        padding: 2px 8px;
-        background: var(--ldoc-c-yellow, #f59e0b);
-        color: white;
+      .ldoc-comment-editor__cancel-reply {
+        padding: 4px 12px;
+        background: transparent;
+        border: 1px solid var(--ldoc-c-brand, #3b82f6);
         border-radius: 4px;
+        color: var(--ldoc-c-brand, #3b82f6);
         font-size: 12px;
-        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
       }
-      .ldoc-comment__input-area {
-        margin-bottom: 24px;
+      .ldoc-comment-editor__cancel-reply:hover {
+        background: var(--ldoc-c-brand, #3b82f6);
+        color: white;
       }
-      .ldoc-comment__input {
-        width: 100%;
-        min-height: 100px;
+      .ldoc-comment-editor__user {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .ldoc-comment-editor__input {
         padding: 12px 16px;
         border: 1px solid var(--ldoc-c-divider, #e5e7eb);
         border-radius: 8px;
-        background: var(--ldoc-c-bg, white);
+        background: var(--ldoc-c-bg, #ffffff);
         font-size: 14px;
-        resize: vertical;
         font-family: inherit;
+        color: var(--ldoc-c-text-1, #1f2937);
+        transition: border-color 0.2s;
       }
-      .ldoc-comment__input:focus {
+      .ldoc-comment-editor__input:focus {
         outline: none;
         border-color: var(--ldoc-c-brand, #3b82f6);
       }
-      .ldoc-comment__input-actions {
+      .ldoc-comment-editor__input::placeholder {
+        color: var(--ldoc-c-text-3, #9ca3af);
+      }
+      .ldoc-comment-editor__textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 16px;
+        border: 1px solid var(--ldoc-c-divider, #e5e7eb);
+        border-radius: 8px;
+        background: var(--ldoc-c-bg, #ffffff);
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--ldoc-c-text-1, #1f2937);
+        line-height: 1.6;
+        resize: vertical;
+        transition: border-color 0.2s;
+      }
+      .ldoc-comment-editor__textarea:focus {
+        outline: none;
+        border-color: var(--ldoc-c-brand, #3b82f6);
+      }
+      .ldoc-comment-editor__textarea::placeholder {
+        color: var(--ldoc-c-text-3, #9ca3af);
+      }
+      .ldoc-comment-editor__error {
+        margin-top: 8px;
+        padding: 10px 14px;
+        background: #fef2f2;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #dc2626;
+      }
+      .ldoc-comment-editor__footer {
         display: flex;
-        justify-content: flex-end;
+        align-items: center;
+        justify-content: space-between;
         margin-top: 12px;
       }
-      .ldoc-comment__submit {
-        padding: 8px 20px;
+      .ldoc-comment-editor__tip {
+        font-size: 12px;
+        color: var(--ldoc-c-text-3, #9ca3af);
+      }
+      .ldoc-comment-editor__submit {
+        padding: 10px 24px;
         background: var(--ldoc-c-brand, #3b82f6);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .ldoc-comment-editor__submit:hover:not(:disabled) {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .ldoc-comment-editor__submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      
+      /* ============== 评论列表 ============== */
+      .ldoc-comment__list {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* ============== 评论项 ============== */
+      .ldoc-comment-item {
+        display: flex;
+        gap: 16px;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--ldoc-c-divider, #e5e7eb);
+      }
+      .ldoc-comment-item:last-child {
+        border-bottom: none;
+      }
+      .ldoc-comment-item__avatar {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+      }
+      .ldoc-comment-item__avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--ldoc-c-bg-soft, #f3f4f6);
+      }
+      .ldoc-comment-item__main {
+        flex: 1;
+        min-width: 0;
+      }
+      .ldoc-comment-item__header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .ldoc-comment-item__nick {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--ldoc-c-text-1, #1f2937);
+      }
+      .ldoc-comment-item__badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .ldoc-comment-item__badge--pinned {
+        background: var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.1));
+        color: var(--ldoc-c-brand, #3b82f6);
+      }
+      .ldoc-comment-item__time {
+        font-size: 12px;
+        color: var(--ldoc-c-text-3, #9ca3af);
+      }
+      .ldoc-comment-item__content {
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--ldoc-c-text-2, #4b5563);
+        word-break: break-word;
+      }
+      .ldoc-comment-item__content p {
+        margin: 0 0 8px;
+      }
+      .ldoc-comment-item__content p:last-child {
+        margin-bottom: 0;
+      }
+      .ldoc-comment-item__content code {
+        padding: 2px 6px;
+        background: var(--ldoc-c-bg-soft, #f3f4f6);
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .ldoc-comment-item__actions {
+        margin-top: 12px;
+      }
+      .ldoc-comment-item__action {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--ldoc-c-text-3, #9ca3af);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .ldoc-comment-item__action:hover {
+        background: var(--ldoc-c-bg-soft, #f3f4f6);
+        color: var(--ldoc-c-brand, #3b82f6);
+      }
+      .ldoc-comment-item__children {
+        margin-top: 16px;
+        padding-left: 20px;
+        border-left: 2px solid var(--ldoc-c-divider, #e5e7eb);
+      }
+      
+      /* ============== 状态组件 ============== */
+      .ldoc-comment__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 40px;
+        color: var(--ldoc-c-text-3, #9ca3af);
+        font-size: 14px;
+      }
+      .ldoc-comment__spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--ldoc-c-divider, #e5e7eb);
+        border-top-color: var(--ldoc-c-brand, #3b82f6);
+        border-radius: 50%;
+        animation: ldoc-comment-spin 0.8s linear infinite;
+      }
+      @keyframes ldoc-comment-spin {
+        to { transform: rotate(360deg); }
+      }
+      .ldoc-comment__error-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        text-align: center;
+      }
+      .ldoc-comment__error-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+      .ldoc-comment__error-text {
+        font-size: 14px;
+        color: #dc2626;
+        margin-bottom: 16px;
+      }
+      .ldoc-comment__retry {
+        padding: 8px 20px;
+        background: #dc2626;
         color: white;
         border: none;
         border-radius: 6px;
         font-size: 14px;
         cursor: pointer;
-        opacity: 0.6;
+        transition: background 0.2s;
       }
-      .ldoc-comment__list {
+      .ldoc-comment__retry:hover {
+        background: #b91c1c;
+      }
+      .ldoc-comment__empty {
         display: flex;
         flex-direction: column;
-        gap: 16px;
-      }
-      .ldoc-comment__item {
-        display: flex;
-        gap: 12px;
-        padding: 16px;
-        background: var(--ldoc-c-bg, white);
-        border-radius: 8px;
-        border: 1px solid var(--ldoc-c-divider, #e5e7eb);
-      }
-      .ldoc-comment__avatar {
-        width: 40px;
-        height: 40px;
-        display: flex;
         align-items: center;
-        justify-content: center;
-        background: var(--ldoc-c-bg-soft, #f3f4f6);
-        border-radius: 50%;
-        font-size: 20px;
+        padding: 48px;
+        text-align: center;
       }
-      .ldoc-comment__body {
-        flex: 1;
+      .ldoc-comment__empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
       }
-      .ldoc-comment__meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-      .ldoc-comment__author {
-        font-weight: 600;
-        color: var(--ldoc-c-text-1, #1f2937);
-      }
-      .ldoc-comment__time {
-        font-size: 12px;
+      .ldoc-comment__empty-text {
+        font-size: 14px;
         color: var(--ldoc-c-text-3, #9ca3af);
       }
-      .ldoc-comment__content {
-        font-size: 14px;
-        color: var(--ldoc-c-text-2, #4b5563);
-        line-height: 1.6;
+      
+      /* ============== 深色模式 ============== */
+      .dark .ldoc-comment__title {
+        color: var(--ldoc-c-text-1, #f9fafb);
       }
-      .dark .ldoc-comment--demo {
-        background: var(--ldoc-c-bg-soft, #1f2937);
+      .dark .ldoc-comment-editor {
+        background: var(--ldoc-c-bg-soft, #242424);
+      }
+      .dark .ldoc-comment-editor__input,
+      .dark .ldoc-comment-editor__textarea {
+        background: var(--ldoc-c-bg, #1a1a1a);
+        border-color: var(--ldoc-c-divider, #374151);
+        color: var(--ldoc-c-text-1, #f9fafb);
+      }
+      .dark .ldoc-comment-editor__error {
+        background: rgba(220, 38, 38, 0.1);
+        color: #fca5a5;
+      }
+      .dark .ldoc-comment-item__avatar img {
+        border-color: var(--ldoc-c-bg-soft, #374151);
+      }
+      .dark .ldoc-comment-item__nick {
+        color: var(--ldoc-c-text-1, #f9fafb);
+      }
+      .dark .ldoc-comment-item__content {
+        color: var(--ldoc-c-text-2, #d1d5db);
+      }
+      .dark .ldoc-comment-item__content code {
+        background: var(--ldoc-c-bg-soft, #374151);
+      }
+      .dark .ldoc-comment-item__action:hover {
+        background: var(--ldoc-c-bg-soft, #374151);
+      }
+      .dark .ldoc-comment__error-box {
+        background: rgba(220, 38, 38, 0.1);
+        border-color: rgba(220, 38, 38, 0.3);
+      }
+      .dark .ldoc-comment__error-text {
+        color: #fca5a5;
       }
       .dark .ldoc-comment__demo-notice {
         background: rgba(245, 158, 11, 0.15);

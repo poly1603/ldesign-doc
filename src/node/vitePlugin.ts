@@ -261,14 +261,14 @@ function createMarkdownPlugin(
       // 渲染 Markdown
       const html = md.render(markdown, { path: filePath })
 
-      // 根据框架生成组件代码（使用扩展后的 frontmatter）
+      // 根据框架生成组件代码（使用扩展后的 pageData）
       let result: string
       if (config.framework === 'react' ||
         (config.framework === 'auto' && hasReactImport(code))) {
         result = generateReactComponent(html, pageData.frontmatter)
       } else {
-        // 默认生成 Vue 组件，传入 demos 信息
-        result = generateVueComponent(html, pageData.frontmatter, demos)
+        // 默认生成 Vue 组件，传入 demos 信息和完整 pageData
+        result = generateVueComponent(html, pageData, demos)
 
         // 调试：输出生成的代码
         if (demos.length > 0) {
@@ -291,12 +291,21 @@ function createMarkdownPlugin(
  * 生成 Vue 组件代码
  * 如果有 demo 组件，使用模板模式；否则使用 v-html 模式
  */
+interface PageDataForComponent {
+  frontmatter: Record<string, unknown>
+  lastUpdated?: number
+  title?: string
+  description?: string
+  relativePath?: string
+}
+
 function generateVueComponent(
   html: string,
-  frontmatter: Record<string, unknown>,
+  pageData: PageDataForComponent,
   demos: DemoInfo[] = []
 ): string {
-  const frontmatterJson = JSON.stringify(frontmatter)
+  const frontmatterJson = JSON.stringify(pageData.frontmatter)
+  const lastUpdated = pageData.lastUpdated || Date.now()
   const componentId = `md_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
   // 如果没有 demo，使用简单的 v-html 模式
@@ -313,12 +322,14 @@ import { ref, onMounted } from 'vue'
 const componentId = '${componentId}'
 const contentHtml = ref(${htmlJson})
 const frontmatter = ${frontmatterJson}
+const lastUpdated = ${lastUpdated}
 
 const updatePageData = () => {
   if (typeof window !== 'undefined' && window.__LDOC_PAGE_DATA__) {
     window.__LDOC_PAGE_DATA__.value = {
       ...window.__LDOC_PAGE_DATA__.value,
       frontmatter: { ...frontmatter },
+      lastUpdated,
       _hmrId: componentId
     }
   }
@@ -394,6 +405,7 @@ const decodeBase64 = (str) => decodeURIComponent(atob(str))
 
 const componentId = '${componentId}'
 const frontmatter = ${frontmatterJson}
+const lastUpdated = ${lastUpdated}
 const contentHtml = ref(typeof atob !== 'undefined' ? decodeBase64('${htmlEncoded}') : '')
 const contentRef = ref(null)
 
@@ -484,6 +496,7 @@ const updatePageData = () => {
     window.__LDOC_PAGE_DATA__.value = {
       ...window.__LDOC_PAGE_DATA__.value,
       frontmatter: { ...frontmatter },
+      lastUpdated,
       _hmrId: componentId
     }
   }

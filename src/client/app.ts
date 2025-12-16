@@ -63,7 +63,7 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
     head: []
   })
 
-  // 页面数据
+  // 页面数据 - 使用全局共享的 ref，以便 Vue 组件可以更新它
   const pageData = ref<PageData>({
     title: '',
     description: '',
@@ -72,6 +72,11 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
     relativePath: '',
     filePath: ''
   })
+
+  // 将 pageData 设置到全局，让 Vue 组件生成的代码可以更新它
+  if (typeof window !== 'undefined') {
+    (window as any).__LDOC_PAGE_DATA__ = pageData
+  }
 
   // 转换路由格式
   const vueRoutes: RouteRecordRaw[] = routes.map(route => ({
@@ -146,7 +151,7 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
         query: to.query
       }
     }
-    
+
     // 重新收集插件 slots
     recollectPluginSlots(pluginSlotsContext, pluginContext)
   })
@@ -200,7 +205,7 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
           }
         }
         recollectPluginSlots(pluginSlotsContext, pluginContext)
-        
+
         app.mount(container)
       })
     }

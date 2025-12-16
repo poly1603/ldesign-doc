@@ -3,7 +3,7 @@
  */
 
 import { resolve, join, dirname } from 'path'
-import { existsSync, mkdirSync, writeFileSync, copyFileSync, readdirSync, statSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync, copyFileSync, readdirSync, statSync, readFileSync } from 'fs'
 import { build as viteBuild, type InlineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import type { SiteConfig, PageData } from '../shared/types'
@@ -55,9 +55,16 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       // 调用 extendPageData 钩子，让插件扩展页面数据
       logger.printBuildStep('Extending page data', `${config.userPlugins.length} plugins`)
       for (const page of pages) {
+        // 读取文件内容以便插件计算阅读时间等
+        let content = ''
+        try {
+          content = readFileSync(page.filePath, 'utf-8')
+        } catch {
+          // 忽略读取错误
+        }
         const pageContext = {
           siteConfig: config,
-          content: '', // build 时内容已处理
+          content,
           filePath: page.filePath,
           relativePath: page.relativePath
         }

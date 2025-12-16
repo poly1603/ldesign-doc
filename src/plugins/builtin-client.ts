@@ -4,7 +4,7 @@
  * 这个文件导出所有内置插件的客户端配置（slots、globalComponents 等）
  * 将被虚拟模块导入
  */
-import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport, watch, nextTick } from 'vue'
+import { defineComponent, h, ref, onMounted, onUnmounted, computed, Teleport, watch, nextTick, inject } from 'vue'
 import type { PluginSlots, PluginGlobalComponent } from '../shared/types'
 import { useRoute } from 'vue-router'
 
@@ -420,6 +420,132 @@ const AnnouncementBar = defineComponent({
   }
 })
 
+// ============== 页面数据注入 key ==============
+// 使用 Symbol.for 确保与客户端 composables 共享同一个 symbol
+const pageDataSymbol = Symbol.for('ldoc:pageData')
+
+interface PageDataRef {
+  value: {
+    frontmatter?: Record<string, unknown>
+    lastUpdated?: number
+  }
+}
+
+// ============== 阅读时间组件 ==============
+
+const ReadingTimeDisplay = defineComponent({
+  name: 'LDocReadingTime',
+  setup() {
+    const pageData = inject<PageDataRef>(pageDataSymbol)
+    const route = useRoute()
+
+    const readingData = computed(() => {
+      const fm = pageData?.value?.frontmatter
+      return fm?.readingTime as { minutes: number; words: number } | undefined
+    })
+
+    // 监听路由变化以触发响应式更新
+    watch(() => route.path, () => {
+      // 触发重新计算
+    })
+
+    return () => {
+      const data = readingData.value
+      if (!data || !data.minutes) return null
+
+      const minText = data.minutes === 1 ? '1 分钟' : `${data.minutes} 分钟`
+      const wordsText = data.words ? ` · 约 ${data.words.toLocaleString()} 字` : ''
+
+      return h('div', {
+        class: 'ldoc-reading-time',
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '14px',
+          color: 'var(--ldoc-c-text-3, #6b7280)',
+          marginBottom: '16px'
+        }
+      }, [
+        h('svg', {
+          viewBox: '0 0 24 24',
+          width: '14',
+          height: '14',
+          fill: 'none',
+          stroke: 'currentColor',
+          'stroke-width': '2',
+          style: { opacity: 0.7 }
+        }, [
+          h('circle', { cx: '12', cy: '12', r: '10' }),
+          h('path', { d: 'M12 6v6l4 2' })
+        ]),
+        h('span', {}, `阅读需 ${minText}${wordsText}`)
+      ])
+    }
+  }
+})
+
+// ============== 最后更新时间组件 ==============
+
+const LastUpdatedDisplay = defineComponent({
+  name: 'LDocLastUpdated',
+  setup() {
+    const pageData = inject<PageDataRef>(pageDataSymbol)
+    const route = useRoute()
+
+    const lastUpdated = computed(() => {
+      return pageData?.value?.lastUpdated
+    })
+
+    const formattedDate = computed(() => {
+      const ts = lastUpdated.value
+      if (!ts) return ''
+      return new Date(ts).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    })
+
+    // 监听路由变化以触发响应式更新
+    watch(() => route.path, () => {
+      // 触发重新计算
+    })
+
+    return () => {
+      if (!lastUpdated.value) return null
+
+      return h('div', {
+        class: 'ldoc-last-updated',
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '14px',
+          color: 'var(--ldoc-c-text-3, #6b7280)',
+          marginTop: '24px'
+        }
+      }, [
+        h('svg', {
+          viewBox: '0 0 24 24',
+          width: '14',
+          height: '14',
+          fill: 'none',
+          stroke: 'currentColor',
+          'stroke-width': '2',
+          style: { opacity: 0.7 }
+        }, [
+          h('circle', { cx: '12', cy: '12', r: '10' }),
+          h('path', { d: 'M12 6v6l4 2' })
+        ]),
+        h('span', {}, `最后更新于 ${formattedDate.value}`)
+      ])
+    }
+  }
+})
+
 // ============== Demo 组件 ==============
 
 import { DemoBox, Demo } from './demo/client'
@@ -473,6 +599,16 @@ export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
     { component: TabsInitializer, props: {}, order: 302 }
   ]
 
+  // 阅读时间（doc-top 位置）
+  slots['doc-top'] = [
+    { component: ReadingTimeDisplay, props: {}, order: 10 }
+  ]
+
+  // 最后更新时间（doc-bottom 位置）
+  slots['doc-bottom'] = [
+    { component: LastUpdatedDisplay, props: {}, order: 50 }
+  ]
+
   return slots
 }
 
@@ -481,6 +617,8 @@ export function getBuiltinComponents(): PluginGlobalComponent[] {
     { name: 'LDocBackToTop', component: BackToTopButton },
     { name: 'LDocLightbox', component: LightboxOverlay },
     { name: 'LDocAnnouncement', component: AnnouncementBar },
+    { name: 'LDocReadingTime', component: ReadingTimeDisplay },
+    { name: 'LDocLastUpdated', component: LastUpdatedDisplay },
     { name: 'Demo', component: Demo },
     { name: 'DemoBox', component: DemoBox }
   ]
