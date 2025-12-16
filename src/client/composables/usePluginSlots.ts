@@ -120,6 +120,13 @@ export function collectPluginSlots(
   context: PluginSlotsContext,
   pluginContext?: any
 ) {
+  console.log('[collectPluginSlots] Processing plugins:', plugins.map(p => ({
+    name: p.name,
+    hasSlots: !!p.slots,
+    hasGlobalComponents: !!p.globalComponents,
+    globalComponentsCount: p.globalComponents?.length
+  })))
+
   for (const plugin of plugins) {
     // 注册 slots（支持对象或工厂函数）
     if (plugin.slots) {
@@ -131,6 +138,7 @@ export function collectPluginSlots(
 
     // 注册全局组件
     if (plugin.globalComponents) {
+      console.log(`[collectPluginSlots] Registering ${plugin.globalComponents.length} global components from ${plugin.name}:`, plugin.globalComponents.map(c => c.name))
       context.registerGlobalComponents(plugin.globalComponents)
     }
   }
@@ -164,7 +172,7 @@ export function recollectPluginSlots(
 ) {
   // 清空现有 slots
   context.slots.value.clear()
-  
+
   // 重新收集
   collectPluginSlots(cachedPlugins, context, pluginContext)
 }

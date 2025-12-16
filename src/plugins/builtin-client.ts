@@ -639,6 +639,10 @@ const LastUpdatedDisplay = defineComponent({
 
 import { DemoBox, Demo } from './demo/client'
 
+// ============== Auth 组件 ==============
+
+import { LDocAuthButton } from './auth/client'
+
 // ============== 导出配置 ==============
 
 export interface BuiltinPluginConfig {
@@ -706,6 +710,7 @@ export function getBuiltinComponents(): PluginGlobalComponent[] {
     { name: 'LDocAnnouncement', component: AnnouncementBar },
     { name: 'LDocReadingTime', component: ReadingTimeDisplay },
     { name: 'LDocLastUpdated', component: LastUpdatedDisplay },
+    { name: 'LDocAuthButton', component: LDocAuthButton },
     { name: 'Demo', component: Demo },
     { name: 'DemoBox', component: DemoBox }
   ]

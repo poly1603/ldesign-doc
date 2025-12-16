@@ -316,7 +316,7 @@ async function updatePackageJson(targetDir: string, pkgPath: string): Promise<vo
         'docs:preview': 'ldoc preview'
       },
       devDependencies: {
-        '@ldesign/doc': '^0.0.10'
+        '@ldesign/doc': '^0.1.0'
       }
     }
 

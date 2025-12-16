@@ -594,14 +594,6 @@ export const routes = [
     }
   },
   {
-    path: '/index.new',
-    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/index.new.md'),
-    meta: { 
-      title: 'index.new',
-      frontmatter: {}
-    }
-  },
-  {
     path: '/plugins',
     component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/index.md'),
     meta: { 

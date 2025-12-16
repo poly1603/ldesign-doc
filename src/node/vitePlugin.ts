@@ -7,7 +7,7 @@ import { readFileSync, existsSync } from 'fs'
 import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
-import yaml from 'js-yaml'
+import matter from 'gray-matter'
 import { getHighlighter, type Highlighter } from 'shiki'
 import type { SiteConfig, MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
@@ -110,16 +110,9 @@ function createMarkdownPlugin(
       const fileDir = dirname(filePath)
 
       // 解析 frontmatter
-      const frontmatterMatch = code.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-      let frontmatter: Record<string, unknown> = {}
-      let markdown = code
-
-      if (frontmatterMatch) {
-        try {
-          frontmatter = yaml.load(frontmatterMatch[1]) as Record<string, unknown> || {}
-          markdown = code.slice(frontmatterMatch[0].length)
-        } catch { }
-      }
+      const parsed = matter(code)
+      const frontmatter = parsed.data
+      let markdown = parsed.content
 
       // 解析 demo，支持多种语法：
       // 1. <demo src="./xxx.vue" /> 标签
@@ -737,6 +730,31 @@ function createVirtualModulesPlugin(config: SiteConfig, pluginContainer: PluginC
     .join('\n')
 
 
+  // 收集所有用户插件的 slots（仅支持字符串组件名）
+  const userPluginSlots: Array<{ name: string; slots: Record<string, unknown> }> = []
+  for (const plugin of config.userPlugins) {
+    if (plugin.slots && typeof plugin.slots === 'object') {
+      // 只序列化使用字符串组件名的 slots
+      const serializableSlots: Record<string, unknown[]> = {}
+      for (const [slotName, components] of Object.entries(plugin.slots)) {
+        const compArray = Array.isArray(components) ? components : [components]
+        const serializable = compArray.filter(c =>
+          c && typeof c === 'object' && typeof c.component === 'string'
+        )
+        if (serializable.length > 0) {
+          serializableSlots[slotName] = serializable
+        }
+      }
+      if (Object.keys(serializableSlots).length > 0) {
+        userPluginSlots.push({ name: plugin.name, slots: serializableSlots })
+      }
+    }
+  }
+
+  const userPluginSlotsCode = userPluginSlots.length > 0
+    ? userPluginSlots.map(p => `plugins.push({ name: '${p.name}', slots: ${JSON.stringify(p.slots)} });`).join('\n')
+    : ''
+
   const virtualModules: Record<string, string> = {
     'virtual:ldoc/site-data': `
 export const siteData = ${JSON.stringify({
@@ -765,6 +783,9 @@ plugins.push({
 });
 
 ${pluginsPush}
+
+// 添加用户插件的 slots（仅字符串组件名）
+${userPluginSlotsCode}
 
 export { plugins };
 export default plugins;
@@ -967,13 +988,7 @@ function createHMRPlugin(config: SiteConfig, pluginContainer: PluginContainer): 
         const content = readFileSync(file, 'utf-8')
 
         // 解析 frontmatter
-        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-        let frontmatter: Record<string, unknown> = {}
-        if (frontmatterMatch) {
-          try {
-            frontmatter = yaml.load(frontmatterMatch[1]) as Record<string, unknown> || {}
-          } catch { }
-        }
+        const { data: frontmatter } = matter(content)
 
         // 发送自定义消息给客户端
         server.ws.send({

@@ -7,7 +7,7 @@ import pc from 'picocolors'
 import * as logger from './logger'
 
 // 版本号 - 构建时会被替换或从包信息获取
-const version = '0.0.10'
+const version = '0.1.0'
 
 const cli = cac('ldoc')
 

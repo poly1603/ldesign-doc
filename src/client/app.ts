@@ -49,6 +49,10 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
   const virtualPlugins = await loadVirtualPlugins()
   const allPlugins = [...plugins, ...virtualPlugins]
 
+  // 调试日志
+  console.log('[app.ts] Virtual plugins loaded:', virtualPlugins.map(p => ({ name: p.name, hasSlots: !!p.slots, slots: p.slots })))
+  console.log('[app.ts] All plugins:', allPlugins.map(p => p.name))
+
   // 缓存插件定义,用于路由变化时重新收集 slots
   cachePlugins(allPlugins)
 
@@ -171,6 +175,19 @@ export async function createApp(options: CreateAppOptions): Promise<AppInstance>
   }
 
   const app = createVueApp(RootComponent)
+
+  // 注册插件全局组件
+  const componentsToRegister = pluginSlotsContext.globalComponents.value
+  console.log('[app.ts] globalComponents count:', componentsToRegister.length)
+  console.log('[app.ts] globalComponents names:', componentsToRegister.map(c => c.name))
+
+  componentsToRegister.forEach(comp => {
+    console.log('[app.ts] Registering component:', comp.name)
+    app.component(comp.name, comp.component as Component)
+  })
+
+  // 验证注册结果
+  console.log('[app.ts] Registered components in app:', Object.keys(app._context.components))
 
   // 使用路由
   app.use(router)

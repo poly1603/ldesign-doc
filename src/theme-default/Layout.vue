@@ -281,11 +281,11 @@ onUnmounted(() => {
 
 /* 当没有侧边栏时，为浮动大纲预留空间并固定其位置 */
 @media (min-width: 1024px) {
-  .ldoc-layout.has-outline .ldoc-layout-content:not(.has-sidebar) {
+  .ldoc-layout:not(.is-home) .ldoc-layout-content.has-outline:not(.has-sidebar) {
     padding-right: var(--ldoc-outline-width, 220px);
   }
 
-  .ldoc-layout.has-outline :is(.vp-outline) {
+  .ldoc-layout:not(.is-home) .ldoc-layout-content.has-outline .vp-outline {
     position: fixed !important;
     top: calc(var(--ldoc-nav-height, 64px) + 24px);
     right: max(0px, calc((100vw - var(--ldoc-layout-max-width, 1440px)) / 2));
@@ -305,7 +305,8 @@ onUnmounted(() => {
 
 /* 首页样式 */
 .ldoc-layout.is-home .ldoc-main {
-  padding: 0;
+  padding: 0 !important;
+  max-width: 100% !important;
   /* 首页内容通常包含全宽元素，可能需要隐藏溢出，但不影响 Nav 的 sticky */
   overflow-x: hidden;
 }

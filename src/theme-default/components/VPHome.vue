@@ -157,7 +157,8 @@
           <h2>{{ community.title || '社区与支持' }}</h2>
         </div>
         <div class="vp-home-community-container">
-          <a v-for="card in community.cards" :key="card.title" :href="card.link" target="_blank" rel="noopener noreferrer" class="vp-home-community-card">
+          <a v-for="card in community.cards" :key="card.title" :href="card.link" target="_blank"
+            rel="noopener noreferrer" class="vp-home-community-card">
             <div class="vp-home-community-card-icon" v-html="getFeatureIcon(card.icon)"></div>
             <h3 class="vp-home-community-card-title">{{ card.title }}</h3>
             <p class="vp-home-community-card-desc">{{ card.description }}</p>
@@ -846,6 +847,7 @@ const onFeatureLeave = (e: MouseEvent) => {
 <style scoped>
 .vp-home {
   width: 100%;
+  margin: 0;
 }
 
 .vp-home--animated {
@@ -857,6 +859,7 @@ const onFeatureLeave = (e: MouseEvent) => {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -864,9 +867,10 @@ const onFeatureLeave = (e: MouseEvent) => {
 }
 
 .vp-home-inner {
-  max-width: var(--ldoc-layout-max-width, 1400px);
+  max-width: var(--ldoc-layout-max-width, 1440px);
   margin: 0 auto;
   padding: 0 24px;
+  box-sizing: border-box;
 }
 
 /* Hero - 无左右上边距 */

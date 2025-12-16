@@ -8,9 +8,13 @@
  * 
  * 插件通过 slots 配置注入组件到此位置
  */
-import { computed, h } from 'vue'
+import { computed, h, resolveComponent, getCurrentInstance } from 'vue'
 import { usePluginSlots } from '../composables/usePluginSlots'
 import type { PluginSlotName, PluginSlotComponent } from '../../shared/types'
+
+// 获取当前组件实例，用于访问全局注册的组件
+const instance = getCurrentInstance()
+const appContext = instance?.appContext
 
 const props = withDefaults(defineProps<{
   /** Slot 名称 */
@@ -30,8 +34,11 @@ const props = withDefaults(defineProps<{
 const { getSlotComponents, slots } = usePluginSlots()
 
 // 调试日志
-console.log(`[PluginSlot] Rendering slot: ${props.name}`)
-console.log(`[PluginSlot] All slots:`, slots.value)
+if (props.name === 'nav-bar-content-after') {
+  console.log(`[PluginSlot] Rendering slot: ${props.name}`)
+  console.log(`[PluginSlot] All slots keys:`, Array.from(slots.value.keys()))
+  console.log(`[PluginSlot] nav-bar-content-after components:`, slots.value.get('nav-bar-content-after'))
+}
 
 // 获取并排序该 slot 的所有组件
 const components = computed(() => {
@@ -46,12 +53,25 @@ const hasContent = computed(() => components.value.length > 0)
 
 // 渲染单个组件
 const renderComponent = (item: PluginSlotComponent, index: number) => {
-  const comp = item.component as any
+  let comp = item.component
+
+  // 如果组件是字符串名称，从 appContext 中查找全局组件
+  if (typeof comp === 'string') {
+    const globalComp = appContext?.components[comp]
+    if (globalComp) {
+      comp = globalComp
+    } else {
+      // 回退到 resolveComponent（在渲染上下文中可能有效）
+      console.warn(`[PluginSlot] Component "${comp}" not found in global components, trying resolveComponent`)
+      comp = resolveComponent(comp)
+    }
+  }
+
   const mergedProps = {
     ...item.props,
     ...props.slotProps
   }
-  return h(comp, { key: `plugin-slot-${props.name}-${index}`, ...mergedProps })
+  return h(comp as any, { key: `plugin-slot-${props.name}-${index}`, ...mergedProps })
 }
 
 // 渲染所有组件
@@ -61,22 +81,12 @@ const renderAll = () => {
 </script>
 
 <template>
-  <component 
-    v-if="hasContent && tag" 
-    :is="tag" 
-    :class="props.class"
-  >
-    <component 
-      v-for="(item, index) in components" 
-      :key="`plugin-slot-${name}-${index}`"
-      :is="() => renderComponent(item, index)" 
-    />
+  <component v-if="hasContent && tag" :is="tag" :class="props.class">
+    <component v-for="(item, index) in components" :key="`plugin-slot-${name}-${index}`"
+      :is="() => renderComponent(item, index)" />
   </component>
   <template v-else-if="hasContent">
-    <component 
-      v-for="(item, index) in components" 
-      :key="`plugin-slot-${name}-${index}`"
-      :is="() => renderComponent(item, index)" 
-    />
+    <component v-for="(item, index) in components" :key="`plugin-slot-${name}-${index}`"
+      :is="() => renderComponent(item, index)" />
   </template>
 </template>

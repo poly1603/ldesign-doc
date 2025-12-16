@@ -41,7 +41,14 @@ export type { ReactPluginOptions } from './react'
 // ============== 认证插件 ==============
 
 export { authPlugin, createLocalStorageAuthProvider, defineAuthProvider } from './auth'
-export type { AuthPluginOptions } from './auth'
+export type {
+  AuthPluginOptions,
+  AuthUser,
+  LoginFormData,
+  LoginResult,
+  GetUserResult,
+  CaptchaSource
+} from './auth'
 
 // ============== 搜索插件 ==============
 

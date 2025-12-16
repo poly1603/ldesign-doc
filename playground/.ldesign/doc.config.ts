@@ -18,7 +18,8 @@ import {
   searchPlugin,
   imageViewerPlugin,
   lastUpdatedPlugin,
-  wordCountPlugin
+  wordCountPlugin,
+  authPlugin
 } from '@ldesign/doc/plugins'
 
 // 导入导航和侧边栏配置
@@ -127,6 +128,33 @@ export default defineConfig({
         site: 'LDesign Docs',
         darkMode: 'auto'
       }
+    }),
+    authPlugin({
+      loginText: '登录',
+      onLogin: async (data) => {
+        console.log('Login:', data)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return {
+          success: true,
+          user: {
+            id: '1',
+            name: data.username,
+            avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
+            email: 'admin@example.com'
+          }
+        }
+      },
+      onGetUser: async () => {
+        return { isLoggedIn: false }
+      },
+      onLogout: async () => {
+        console.log('Logout')
+      },
+      getCaptcha: () => 'https://dummyimage.com/100x40/e5e7eb/4b5563&text=1234',
+      userMenuItems: [
+        { text: '个人中心', icon: '👤', onClick: () => alert('点击了个人中心') },
+        { text: '设置', icon: '⚙️', onClick: () => alert('点击了设置') }
+      ]
     })
   ],
 

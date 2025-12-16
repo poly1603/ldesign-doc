@@ -98,6 +98,12 @@ const RootComponent = {
 
 // 创建应用
 const app = createApp(RootComponent)
+
+// 注册插件全局组件
+pluginSlotsContext.globalComponents.value.forEach(comp => {
+  app.component(comp.name, comp.component)
+})
+
 app.use(router)
 
 // 等待路由就绪后挂载应用

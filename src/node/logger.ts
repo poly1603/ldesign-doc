@@ -4,7 +4,7 @@
 
 import pc from 'picocolors'
 
-const version = '0.0.10'
+const version = '0.1.0'
 
 // 品牌色彩
 const brand = {

@@ -258,6 +258,92 @@ LDoc 采用插件化架构，内置了丰富的插件：
 | demoPlugin | 代码演示容器 | `{ defaultTitle: '示例' }` |
 | progressPlugin | 顶部阅读进度条 | `{ color: 'var(--ldoc-c-brand)' }` |
 | commentPlugin | 评论系统集成 | 需指定 `provider` |
+| authPlugin | 用户认证登录 | 需配置 `onLogin` 和 `onGetUser` |
+
+### 认证插件 (authPlugin)
+
+在导航栏右侧添加登录按钮，支持自定义登录面板、验证码、表单事件监听等。
+
+```ts
+import { authPlugin } from '@ldesign/doc/plugins'
+
+authPlugin({
+  // 登录按钮文本
+  loginText: '登录',
+  loginTextEn: 'Login',
+
+  // 登录面板标题
+  panelTitle: '用户登录',
+  panelTitleEn: 'User Login',
+
+  // 获取验证码（支持字符串、同步函数、异步函数）
+  getCaptcha: async () => {
+    const res = await fetch('/api/captcha')
+    const data = await res.json()
+    return data.imageUrl
+  },
+
+  // 登录面板打开时回调（可用于获取 session）
+  onPanelOpen: async () => {
+    await fetch('/api/session')
+  },
+
+  // 表单变化监听
+  onFormChange: (field, value, formData) => {
+    console.log('Field changed:', field, value)
+  },
+
+  // 点击登录按钮（必填，返回登录结果）
+  onLogin: async (formData) => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+    const data = await res.json()
+    if (data.success) {
+      return { success: true, user: data.user }
+    }
+    return { success: false, error: data.message }
+  },
+
+  // 插件加载时获取用户信息（必填）
+  onGetUser: async () => {
+    const res = await fetch('/api/user')
+    const data = await res.json()
+    if (data.user) {
+      return { isLoggedIn: true, user: data.user }
+    }
+    return { isLoggedIn: false }
+  },
+
+  // 退出登录回调
+  onLogout: async () => {
+    await fetch('/api/logout', { method: 'POST' })
+  },
+
+  // 用户菜单项
+  userMenuItems: [
+    { text: '个人中心', textEn: 'Profile', icon: '👤', onClick: (user) => { /* ... */ } },
+    { text: '设置', textEn: 'Settings', icon: '⚙️', onClick: (user) => { /* ... */ } }
+  ],
+
+  // 保护的路由（需要登录才能访问）
+  protectedRoutes: ['/admin/*', '/dashboard']
+})
+```
+
+**用户信息类型 (AuthUser)**:
+```ts
+interface AuthUser {
+  id: string
+  name: string
+  email?: string
+  avatar?: string
+  roles?: string[]
+  [key: string]: unknown
+}
+```
 
 ### 评论插件支持列表
 
