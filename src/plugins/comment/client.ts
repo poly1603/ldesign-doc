@@ -15,18 +15,15 @@ const COMMENT_STYLES = `
 /* 评论容器 */
 .ldoc-comment {
   margin-top: clamp(32px, 5vw, 64px);
-  padding-top: clamp(24px, 4vw, 48px);
-  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb);
+  padding: 0;
 }
 
 /* 评论头部 */
 .ldoc-comment__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: clamp(20px, 3vw, 32px);
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 12px;
+  margin-bottom: clamp(20px, 3vw, 32px);
 }
 
 .ldoc-comment__title {
@@ -47,31 +44,64 @@ const COMMENT_STYLES = `
   height: clamp(20px, 3vw, 28px);
 }
 
+.ldoc-comment__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .ldoc-comment__title-badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  background: var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.1));
+  background: var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.08));
   color: var(--ldoc-c-brand, #3b82f6);
   font-size: 12px;
   font-weight: 600;
   border-radius: 20px;
   margin-left: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ldoc-comment__subtitle {
+  width: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ldoc-c-text-3, #94a3b8);
+  line-height: 1.6;
+}
+
+.ldoc-comment__info-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ldoc-c-text-3, #94a3b8);
+}
+
+.ldoc-comment__separator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ldoc-c-divider, #e5e7eb);
+}
+
+.ldoc-comment__help-link {
+  font-weight: 600;
+  color: var(--ldoc-c-brand, #2563eb);
+  text-decoration: none;
 }
 
 /* 评论容器 */
 .ldoc-comment__container {
   min-height: 120px;
-  border-radius: var(--ldoc-radius-xl, 16px);
-  background: var(--ldoc-c-bg-soft, #f9fafb);
-  padding: clamp(16px, 3vw, 24px);
-  transition: all 0.3s ease;
-}
-
-.ldoc-comment__container:empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 18px;
+  background: var(--ldoc-c-bg-soft, #f7f8fa);
+  border: 1px solid var(--ldoc-c-divider, #e5e7eb);
+  padding: 20px;
 }
 
 /* ==================== Artalk 主题适配 ==================== */
@@ -91,128 +121,263 @@ const COMMENT_STYLES = `
   font-family: inherit !important;
 }
 
-/* Artalk 输入框优化 */
+/* ==================== Artalk 深度样式覆盖 ==================== */
+
+/* 1. 编辑器整体容器 */
 .artalk .atk-editor {
+  border: 1px solid var(--ldoc-c-divider, #e5e7eb) !important;
   border-radius: 12px !important;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid var(--ldoc-c-divider) !important;
-  transition: all 0.2s ease !important;
+  background: var(--ldoc-c-bg, #fff) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+  padding: 0 !important; /* 清除默认 padding */
 }
 
-.artalk .atk-editor:focus-within {
-  border-color: var(--ldoc-c-brand) !important;
-  box-shadow: 0 0 0 3px var(--ldoc-c-brand-soft, rgba(59, 130, 246, 0.15)) !important;
+.artalk .atk-editor-plug-manager {
+  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb) !important;
+  background: var(--ldoc-c-bg-soft, #f9fafb) !important;
 }
 
-.artalk .atk-editor-textarea {
-  min-height: 100px !important;
+/* 2. 输入框区域 */
+.artalk .atk-textarea-wrap {
   padding: 16px !important;
+  background: transparent !important;
+}
+
+.artalk textarea.atk-textarea {
+  min-height: 120px !important;
+  padding: 0 !important;
   font-size: 15px !important;
   line-height: 1.6 !important;
+  color: var(--ldoc-c-text-1, #1f2937) !important;
+  background: transparent !important;
+  border: none !important;
+  resize: vertical !important;
+  box-shadow: none !important; /* 移除可能存在的内部阴影 */
+  width: 100% !important;
 }
 
-/* Artalk 按钮优化 */
-.artalk .atk-btn {
+.artalk textarea.atk-textarea::placeholder {
+  color: var(--ldoc-c-text-3, #9ca3af) !important;
+}
+
+.artalk textarea.atk-textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 3. 底部操作栏（包含按钮） */
+.artalk .atk-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 16px !important;
+  background: var(--ldoc-c-bg-soft, #f9fafb) !important;
+  border-top: 1px solid var(--ldoc-c-divider, #e5e7eb) !important;
+}
+
+/* 4. 发送按钮 */
+.artalk .atk-send-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 36px !important;
+  padding: 0 24px !important;
+  background: var(--ldoc-c-brand, #3b82f6) !important;
+  color: #ffffff !important; /* 强制白色文字 */
+  font-size: 14px !important;
+  font-weight: 600 !important;
   border-radius: 8px !important;
-  font-weight: 500 !important;
+  border: none !important;
+  cursor: pointer !important;
   transition: all 0.2s ease !important;
-  min-height: 40px !important;
-  padding: 8px 20px !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+  min-width: 80px !important;
 }
 
-.artalk .atk-btn-primary {
-  background: var(--ldoc-c-brand) !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
-}
-
-.artalk .atk-btn-primary:hover {
+.artalk .atk-send-btn:hover {
+  background: var(--ldoc-c-brand-dark, #2563eb) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
 }
 
-/* Artalk 评论列表优化 */
-.artalk .atk-list {
+.artalk .atk-send-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* 5. 头部输入框（昵称/邮箱/网址） */
+.artalk .atk-header {
+  display: flex !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--ldoc-c-divider, #e5e7eb) !important;
+  background: var(--ldoc-c-bg-soft, #f9fafb) !important;
+}
+
+.artalk .atk-header input {
+  height: 32px !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--ldoc-c-divider, #e5e7eb) !important;
+  border-radius: 6px !important;
+  background: var(--ldoc-c-bg, #fff) !important;
+  font-size: 13px !important;
+  color: var(--ldoc-c-text-1, #1f2937) !important;
+  transition: border-color 0.2s !important;
+  width: auto !important;
+  flex: 1 !important;
+}
+
+.artalk .atk-header input:focus {
+  border-color: var(--ldoc-c-brand, #3b82f6) !important;
+  outline: none !important;
+}
+
+/* 6. 版权/徽章隐藏 (可选) */
+.artalk .atk-copyright {
+  display: none !important;
+}
+
+/* 7. 评论列表样式修复 */
+.artalk .atk-list-comments-wrap {
   margin-top: 24px !important;
 }
 
 .artalk .atk-comment {
-  padding: 20px !important;
-  margin-bottom: 16px !important;
-  background: var(--ldoc-c-bg) !important;
-  border-radius: 12px !important;
-  border: 1px solid var(--ldoc-c-divider) !important;
-  transition: all 0.2s ease !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 24px !important;
 }
 
-.artalk .atk-comment:hover {
-  border-color: var(--ldoc-c-brand-light, #93c5fd) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
-}
-
-/* Artalk 头像优化 */
 .artalk .atk-avatar {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  margin-right: 16px !important;
 }
 
 .artalk .atk-avatar img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
-/* Artalk 用户名优化 */
-.artalk .atk-nick {
-  font-weight: 600 !important;
-  color: var(--ldoc-c-text-1) !important;
-  font-size: 15px !important;
+.artalk .atk-main {
+  background: var(--ldoc-c-bg-soft, #f9fafb) !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  position: relative !important;
 }
 
-/* Artalk 时间戳优化 */
-.artalk .atk-date {
-  font-size: 13px !important;
-  color: var(--ldoc-c-text-3) !important;
+.artalk .atk-main::before {
+  content: '' !important;
+  position: absolute !important;
+  left: -8px !important;
+  top: 14px !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-top: 8px solid transparent !important;
+  border-bottom: 8px solid transparent !important;
+  border-right: 8px solid var(--ldoc-c-bg-soft, #f9fafb) !important;
 }
 
-/* Artalk 评论内容优化 */
-.artalk .atk-content {
-  font-size: 15px !important;
-  line-height: 1.7 !important;
-  color: var(--ldoc-c-text-2) !important;
-  margin-top: 12px !important;
-}
-
-.artalk .atk-content p {
-  margin: 0 0 12px !important;
-}
-
-.artalk .atk-content p:last-child {
-  margin-bottom: 0 !important;
-}
-
-/* 深色模式适配 */
-.dark .artalk {
-  --at-color-bg: var(--ldoc-c-bg) !important;
-  --at-color-bg-transl: rgba(0, 0, 0, 0) !important;
-  --at-color-input-bg: var(--ldoc-c-bg-soft) !important;
-  --at-color-border: var(--ldoc-c-divider) !important;
-}
-
+/* ==================== 深色模式覆盖 ==================== */
 .dark .artalk .atk-editor {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  background: var(--ldoc-c-bg, #1e293b) !important;
+  border-color: var(--ldoc-c-divider, #334155) !important;
 }
 
-.dark .artalk .atk-comment:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+.dark .artalk .atk-header,
+.dark .artalk .atk-bottom,
+.dark .artalk .atk-editor-plug-manager {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: var(--ldoc-c-divider, #334155) !important;
 }
 
-/* 隐藏 Artalk 自带的深色模式切换按钮 */
-.atk-header .atk-dark-mode-btn { display: none !important; }
+.dark .artalk textarea.atk-textarea {
+  color: var(--ldoc-c-text-1, #f1f5f9) !important;
+}
+
+.dark .artalk .atk-header input {
+  background: var(--ldoc-c-bg, #0f172a) !important;
+  border-color: var(--ldoc-c-divider, #334155) !important;
+  color: var(--ldoc-c-text-1, #f1f5f9) !important;
+}
+
+.dark .artalk .atk-main {
+  background: var(--ldoc-c-bg-soft, #1e293b) !important;
+}
+
+.dark .artalk .atk-main::before {
+  border-right-color: var(--ldoc-c-bg-soft, #1e293b) !important;
+}
+
+
+
+
+/* ==================== Artalk 错误层美化 ==================== */
+.artalk .atk-list-error,
+.artalk .atk-error-layer {
+  padding: 32px 24px !important;
+  margin: 16px 0 !important;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.08), rgba(248, 113, 113, 0.02)) !important;
+  border: 1px solid rgba(248, 113, 113, 0.25) !important;
+  border-radius: 16px !important;
+  text-align: center !important;
+}
+
+.artalk .atk-list-error-title,
+.artalk .atk-error-layer .atk-error-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #dc2626 !important;
+  margin-bottom: 8px !important;
+}
+
+.artalk .atk-list-error-text,
+.artalk .atk-error-layer .atk-error-text {
+  font-size: 14px !important;
+  color: #b91c1c !important;
+  margin-bottom: 16px !important;
+}
+
+.artalk .atk-list-error-retry,
+.artalk .atk-error-layer .atk-retry-btn,
+.artalk .atk-error-layer button {
+  padding: 10px 28px !important;
+  background: #dc2626 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
+}
+
+.artalk .atk-list-error-retry:hover,
+.artalk .atk-error-layer .atk-retry-btn:hover,
+.artalk .atk-error-layer button:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Artalk 加载状态 */
+.artalk .atk-list-loading,
+.artalk .atk-loading-layer {
+  padding: 40px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.artalk .atk-loading-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border: 3px solid rgba(59, 130, 246, 0.2) !important;
+  border-top-color: var(--ldoc-c-brand, #3b82f6) !important;
+  border-radius: 50% !important;
+}
 
 /* ==================== Giscus 主题适配 ==================== */
 .giscus {
@@ -224,115 +389,136 @@ const COMMENT_STYLES = `
   border: none !important;
 }
 
-/* ==================== 加载状态 ==================== */
-.ldoc-comment__loading {
+/* ==================== 状态反馈 ==================== */
+.ldoc-comment__status-card {
+  margin-top: clamp(20px, 3vw, 36px);
+  padding: clamp(28px, 4vw, 48px) clamp(20px, 4vw, 56px);
+  border-radius: 18px;
+  border: 1px solid var(--ldoc-c-divider, rgba(148, 163, 184, 0.4));
+  background: var(--ldoc-c-bg, #fff);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 16px;
-  padding: clamp(40px, 8vw, 80px) 24px;
-  color: var(--ldoc-c-text-3, #9ca3af);
   text-align: center;
 }
 
-.ldoc-comment__spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--ldoc-c-divider, #e5e7eb);
-  border-top-color: var(--ldoc-c-brand, #3b82f6);
-  border-radius: 50%;
-  animation: ldoc-comment-spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+.ldoc-comment__status-card--loading {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.02));
 }
 
-.ldoc-comment__loading-text {
+.ldoc-comment__status-card--error {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.08), rgba(248, 113, 113, 0.02));
+}
+
+.ldoc-comment__status-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: var(--ldoc-c-brand, #3b82f6);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.ldoc-comment__status-card--error .ldoc-comment__status-icon {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.ldoc-comment__status-title {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 600;
+  color: var(--ldoc-c-text-1, #111827);
+}
+
+.ldoc-comment__status-text {
+  margin: 0;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--ldoc-c-text-2);
+  line-height: 1.6;
+  color: var(--ldoc-c-text-2, #475467);
+  max-width: 420px;
+}
+
+.ldoc-comment__status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ldoc-comment__status-btn {
+  padding: 10px 28px;
+  border-radius: 999px;
+  border: none;
+  background: var(--ldoc-c-brand, #2563eb);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+}
+
+.ldoc-comment__status-btn:active {
+  transform: scale(0.97);
+}
+
+.ldoc-comment__status-link {
+  font-size: 13px;
+  color: var(--ldoc-c-text-3, #64748b);
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px dashed rgba(100, 116, 139, 0.4);
+  transition: all 0.2s ease;
+}
+
+.ldoc-comment__status-link:hover {
+  color: var(--ldoc-c-brand, #2563eb);
+  border-color: var(--ldoc-c-brand, #2563eb);
+}
+
+.ldoc-comment__spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(148, 163, 184, 0.4);
+  border-top-color: var(--ldoc-c-brand, #2563eb);
+  border-radius: 50%;
+  animation: ldoc-comment-spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 @keyframes ldoc-comment-spin {
   to { transform: rotate(360deg); }
 }
 
-/* ==================== 错误状态 ==================== */
-.ldoc-comment__error-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: clamp(32px, 6vw, 56px) clamp(20px, 4vw, 40px);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.15);
-  border-radius: var(--ldoc-radius-xl, 16px);
-  text-align: center;
-}
-
-.ldoc-comment__error-icon {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 20px;
-  color: #ef4444;
-  opacity: 0.8;
-  animation: ldoc-error-shake 0.5s ease-in-out;
-}
-
-@keyframes ldoc-error-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
-}
-
-.ldoc-comment__error-title {
-  font-size: clamp(16px, 2vw, 18px);
-  font-weight: 600;
-  color: #dc2626;
-  margin: 0 0 8px;
-}
-
-.ldoc-comment__error-text {
-  font-size: 14px;
-  color: #b91c1c;
-  margin-bottom: 24px;
-  opacity: 0.8;
-  max-width: 300px;
-  line-height: 1.5;
-}
-
-.ldoc-comment__retry {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.ldoc-comment__retry:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-}
-
-.ldoc-comment__retry:active {
-  transform: translateY(0);
-}
-
 /* ==================== 深色模式状态组件 ==================== */
 .dark .ldoc-comment__title { color: var(--ldoc-c-text-1, #f9fafb); }
 .dark .ldoc-comment__container { background: var(--ldoc-c-bg-soft, #1f1f1f); }
-.dark .ldoc-comment__error-box {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
-  border-color: rgba(239, 68, 68, 0.2);
+.dark .ldoc-comment__status-card {
+  background: var(--ldoc-c-bg, #0f172a);
+  border-color: rgba(148, 163, 184, 0.3);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
-.dark .ldoc-comment__error-icon { color: #f87171; }
-.dark .ldoc-comment__error-title { color: #fca5a5; }
-.dark .ldoc-comment__error-text { color: #fecaca; }
+.dark .ldoc-comment__status-card--loading {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.08));
+}
+.dark .ldoc-comment__status-card--error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.08));
+}
+.dark .ldoc-comment__status-title { color: var(--ldoc-c-text-1, #f9fafb); }
+.dark .ldoc-comment__status-text { color: var(--ldoc-c-text-2, #cfd8e3); }
+.dark .ldoc-comment__status-link {
+  color: var(--ldoc-c-text-3, #9ca3af);
+  border-color: rgba(148, 163, 184, 0.35);
+}
 
 /* ==================== 响应式适配 ==================== */
 @media (max-width: 768px) {
@@ -453,6 +639,7 @@ export interface ArtalkOptions {
   site: string
   pageKey?: string
   pageTitle?: string
+  locale?: string
 }
 
 export interface CommentPluginOptions {
@@ -509,7 +696,8 @@ async function loadArtalk(container: HTMLElement, options: ArtalkOptions, isDark
     site: options.site,
     pageKey: options.pageKey || location.pathname,
     pageTitle: options.pageTitle || document.title,
-    darkMode: isDark
+    darkMode: isDark,
+    locale: options.locale || 'zh-CN'
   })
 
   // 初始化深色模式监听
@@ -737,20 +925,36 @@ const CommentBox = defineComponent({
     return () => h('div', { class: 'ldoc-comment' }, [
       // 标题区域
       h('div', { class: 'ldoc-comment__header' }, [
-        h('h3', { class: 'ldoc-comment__title' }, [
-          // 聊天气泡图标
-          h('svg', {
-            viewBox: '0 0 24 24',
-            fill: 'none',
-            stroke: 'currentColor',
-            'stroke-width': 2,
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round'
-          }, [
-            h('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
+        h('div', { class: 'ldoc-comment__title-row' }, [
+          h('h3', { class: 'ldoc-comment__title' }, [
+            h('svg', {
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              stroke: 'currentColor',
+              'stroke-width': 2,
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round'
+            }, [
+              h('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
+            ]),
+            props.options.title || '评论交流'
           ]),
-          props.options.title || '评论交流'
-        ])
+          h('span', { class: 'ldoc-comment__title-badge' }, '一起讨论 / Share Ideas')
+        ]),
+        h('p', { class: 'ldoc-comment__subtitle' }, '欢迎分享你的观点，和社区一起讨论、提问或反馈。')
+      ]),
+
+      h('div', { class: 'ldoc-comment__info-row' }, [
+        h('span', '评论服务：' + (props.options.provider || 'Artalk')),
+        h('span', { class: 'ldoc-comment__separator' }),
+        h('span', '当前页面：' + route.path),
+        h('span', { class: 'ldoc-comment__separator' }),
+        h('a', {
+          class: 'ldoc-comment__help-link',
+          href: 'https://ldesign.dev/guide/comment.html',
+          target: '_blank',
+          rel: 'noopener'
+        }, '配置指引')
       ]),
 
       // 评论容器 - 必须始终存在以便加载评论系统
@@ -761,48 +965,46 @@ const CommentBox = defineComponent({
       }),
 
       // 加载状态 - 更现代的设计
-      loading.value && h('div', { class: 'ldoc-comment__loading' }, [
-        h('div', { class: 'ldoc-comment__spinner' }),
-        h('span', { class: 'ldoc-comment__loading-text' }, '正在加载评论系统...')
+      loading.value && h('div', { class: 'ldoc-comment__status-card ldoc-comment__status-card--loading' }, [
+        h('div', { class: 'ldoc-comment__status-icon' }, [
+          h('div', { class: 'ldoc-comment__spinner' })
+        ]),
+        h('p', { class: 'ldoc-comment__status-title' }, '正在召唤评论区...'),
+        h('p', { class: 'ldoc-comment__status-text' }, '我们正在连接评论服务，请稍候片刻，马上就能和社区互动。')
       ]),
 
       // 错误提示 - 更友好的设计
-      error.value && h('div', { class: 'ldoc-comment__error-box' }, [
-        h('svg', {
-          class: 'ldoc-comment__error-icon',
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          'stroke-width': 1.5,
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round'
-        }, [
-          h('circle', { cx: 12, cy: 12, r: 10 }),
-          h('line', { x1: 12, y1: 8, x2: 12, y2: 12 }),
-          h('line', { x1: 12, y1: 16, x2: 12.01, y2: 16 })
-        ]),
-        h('h4', { class: 'ldoc-comment__error-title' }, '评论加载失败'),
-        h('div', { class: 'ldoc-comment__error-text' }, error.value),
-        h('button', {
-          class: 'ldoc-comment__retry',
-          onClick: loadComment
-        }, [
+      error.value && h('div', { class: 'ldoc-comment__status-card ldoc-comment__status-card--error' }, [
+        h('div', { class: 'ldoc-comment__status-icon' }, [
           h('svg', {
-            width: 16,
-            height: 16,
             viewBox: '0 0 24 24',
             fill: 'none',
             stroke: 'currentColor',
-            'stroke-width': 2,
+            'stroke-width': 1.5,
             'stroke-linecap': 'round',
             'stroke-linejoin': 'round'
           }, [
-            h('path', { d: 'M21 2v6h-6' }),
-            h('path', { d: 'M3 12a9 9 0 0 1 15-6.7L21 8' }),
-            h('path', { d: 'M3 22v-6h6' }),
-            h('path', { d: 'M21 12a9 9 0 0 1-15 6.7L3 16' })
+            h('circle', { cx: 12, cy: 12, r: 10 }),
+            h('line', { x1: 12, y1: 8, x2: 12, y2: 12 }),
+            h('line', { x1: 12, y1: 16, x2: 12.01, y2: 16 })
+          ])
+        ]),
+        h('p', { class: 'ldoc-comment__status-title' }, '未能连接到评论服务'),
+        h('p', { class: 'ldoc-comment__status-text' }, error.value || '网络波动或服务暂不可用，请稍后再试。'),
+        h('div', { class: 'ldoc-comment__status-actions' }, [
+          h('button', {
+            class: 'ldoc-comment__status-btn',
+            onClick: loadComment
+          }, [
+            h('span', { style: { marginRight: '6px' } }, '↻'),
+            '重新加载'
           ]),
-          '重新加载'
+          h('a', {
+            class: 'ldoc-comment__status-link',
+            href: 'https://artalk.js.org/guide/introduction.html',
+            target: '_blank',
+            rel: 'noopener'
+          }, '了解配置')
         ])
       ])
     ])

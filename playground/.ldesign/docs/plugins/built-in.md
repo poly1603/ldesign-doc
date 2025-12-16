@@ -155,7 +155,7 @@ commentPlugin({
 | `exclude` | `string[]` | `[]` | 排除的页面 |
 | `include` | `string[]` | - | 仅在这些页面显示 |
 | `showOnHome` | `boolean` | `false` | 首页是否显示 |
-| `title` | `string` | `'💬 评论'` | 评论区标题 |
+| `title` | `string` | `'评论'` | 评论区标题 |
 
 ---
 

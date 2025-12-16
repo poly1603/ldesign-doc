@@ -124,7 +124,7 @@ const isActive = (link?: string) => {
 
 .vp-sidebar-container {
   /* 左侧边距与导航栏 logo 对齐 (24px) */
-  padding: 24px 16px 32px 24px;
+  padding: 24px 16px 32px 0;
 }
 
 .vp-sidebar-group {
@@ -146,13 +146,13 @@ const isActive = (link?: string) => {
 }
 
 .vp-sidebar-item {
-  margin: 2px 0;
+  margin: 4px 0;
 }
 
 .vp-sidebar-link {
   display: block;
   /* 减少左边距以与 logo 文字对齐 */
-  padding: 8px 12px 8px 0;
+  padding: 8px 12px 8px 8px;
   border-radius: 6px;
   color: var(--ldoc-c-text-2);
   text-decoration: none;
@@ -324,8 +324,13 @@ const isActive = (link?: string) => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* 侧边栏内容切换动画 */

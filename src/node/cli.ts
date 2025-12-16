@@ -171,6 +171,27 @@ cli
     }
   })
 
+// upgrade 命令 - 更新 ldoc 版本
+cli
+  .command('upgrade', 'Upgrade ldoc to the latest version')
+  .option('-g, --global', 'Upgrade global installation')
+  .action(async (options: Record<string, unknown>) => {
+    try {
+      const { upgrade } = await import('./upgrade')
+
+      logger.printBanner()
+      logger.printCommandTitle('upgrade', 'Upgrading LDesign Doc')
+
+      await upgrade({
+        global: options.global as boolean
+      })
+    } catch (error) {
+      logger.printError('Upgrade failed', error instanceof Error ? error.message : String(error))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
 // 帮助信息
 cli.help()
 

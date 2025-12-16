@@ -3,9 +3,11 @@
  */
 
 import { resolve, dirname } from 'path'
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'module'
 
+const require = createRequire(import.meta.url)
 const __dirname = dirname(fileURLToPath(import.meta.url))
 import { createServer as createViteServer, type ViteDevServer } from 'vite'
 import type { SiteConfig, MarkdownRenderer } from '../../shared/types'
@@ -26,6 +28,27 @@ export interface DevServer {
   port: number
   close: () => Promise<void>
   restart: () => Promise<void>
+}
+
+/**
+ * 解析依赖包路径
+ * 尝试找到包的 esm 入口
+ */
+function resolvePackagePath(pkgName: string) {
+  try {
+    const pkgPath = require.resolve(`${pkgName}/package.json`)
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+    // 优先使用 module 或 import 字段
+    const main = pkg.module || pkg.import || pkg.main
+    return resolve(dirname(pkgPath), main)
+  } catch {
+    // 尝试直接解析（用于处理子路径，如 react-dom/client）
+    try {
+      return require.resolve(pkgName)
+    } catch {
+      return pkgName
+    }
+  }
 }
 
 /**
@@ -119,10 +142,17 @@ export async function createDevServer(
       ...userServerConfig
     },
     resolve: {
-      alias: getClientAlias(config, userViteConfig)
+      alias: {
+        ...getClientAlias(config, userViteConfig),
+        'vue': resolvePackagePath('vue'),
+        'vue-router': resolvePackagePath('vue-router'),
+        'react': resolvePackagePath('react'),
+        'react-dom/client': resolvePackagePath('react-dom/client'),
+        'react-dom': resolvePackagePath('react-dom')
+      }
     },
     optimizeDeps: {
-      include: ['vue', 'vue-router', ...(userViteConfig.optimizeDeps?.include || [])]
+      include: ['vue', 'vue-router', 'react', 'react-dom/client', 'react-dom', ...(userViteConfig.optimizeDeps?.include || [])]
     },
     // 其他用户 vite 配置
     css: userViteConfig.css,

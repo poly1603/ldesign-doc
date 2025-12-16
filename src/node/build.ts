@@ -6,6 +6,9 @@ import { resolve, join, dirname } from 'path'
 import { existsSync, mkdirSync, writeFileSync, copyFileSync, readdirSync, statSync, readFileSync } from 'fs'
 import { build as viteBuild, type InlineConfig } from 'vite'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 import type { SiteConfig, PageData } from '../shared/types'
 import type { MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
@@ -23,6 +26,24 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const LDOC_PKG_ROOT = __dirname.includes('dist')
   ? resolve(__dirname, '../../..')
   : resolve(__dirname, '../..')
+
+/**
+ * 解析依赖包路径
+ */
+function resolvePackagePath(pkgName: string) {
+  try {
+    const pkgPath = require.resolve(`${pkgName}/package.json`)
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+    const main = pkg.module || pkg.import || pkg.main
+    return resolve(dirname(pkgPath), main)
+  } catch {
+    try {
+      return require.resolve(pkgName)
+    } catch {
+      return pkgName
+    }
+  }
+}
 
 export interface BuildOptions {
   md: MarkdownRenderer
@@ -120,7 +141,12 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
             // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
             '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
             '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
-            '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es')
+            '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es'),
+            'vue': resolvePackagePath('vue'),
+            'vue-router': resolvePackagePath('vue-router'),
+            'react': resolvePackagePath('react'),
+            'react-dom/client': resolvePackagePath('react-dom/client'),
+            'react-dom': resolvePackagePath('react-dom')
           }
         }
       }
@@ -244,7 +270,12 @@ async function buildSSR(config: SiteConfig, vitePlugins: unknown[]): Promise<voi
         // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
         '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
         '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
-        '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es')
+        '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es'),
+        'vue': resolvePackagePath('vue'),
+        'vue-router': resolvePackagePath('vue-router'),
+        'react': resolvePackagePath('react'),
+        'react-dom/client': resolvePackagePath('react-dom/client'),
+        'react-dom': resolvePackagePath('react-dom')
       }
     }
   }

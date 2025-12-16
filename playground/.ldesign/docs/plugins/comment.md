@@ -161,7 +161,7 @@ commentPlugin({
   exclude: ['/'],            // 排除的页面
   include: ['/guide/*'],     // 仅在这些页面显示
   showOnHome: false,         // 首页是否显示
-  title: '💬 评论'            // 评论区标题
+  title: '评论'            // 评论区标题
 })
 ```
 
@@ -196,7 +196,7 @@ commentPlugin({
 ### title
 
 - **类型**: `string`
-- **默认值**: `'💬 评论'`
+- **默认值**: `'评论'`
 
 评论区标题。
 
