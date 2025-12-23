@@ -690,16 +690,6 @@ export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
     { component: TabsInitializer, props: {}, order: 302 }
   ]
 
-  // 阅读时间（doc-top 位置）
-  slots['doc-top'] = [
-    { component: ReadingTimeDisplay, props: {}, order: 10 }
-  ]
-
-  // 最后更新时间（doc-bottom 位置）
-  slots['doc-bottom'] = [
-    { component: LastUpdatedDisplay, props: {}, order: 50 }
-  ]
-
   return slots
 }
 

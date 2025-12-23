@@ -17,13 +17,24 @@
       </h1>
 
       <!-- 标题下方插槽（元信息区域，插件可注入阅读时间等） -->
-      <PluginSlot name="doc-top" />
-
-      <!-- 元信息（只保留最后更新时间，阅读时间由插件提供） -->
-      <div v-if="page.lastUpdated" class="vp-doc-meta">
-        <span class="vp-doc-meta-item">
-          {{ i18nText.lastUpdated }}: {{ formatDate(page.lastUpdated) }}
-        </span>
+      <PluginSlot name="doc-top" tag="div" class="vp-doc-top-slot" />
+      <div v-if="!docTopHasContent && (readingTimeDisplay || page.lastUpdated)" class="vp-doc-top-slot">
+        <div class="ldoc-reading-time" v-if="readingTimeDisplay">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="opacity:.7">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          <span>阅读需 {{ readingTimeDisplay.minutes }} 分钟 · 约 {{ readingTimeDisplay.words.toLocaleString() }} 字</span>
+        </div>
+        <div class="ldoc-last-updated" v-if="page.lastUpdated">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="opacity:.7">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          <span>最后更新于 {{ formatDate(page.lastUpdated) }}</span>
+        </div>
       </div>
 
       <!-- 主要内容插槽 -->
@@ -31,8 +42,8 @@
         <Content />
       </div>
 
-      <!-- 文档内容底部插槽 -->
-      <PluginSlot name="doc-bottom" />
+      <!-- 文档内容底部插槽：阅读时间 + 最后更新时间（同一行，右对齐） -->
+      <PluginSlot name="doc-bottom" tag="div" class="vp-doc-bottom-meta" />
     </article>
 
     <!-- 编辑链接 -->
@@ -76,12 +87,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, nextTick } from 'vue'
 import { useData, useRoute, Content } from '@ldesign/doc/client'
-import { PluginSlot } from '@ldesign/doc/client'
+import { PluginSlot, usePluginSlots } from '@ldesign/doc/client'
 
 const { page, site, theme, frontmatter } = useData()
 const route = useRoute()
+const { getSlotComponents } = usePluginSlots()
 
 // 获取当前语言环境
 const currentLocale = computed(() => {
@@ -150,6 +162,31 @@ const readingTime = computed<ReadingTimeData | null>(() => {
   return frontmatter.value.readingTime as ReadingTimeData | null
 })
 
+const docTopHasContent = computed(() => {
+  const comps = getSlotComponents('doc-top')
+  return Array.isArray(comps) && comps.length > 0
+})
+
+// 客户端兜底：若插件未注入阅读时间，则在挂载后基于正文粗略计算
+const fallbackReadingTime = ref<ReadingTimeData | null>(null)
+const readingTimeDisplay = computed<ReadingTimeData | null>(() => readingTime.value || fallbackReadingTime.value)
+
+onMounted(async () => {
+  if (!readingTime.value) {
+    await nextTick()
+    const body = document.querySelector('.vp-doc-body')
+    if (body) {
+      const text = body.textContent || ''
+      const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length
+      const englishWords = (text.match(/[a-zA-Z]+/g) || []).length
+      const totalWords = chineseChars + englishWords
+      const wpm = 300
+      const minutes = Math.max(1, Math.ceil(totalWords / wpm))
+      fallbackReadingTime.value = { minutes, words: totalWords, text: `阅读需 ${minutes} 分钟` }
+    }
+  }
+})
+
 // 编辑链接
 const editLink = computed(() => {
   const config = theme.value as { editLink?: { pattern: string; text?: string } }
@@ -167,14 +204,50 @@ interface NavLink {
   link: string
 }
 
-// 上一页/下一页
+// 上一页/下一页：根据当前路由在侧边栏的顺序计算
+function normalizePath(p: string) {
+  let s = p || '/'
+  if (!s.startsWith('/')) s = '/' + s
+  if (s.length > 1 && s.endsWith('/')) s = s.slice(0, -1)
+  return s
+}
+
+function getOrderedLinks(): NavLink[] {
+  const themeCfg = localeTheme.value as unknown as {
+    sidebar?: Record<string, Array<{ text?: string; items?: Array<{ text: string; link: string }> }>>
+  }
+  const current = normalizePath(route.path)
+  const sidebar = themeCfg?.sidebar || {}
+
+  // 选择与当前路径最匹配的 sidebar 分组（最长前缀）
+  const base = Object.keys(sidebar)
+    .sort((a, b) => b.length - a.length)
+    .find(k => current.startsWith(normalizePath(k)))
+
+  const groups = base ? sidebar[base] : ([] as Array<{ items?: Array<{ text: string; link: string }> }>)
+  const list: NavLink[] = []
+  for (const g of groups) {
+    const items = g.items || []
+    for (const it of items) {
+      if (it.link && !/^https?:/i.test(it.link)) {
+        list.push({ text: it.text, link: it.link })
+      }
+    }
+  }
+  return list
+}
+
 const prevPage = computed<NavLink | null>(() => {
-  // TODO: 实现上下页导航
+  const list = getOrderedLinks()
+  const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
+  if (idx > 0) return list[idx - 1]
   return null
 })
 
 const nextPage = computed<NavLink | null>(() => {
-  // TODO: 实现上下页导航
+  const list = getOrderedLinks()
+  const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
+  if (idx >= 0 && idx < list.length - 1) return list[idx + 1]
   return null
 })
 
@@ -359,20 +432,30 @@ const formatDate = (timestamp: number) => {
   display: flex;
   flex-direction: column;
   padding: 16px;
-  border: 1px solid var(--ldoc-c-divider);
+  border: none;
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s;
+  max-width: 50%;
+  background: transparent;
+}
+
+.vp-doc-pagination-prev {
+  grid-column: 1;
+}
+
+.vp-doc-pagination-next {
+  grid-column: 2;
+  justify-self: end;
+  text-align: right;
 }
 
 .vp-doc-pagination-prev:hover,
 .vp-doc-pagination-next:hover {
-  border-color: var(--ldoc-c-brand);
+  background: var(--ldoc-c-bg-soft);
 }
 
-.vp-doc-pagination-next {
-  text-align: right;
-}
+
 
 .vp-doc-pagination-label {
   font-size: 12px;
@@ -384,6 +467,44 @@ const formatDate = (timestamp: number) => {
   font-size: 14px;
   font-weight: 500;
   color: var(--ldoc-c-brand);
+}
+
+/* 底部元信息：阅读时间（左） + 最后更新时间（右） */
+.vp-doc-bottom-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  color: var(--ldoc-c-text-3);
+  font-size: 14px;
+}
+
+.vp-doc-bottom-meta :deep(.ldoc-reading-time) {
+  margin-bottom: 0 !important;
+}
+
+.vp-doc-bottom-meta :deep(.ldoc-last-updated) {
+  margin-top: 0 !important;
+}
+
+/* 顶部元信息：阅读时间（左） + 最后更新时间（右） */
+.vp-doc-top-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 16px;
+  color: var(--ldoc-c-text-3);
+  font-size: 14px;
+}
+
+.vp-doc-top-slot :deep(.ldoc-reading-time) {
+  margin-bottom: 0 !important;
+}
+
+.vp-doc-top-slot :deep(.ldoc-last-updated) {
+  margin-top: 0 !important;
 }
 
 /* ==================== 响应式优化 ==================== */
@@ -561,6 +682,7 @@ const formatDate = (timestamp: number) => {
 
 /* 触摸设备优化 */
 @media (hover: none) and (pointer: coarse) {
+
   .vp-doc-pagination-prev,
   .vp-doc-pagination-next {
     min-height: 60px;

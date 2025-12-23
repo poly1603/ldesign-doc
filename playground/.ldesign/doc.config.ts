@@ -102,6 +102,12 @@ export default defineConfig({
       outlineWidth: 220,
       navHeight: 64,
       maxWidth: 1400
+    },
+    ui: {
+      progressBar: { enabled: true, height: 3, color: '#3b82f6', trackFetch: true, trackXHR: true },
+      modal: { type: 'scale', enterDuration: 300, easing: 'cubic-bezier(0.4,0,0.2,1)' },
+      searchModal: { type: 'zoom', enterDuration: 350, leaveDuration: 220 },
+      loginModal: { type: 'scale', enterDuration: 250 }
     }
   },
 
@@ -118,9 +124,9 @@ export default defineConfig({
     copyCodePlugin({ showLanguage: true }),
     imageViewerPlugin({ zoom: true }),
     demoPlugin({ defaultTitle: '示例', defaultExpanded: false }),
-    readingTimePlugin({ wordsPerMinute: 300 }),
+    readingTimePlugin({ wordsPerMinute: 300, position: 'doc-top', exclude: [] }),
     wordCountPlugin(),
-    lastUpdatedPlugin({ useGitTime: false }),
+    lastUpdatedPlugin({ useGitTime: false, position: 'doc-top', exclude: [] }),
     commentPlugin({
       provider: 'artalk',
       artalk: {

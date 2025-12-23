@@ -46,12 +46,8 @@ function getToastColor(type: string) {
   <!-- Toast -->
   <Teleport to="body">
     <Transition name="ldoc-toast">
-      <div
-        v-if="toastState.visible"
-        class="ldoc-toast"
-        :class="[`ldoc-toast--${toastState.position}`]"
-        :style="{ '--toast-color': getToastColor(toastState.type || 'info') }"
-      >
+      <div v-if="toastState.visible" class="ldoc-toast" :class="[`ldoc-toast--${toastState.position}`]"
+        :style="{ '--toast-color': getToastColor(toastState.type || 'info') }">
         <span class="ldoc-toast__icon">{{ getToastIcon(toastState.type || 'info') }}</span>
         <span class="ldoc-toast__message">{{ toastState.message }}</span>
       </div>
@@ -87,17 +83,11 @@ function getToastColor(type: string) {
             <component v-else :is="modalState.options?.content" />
           </div>
           <div class="ldoc-modal__footer">
-            <button
-              v-if="modalState.options?.showCancel !== false"
-              class="ldoc-modal__btn ldoc-modal__btn--cancel"
-              @click="closeModal(false)"
-            >
+            <button v-if="modalState.options?.showCancel !== false" class="ldoc-modal__btn ldoc-modal__btn--cancel"
+              @click="closeModal(false)">
               {{ modalState.options?.cancelText || '取消' }}
             </button>
-            <button
-              class="ldoc-modal__btn ldoc-modal__btn--confirm"
-              @click="closeModal(true)"
-            >
+            <button class="ldoc-modal__btn ldoc-modal__btn--confirm" @click="closeModal(true)">
               {{ modalState.options?.confirmText || '确定' }}
             </button>
           </div>
@@ -293,12 +283,12 @@ function getToastColor(type: string) {
 /* Modal 动画 */
 .ldoc-modal-enter-active,
 .ldoc-modal-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity var(--ldoc-modal-enter-duration, 0.3s) var(--ldoc-modal-ease, ease);
 }
 
 .ldoc-modal-enter-active .ldoc-modal,
 .ldoc-modal-leave-active .ldoc-modal {
-  transition: transform 0.3s ease;
+  transition: transform var(--ldoc-modal-enter-duration, 0.3s) var(--ldoc-modal-ease, ease);
 }
 
 .ldoc-modal-enter-from,
@@ -308,7 +298,7 @@ function getToastColor(type: string) {
 
 .ldoc-modal-enter-from .ldoc-modal,
 .ldoc-modal-leave-to .ldoc-modal {
-  transform: scale(0.9);
+  transform: var(--ldoc-modal-transform-from, scale(0.9));
 }
 
 /* 暗色模式 */

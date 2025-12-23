@@ -12,6 +12,9 @@
     <!-- 布局顶部插槽（导航栏上方，可用于公告栏） -->
     <PluginSlot name="layout-top" />
 
+    <!-- 顶部真实网络进度条 -->
+    <VPTopProgress />
+
     <!-- 阅读进度条 -->
     <VPReadingProgress v-if="!isHome" />
 
@@ -80,6 +83,7 @@ import VPFooter from './components/VPFooter.vue'
 import VPBackToTop from './components/VPBackToTop.vue'
 import VPReadingProgress from './components/VPReadingProgress.vue'
 import VPImageZoom from './components/VPImageZoom.vue'
+import VPTopProgress from './components/VPTopProgress.vue'
 import { useSidebarItems } from './composables'
 
 const { frontmatter, theme } = useData()

@@ -13,7 +13,8 @@ export {
   useSidebar,
   useScrollToAnchor,
   usePageLoading,
-  useThemeColor
+  useThemeColor,
+  setThemeTransition
 } from './composables'
 
 // 插件 Slot 系统
@@ -43,7 +44,7 @@ export {
 
 // 应用和组件
 export { createApp } from './app'
-export { Content, PluginSlot, PluginUI } from './components'
+export { Content, PluginSlot, PluginUI, LDocModal } from './components'
 
 // Re-export types
 export type {

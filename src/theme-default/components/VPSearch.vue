@@ -1,105 +1,100 @@
 <template>
-  <Teleport to="body">
-    <Transition name="search-fade">
-      <div v-if="isOpen" class="vp-search-overlay" @click.self="close">
-        <div class="vp-search-modal">
-          <!-- 搜索头部 -->
-          <div class="vp-search-header">
-            <div class="vp-search-input-wrapper">
-              <svg class="vp-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  <LDocModal :model-value="isOpen" namespace="search" :mask-closable="true" :close-on-esc="true" @close="close"
+    @update:modelValue="v => { if (!v) close() }">
+    <div class="vp-search-modal">
+      <!-- 搜索头部 -->
+      <div class="vp-search-header">
+        <div class="vp-search-input-wrapper">
+          <svg class="vp-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input ref="inputRef" v-model="query" type="text" class="vp-search-input" placeholder="搜索文档..."
+            @keydown.esc="close" @keydown.enter="handleEnter" @keydown.up.prevent="navigateUp"
+            @keydown.down.prevent="navigateDown" />
+          <kbd class="vp-search-kbd">ESC</kbd>
+        </div>
+      </div>
+
+      <!-- 搜索结果 -->
+      <div class="vp-search-body">
+        <div v-if="!query" class="vp-search-hint">
+          <div class="vp-search-hint-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <p>输入关键词搜索文档</p>
+          <div class="vp-search-shortcuts">
+            <div class="vp-search-shortcut-item">
+              <kbd>↑</kbd><kbd>↓</kbd> 选择
+            </div>
+            <div class="vp-search-shortcut-item">
+              <kbd>Enter</kbd> 确认
+            </div>
+            <div class="vp-search-shortcut-item">
+              <kbd>ESC</kbd> 关闭
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="isSearching" class="vp-search-loading">
+          <div class="vp-search-spinner"></div>
+          <p>搜索中...</p>
+        </div>
+
+        <div v-else-if="results.length === 0" class="vp-search-empty">
+          <div class="vp-search-empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9.172 9.172a4 4 0 015.656 5.656M15 9l-6 6" />
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <p>未找到相关结果</p>
+          <span class="vp-search-empty-hint">尝试使用其他关键词</span>
+        </div>
+
+        <div v-else class="vp-search-results">
+          <div v-for="(result, index) in results" :key="result.path + (result.anchor || index)" class="vp-search-result"
+            :class="{ active: activeIndex === index }" @click="goToResult(result)" @mouseenter="activeIndex = index">
+            <div class="vp-search-result-icon" :class="result.type">
+              <!-- 页面图标 -->
+              <svg v-if="result.type === 'page'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
               </svg>
-              <input ref="inputRef" v-model="query" type="text" class="vp-search-input" placeholder="搜索文档..."
-                @keydown.esc="close" @keydown.enter="handleEnter" @keydown.up.prevent="navigateUp"
-                @keydown.down.prevent="navigateDown" />
-              <kbd class="vp-search-kbd">ESC</kbd>
+              <!-- 标题图标 -->
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 12h16M4 6h16M4 18h16" />
+              </svg>
             </div>
-          </div>
-
-          <!-- 搜索结果 -->
-          <div class="vp-search-body">
-            <div v-if="!query" class="vp-search-hint">
-              <div class="vp-search-hint-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </div>
-              <p>输入关键词搜索文档</p>
-              <div class="vp-search-shortcuts">
-                <div class="vp-search-shortcut-item">
-                  <kbd>↑</kbd><kbd>↓</kbd> 选择
-                </div>
-                <div class="vp-search-shortcut-item">
-                  <kbd>Enter</kbd> 确认
-                </div>
-                <div class="vp-search-shortcut-item">
-                  <kbd>ESC</kbd> 关闭
-                </div>
-              </div>
+            <div class="vp-search-result-content">
+              <div class="vp-search-result-title" v-html="result.title"></div>
+              <div v-if="result.excerpt" class="vp-search-result-excerpt" v-html="result.excerpt"></div>
             </div>
-
-            <div v-else-if="isSearching" class="vp-search-loading">
-              <div class="vp-search-spinner"></div>
-              <p>搜索中...</p>
-            </div>
-
-            <div v-else-if="results.length === 0" class="vp-search-empty">
-              <div class="vp-search-empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M9.172 9.172a4 4 0 015.656 5.656M15 9l-6 6" />
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </div>
-              <p>未找到相关结果</p>
-              <span class="vp-search-empty-hint">尝试使用其他关键词</span>
-            </div>
-
-            <div v-else class="vp-search-results">
-              <div v-for="(result, index) in results" :key="result.path + (result.anchor || index)"
-                class="vp-search-result" :class="{ active: activeIndex === index }" @click="goToResult(result)"
-                @mouseenter="activeIndex = index">
-                <div class="vp-search-result-icon" :class="result.type">
-                  <!-- 页面图标 -->
-                  <svg v-if="result.type === 'page'" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                  <!-- 标题图标 -->
-                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M4 12h16M4 6h16M4 18h16" />
-                  </svg>
-                </div>
-                <div class="vp-search-result-content">
-                  <div class="vp-search-result-title" v-html="result.title"></div>
-                  <div v-if="result.excerpt" class="vp-search-result-excerpt" v-html="result.excerpt"></div>
-                </div>
-                <svg class="vp-search-result-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- 搜索页脚 -->
-          <div class="vp-search-footer">
-            <span class="vp-search-footer-text">由 LDoc 提供搜索</span>
+            <svg class="vp-search-result-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
           </div>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+
+      <!-- 搜索页脚 -->
+      <div class="vp-search-footer">
+        <span class="vp-search-footer-text">由 LDoc 提供搜索</span>
+      </div>
+    </div>
+  </LDocModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { useRouter, useData } from '@ldesign/doc/client'
+import { useRouter, useData, LDocModal } from '@ldesign/doc/client'
 
 interface SearchResult {
   path: string
@@ -593,11 +588,11 @@ onUnmounted(() => {
 
 /* 优雅的打开/关闭动画 */
 .search-fade-enter-active {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--ldoc-search-enter-duration, 0.3s) var(--ldoc-search-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .search-fade-leave-active {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--ldoc-search-leave-duration, 0.2s) var(--ldoc-search-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .search-fade-enter-from,
@@ -606,22 +601,31 @@ onUnmounted(() => {
   backdrop-filter: blur(0);
 }
 
+.search-modal-enter-active {
+  transition: all var(--ldoc-search-enter-duration, 0.35s) var(--ldoc-search-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.search-modal-leave-active {
+  transition: all var(--ldoc-search-leave-duration, 0.2s) ease-in;
+}
+
+.search-modal-enter-from,
+.search-modal-leave-to {
+  opacity: 0;
+  transform: var(--ldoc-search-transform-from, scale(0.96) translateY(16px));
+}
+
 .search-fade-enter-active .vp-search-modal {
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: 0.05s; /* 稍微延迟模态框动画 */
+  transition: all var(--ldoc-search-enter-duration, 0.35s) var(--ldoc-search-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .search-fade-leave-active .vp-search-modal {
-  transition: all 0.2s ease-in;
+  transition: all var(--ldoc-search-leave-duration, 0.2s) ease-in;
 }
 
-.search-fade-enter-from .vp-search-modal {
-  opacity: 0;
-  transform: scale(0.96) translateY(16px);
-}
-
+.search-fade-enter-from .vp-search-modal,
 .search-fade-leave-to .vp-search-modal {
   opacity: 0;
-  transform: scale(0.96) translateY(16px);
+  transform: var(--ldoc-search-transform-from, scale(0.96) translateY(16px));
 }
 </style>

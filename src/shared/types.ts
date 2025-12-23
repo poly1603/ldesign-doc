@@ -242,6 +242,9 @@ export interface ThemeConfig {
   // 布局配置
   layout?: LayoutConfig
 
+  // UI 扩展配置
+  ui?: UIConfig
+
   // 自定义扩展
   [key: string]: unknown
 }
@@ -270,6 +273,36 @@ export interface LayoutConfig {
    * 默认: true
    */
   navFullWidth?: boolean
+}
+
+export type ThemeTransitionType = 'none' | 'fade' | 'circle' | 'slide' | 'flip' | 'dissolve'
+
+export interface DarkModeUIOptions {
+  transition?: ThemeTransitionType
+  duration?: number
+}
+
+export interface ModalAnimationOptions {
+  type?: 'fade' | 'scale' | 'zoom' | 'slide-up'
+  enterDuration?: number
+  leaveDuration?: number
+  easing?: string
+}
+
+export interface ProgressBarOptions {
+  enabled?: boolean
+  height?: number
+  color?: string
+  trackFetch?: boolean
+  trackXHR?: boolean
+}
+
+export interface UIConfig {
+  darkMode?: DarkModeUIOptions
+  modal?: ModalAnimationOptions
+  searchModal?: ModalAnimationOptions
+  loginModal?: ModalAnimationOptions
+  progressBar?: ProgressBarOptions
 }
 
 export interface ThemeLogo {

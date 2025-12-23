@@ -267,42 +267,79 @@ export function useDark() {
       const clipStart = `circle(0px at ${x}px ${y}px)`
       const clipEnd = `circle(${maxRadius}px at ${x}px ${y}px)`
 
-      // 在 startViewTransition 之前注入完整的动画样式
-      if (isCollapse) {
-        // 收缩：旧视图（暗色）在上面执行收缩动画，新视图（亮色）在下面不动
-        style.textContent = `
-          *, *::before, *::after { transition: none !important; }
-          ::view-transition-old(root) {
-            z-index: 2 !important;
-            animation: theme-collapse ${duration} ${easing} forwards !important;
+      // 在 startViewTransition 之前注入完整的动画样式（支持多种类型）
+      let css = ''
+      switch (themeTransitionType) {
+        case 'fade':
+          css = `
+            *, *::before, *::after { transition: none !important; }
+            ::view-transition-old(root) {
+              z-index: 1 !important;
+              animation: theme-fade-out ${duration} ${easing} forwards !important;
+            }
+            ::view-transition-new(root) {
+              z-index: 2 !important;
+              animation: theme-fade-in ${duration} ${easing} forwards !important;
+            }
+            @keyframes theme-fade-in { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes theme-fade-out { from { opacity: 1; } to { opacity: 0; } }
+          `
+          break
+        case 'slide':
+          css = `
+            *, *::before, *::after { transition: none !important; }
+            ::view-transition-old(root) {
+              z-index: 1 !important;
+              animation: theme-slide-out ${duration} ${easing} forwards !important;
+            }
+            ::view-transition-new(root) {
+              z-index: 2 !important;
+              animation: theme-slide-in ${duration} ${easing} forwards !important;
+            }
+            @keyframes theme-slide-in { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            @keyframes theme-slide-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
+          `
+          break
+        case 'circle':
+        case 'flip':
+        case 'dissolve':
+        default:
+          if (isCollapse) {
+            css = `
+              *, *::before, *::after { transition: none !important; }
+              ::view-transition-old(root) {
+                z-index: 2 !important;
+                animation: theme-collapse ${duration} ${easing} forwards !important;
+              }
+              ::view-transition-new(root) {
+                z-index: 1 !important;
+                animation: none !important;
+              }
+              @keyframes theme-collapse {
+                from { clip-path: ${clipEnd}; }
+                to { clip-path: ${clipStart}; }
+              }
+            `
+          } else {
+            css = `
+              *, *::before, *::after { transition: none !important; }
+              ::view-transition-old(root) {
+                z-index: 1 !important;
+                animation: none !important;
+              }
+              ::view-transition-new(root) {
+                z-index: 2 !important;
+                animation: theme-expand ${duration} ${easing} forwards !important;
+              }
+              @keyframes theme-expand {
+                from { clip-path: ${clipStart}; }
+                to { clip-path: ${clipEnd}; }
+              }
+            `
           }
-          ::view-transition-new(root) {
-            z-index: 1 !important;
-            animation: none !important;
-          }
-          @keyframes theme-collapse {
-            from { clip-path: ${clipEnd}; }
-            to { clip-path: ${clipStart}; }
-          }
-        `
-      } else {
-        // 扩散：新视图（暗色）在上面执行扩散动画，旧视图（亮色）在下面不动
-        style.textContent = `
-          *, *::before, *::after { transition: none !important; }
-          ::view-transition-old(root) {
-            z-index: 1 !important;
-            animation: none !important;
-          }
-          ::view-transition-new(root) {
-            z-index: 2 !important;
-            animation: theme-expand ${duration} ${easing} forwards !important;
-          }
-          @keyframes theme-expand {
-            from { clip-path: ${clipStart}; }
-            to { clip-path: ${clipEnd}; }
-          }
-        `
+          break
       }
+      style.textContent = css
 
       const transition = (document as any).startViewTransition(() => {
         isDark.value = !isDark.value

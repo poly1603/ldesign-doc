@@ -20,6 +20,7 @@ import {
   inject,
   provide
 } from 'vue'
+import LDocModal from '../../client/components/LDocModal.vue'
 import { useRoute } from 'vue-router'
 import type { AuthUser, LoginFormData, AuthPluginOptions, LoginResult, GetUserResult } from './index'
 
@@ -142,8 +143,6 @@ const LoginPanel = defineComponent({
     }
   },
   render() {
-    if (!this.visible) return null
-
     const inputStyle = {
       width: '100%',
       padding: '12px 16px',
@@ -164,201 +163,187 @@ const LoginPanel = defineComponent({
       color: 'var(--ldoc-c-text-2, #4b5563)'
     }
 
-    return h(Teleport, { to: 'body' }, [
-      h(Transition, { name: 'ldoc-fade' }, {
-        default: () => this.visible ? h('div', {
-          class: 'ldoc-login-overlay',
+    return h(LDocModal, {
+      modelValue: this.visible,
+      namespace: 'login',
+      zIndex: 9999,
+      maskClosable: true,
+      closeOnEsc: true,
+      onClose: this.handleClose,
+      'onUpdate:modelValue': (v: boolean) => { if (!v) this.handleClose() }
+    }, {
+      default: () => h('div', {
+        class: 'ldoc-login-panel',
+        style: {
+          width: '100%',
+          maxWidth: '400px',
+          backgroundColor: 'var(--ldoc-c-bg, #fff)',
+          borderRadius: '16px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          overflow: 'hidden'
+        }
+      }, [
+        // 头部
+        h('div', {
           style: {
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '24px 24px 0',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '20px'
-          },
-          onClick: (e: MouseEvent) => {
-            if (e.target === e.currentTarget) this.handleClose()
+            justifyContent: 'space-between'
           }
         }, [
-          h(Transition, { name: 'ldoc-scale' }, {
-            default: () => h('div', {
-              class: 'ldoc-login-panel',
-              style: {
-                width: '100%',
-                maxWidth: '400px',
-                backgroundColor: 'var(--ldoc-c-bg, #fff)',
-                borderRadius: '16px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                overflow: 'hidden'
-              },
-              onClick: (e: MouseEvent) => e.stopPropagation()
-            }, [
-              // 头部
+          h('h2', {
+            style: {
+              margin: 0,
+              fontSize: '20px',
+              fontWeight: '600',
+              color: 'var(--ldoc-c-text-1, #1f2937)'
+            }
+          }, this.title),
+          h('button', {
+            onClick: this.handleClose,
+            style: {
+              padding: '8px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: 'var(--ldoc-c-text-3, #9ca3af)',
+              fontSize: '20px',
+              lineHeight: 1,
+              borderRadius: '8px',
+              transition: 'background-color 0.2s'
+            }
+          }, '×')
+        ]),
+
+        // 表单
+        h('div', {
+          style: { padding: '24px' }
+        }, [
+          // 错误提示
+          this.error && h('div', {
+            style: {
+              padding: '12px 16px',
+              marginBottom: '16px',
+              backgroundColor: 'var(--ldoc-c-red-soft, #fee2e2)',
+              color: 'var(--ldoc-c-red, #dc2626)',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }
+          }, this.error),
+
+          // 用户名
+          h('div', { style: { marginBottom: '16px' } }, [
+            h('label', { style: labelStyle }, '用户名'),
+            h('input', {
+              type: 'text',
+              placeholder: '请输入用户名',
+              value: this.formData.username,
+              onInput: (e: Event) => this.handleFieldChange('username', (e.target as HTMLInputElement).value),
+              style: inputStyle,
+              autocomplete: 'username'
+            })
+          ]),
+
+          // 密码
+          h('div', { style: { marginBottom: '16px' } }, [
+            h('label', { style: labelStyle }, '密码'),
+            h('div', { style: { position: 'relative' } }, [
+              h('input', {
+                type: this.passwordVisible ? 'text' : 'password',
+                placeholder: '请输入密码',
+                value: this.formData.password,
+                onInput: (e: Event) => this.handleFieldChange('password', (e.target as HTMLInputElement).value),
+                style: { ...inputStyle, paddingRight: '44px' },
+                autocomplete: 'current-password'
+              }),
+              h('button', {
+                type: 'button',
+                onClick: () => { this.passwordVisible = !this.passwordVisible },
+                style: {
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  padding: '4px',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--ldoc-c-text-3, #9ca3af)',
+                  fontSize: '14px'
+                }
+              }, this.passwordVisible ? '🙈' : '👁')
+            ])
+          ]),
+
+          // 验证码
+          this.hasCaptcha && h('div', { style: { marginBottom: '16px' } }, [
+            h('label', { style: labelStyle }, '验证码'),
+            h('div', { style: { display: 'flex', gap: '12px' } }, [
+              h('input', {
+                type: 'text',
+                placeholder: '请输入验证码',
+                value: this.formData.captcha,
+                onInput: (e: Event) => this.handleFieldChange('captcha', (e.target as HTMLInputElement).value),
+                style: { ...inputStyle, flex: 1 },
+                autocomplete: 'off'
+              }),
               h('div', {
                 style: {
-                  padding: '24px 24px 0',
+                  width: '120px',
+                  height: '48px',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  backgroundColor: 'var(--ldoc-c-bg-soft, #f3f4f6)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
-                }
+                  justifyContent: 'center'
+                },
+                onClick: this.refreshCaptcha,
+                title: '点击刷新验证码'
               }, [
-                h('h2', {
-                  style: {
-                    margin: 0,
-                    fontSize: '20px',
-                    fontWeight: '600',
-                    color: 'var(--ldoc-c-text-1, #1f2937)'
-                  }
-                }, this.title),
-                h('button', {
-                  onClick: this.handleClose,
-                  style: {
-                    padding: '8px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    color: 'var(--ldoc-c-text-3, #9ca3af)',
-                    fontSize: '20px',
-                    lineHeight: 1,
-                    borderRadius: '8px',
-                    transition: 'background-color 0.2s'
-                  }
-                }, '×')
-              ]),
-
-              // 表单
-              h('div', {
-                style: { padding: '24px' }
-              }, [
-                // 错误提示
-                this.error && h('div', {
-                  style: {
-                    padding: '12px 16px',
-                    marginBottom: '16px',
-                    backgroundColor: 'var(--ldoc-c-red-soft, #fee2e2)',
-                    color: 'var(--ldoc-c-red, #dc2626)',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }
-                }, this.error),
-
-                // 用户名
-                h('div', { style: { marginBottom: '16px' } }, [
-                  h('label', { style: labelStyle }, '用户名'),
-                  h('input', {
-                    type: 'text',
-                    placeholder: '请输入用户名',
-                    value: this.formData.username,
-                    onInput: (e: Event) => this.handleFieldChange('username', (e.target as HTMLInputElement).value),
-                    style: inputStyle,
-                    autocomplete: 'username'
+                this.captchaUrl
+                  ? h('img', {
+                    src: this.captchaUrl,
+                    alt: '验证码',
+                    style: { width: '100%', height: '100%', objectFit: 'cover' }
                   })
-                ]),
-
-                // 密码
-                h('div', { style: { marginBottom: '16px' } }, [
-                  h('label', { style: labelStyle }, '密码'),
-                  h('div', { style: { position: 'relative' } }, [
-                    h('input', {
-                      type: this.passwordVisible ? 'text' : 'password',
-                      placeholder: '请输入密码',
-                      value: this.formData.password,
-                      onInput: (e: Event) => this.handleFieldChange('password', (e.target as HTMLInputElement).value),
-                      style: { ...inputStyle, paddingRight: '44px' },
-                      autocomplete: 'current-password'
-                    }),
-                    h('button', {
-                      type: 'button',
-                      onClick: () => { this.passwordVisible = !this.passwordVisible },
-                      style: {
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        padding: '4px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: 'var(--ldoc-c-text-3, #9ca3af)',
-                        fontSize: '14px'
-                      }
-                    }, this.passwordVisible ? '🙈' : '👁')
-                  ])
-                ]),
-
-                // 验证码
-                this.hasCaptcha && h('div', { style: { marginBottom: '16px' } }, [
-                  h('label', { style: labelStyle }, '验证码'),
-                  h('div', { style: { display: 'flex', gap: '12px' } }, [
-                    h('input', {
-                      type: 'text',
-                      placeholder: '请输入验证码',
-                      value: this.formData.captcha,
-                      onInput: (e: Event) => this.handleFieldChange('captcha', (e.target as HTMLInputElement).value),
-                      style: { ...inputStyle, flex: 1 },
-                      autocomplete: 'off'
-                    }),
-                    h('div', {
-                      style: {
-                        width: '120px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        backgroundColor: 'var(--ldoc-c-bg-soft, #f3f4f6)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      },
-                      onClick: this.refreshCaptcha,
-                      title: '点击刷新验证码'
-                    }, [
-                      this.captchaUrl
-                        ? h('img', {
-                          src: this.captchaUrl,
-                          alt: '验证码',
-                          style: { width: '100%', height: '100%', objectFit: 'cover' }
-                        })
-                        : h('span', {
-                          style: { fontSize: '12px', color: 'var(--ldoc-c-text-3)' }
-                        }, '点击获取')
-                    ])
-                  ])
-                ]),
-
-                // 登录按钮
-                h('button', {
-                  onClick: this.handleSubmit,
-                  disabled: this.loading,
-                  style: {
-                    width: '100%',
-                    padding: '14px',
-                    marginTop: '8px',
-                    border: 'none',
-                    borderRadius: '8px',
-                    backgroundColor: this.loading ? 'var(--ldoc-c-brand-soft)' : 'var(--ldoc-c-brand, #3b82f6)',
-                    color: '#fff',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    cursor: this.loading ? 'not-allowed' : 'pointer',
-                    transition: 'background-color 0.2s, transform 0.1s',
-                    transform: 'scale(1)'
-                  },
-                  onMousedown: (e: MouseEvent) => {
-                    if (!this.loading) (e.target as HTMLElement).style.transform = 'scale(0.98)'
-                  },
-                  onMouseup: (e: MouseEvent) => {
-                    (e.target as HTMLElement).style.transform = 'scale(1)'
-                  }
-                }, this.loading ? '登录中...' : '登录')
+                  : h('span', {
+                    style: { fontSize: '12px', color: 'var(--ldoc-c-text-3)' }
+                  }, '点击获取')
               ])
             ])
-          })
-        ]) : null
-      })
-    ])
+          ]),
+
+          // 登录按钮
+          h('button', {
+            onClick: this.handleSubmit,
+            disabled: this.loading,
+            style: {
+              width: '100%',
+              padding: '14px',
+              marginTop: '8px',
+              border: 'none',
+              borderRadius: '8px',
+              backgroundColor: this.loading ? 'var(--ldoc-c-brand-soft)' : 'var(--ldoc-c-brand, #3b82f6)',
+              color: '#fff',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: this.loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s, transform 0.1s',
+              transform: 'scale(1)'
+            },
+            onMousedown: (e: MouseEvent) => {
+              if (!this.loading) (e.target as HTMLElement).style.transform = 'scale(0.98)'
+            },
+            onMouseup: (e: MouseEvent) => {
+              (e.target as HTMLElement).style.transform = 'scale(1)'
+            }
+          }, this.loading ? '登录中...' : '登录')
+        ])
+      ])
+    })
   }
 })
 
@@ -794,7 +779,7 @@ export const LDocAuthButton = defineComponent({
         style.textContent = `
           .ldoc-fade-enter-active,
           .ldoc-fade-leave-active {
-            transition: opacity 0.2s ease;
+            transition: opacity var(--ldoc-login-enter-duration, 0.2s) var(--ldoc-login-ease, ease);
           }
           .ldoc-fade-enter-from,
           .ldoc-fade-leave-to {
@@ -802,12 +787,12 @@ export const LDocAuthButton = defineComponent({
           }
           .ldoc-scale-enter-active,
           .ldoc-scale-leave-active {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--ldoc-login-enter-duration, 0.25s) var(--ldoc-login-ease, cubic-bezier(0.4, 0, 0.2, 1));
           }
           .ldoc-scale-enter-from,
           .ldoc-scale-leave-to {
             opacity: 0;
-            transform: scale(0.95);
+            transform: var(--ldoc-login-transform-from, scale(0.95));
           }
           .ldoc-login-panel input:focus {
             border-color: var(--ldoc-c-brand, #3b82f6) !important;
