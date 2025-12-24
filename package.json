@@ -46,6 +46,14 @@
       "types": "./dist/types/plugins/comment/client.d.ts",
       "import": "./dist/es/plugins/comment/client.js"
     },
+    "./plugins/component-playground/client": {
+      "types": "./dist/types/plugins/component-playground/client.d.ts",
+      "import": "./dist/es/plugins/component-playground/client.js"
+    },
+    "./plugins/search/client": {
+      "types": "./dist/types/plugins/search/client.d.ts",
+      "import": "./dist/es/plugins/search/client.js"
+    },
     "./node": {
       "types": "./dist/types/node/index.d.ts",
       "import": "./dist/es/node/index.js"

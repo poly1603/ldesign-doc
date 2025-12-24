@@ -568,7 +568,8 @@ export const LDocAuthButton = defineComponent({
     __authConfig: { type: String, default: '{}' }
   },
   setup(props) {
-    const route = useRoute()
+    let route: any = null
+    try { route = useRoute() } catch { }
 
     // 解析静态配置
     const staticConfig = computed(() => {
@@ -594,7 +595,7 @@ export const LDocAuthButton = defineComponent({
     const loginPanelRef = ref<InstanceType<typeof LoginPanel> | null>(null)
 
     // 是否英文环境
-    const isEnglish = computed(() => route.path.startsWith('/en/'))
+    const isEnglish = computed(() => !!(route && route.path && route.path.startsWith('/en/')))
 
     // 显示文本
     const loginText = computed(() => {
@@ -747,7 +748,7 @@ export const LDocAuthButton = defineComponent({
     }
 
     // 路由守卫：检查保护路由
-    watch(() => route.path, (newPath) => {
+    if (route) watch(() => route.path, (newPath) => {
       const protectedRoutes = staticConfig.value.protectedRoutes || []
 
       const needsAuth = protectedRoutes.some((pattern: string) => {

@@ -127,3 +127,8 @@ export type { LightboxPluginOptions } from './lightbox'
 
 export { demoPlugin } from './demo'
 export type { DemoPluginOptions } from './demo'
+
+// ============== 组件 Playground 插件 ==============
+
+export { componentPlaygroundPlugin } from './component-playground'
+export type { ComponentPlaygroundOptions } from './component-playground'

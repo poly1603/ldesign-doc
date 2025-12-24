@@ -59,7 +59,10 @@ export const zhSidebar = defineSidebar({
     {
       text: '示例总览',
       collapsed: false,
-      items: [{ text: '功能演示', link: '/examples/' }]
+      items: [
+        { text: '功能演示', link: '/examples/' },
+        { text: '组件 Playground', link: '/examples/playground' }
+      ]
     },
     {
       text: 'Markdown 增强',
@@ -110,6 +113,7 @@ export const zhSidebar = defineSidebar({
       collapsed: false,
       items: [
         { text: '组件演示', link: '/plugins/demo' },
+        { text: '组件 Playground', link: '/plugins/component-playground' },
         { text: '全文搜索', link: '/plugins/search' },
         { text: '评论系统', link: '/plugins/comment' },
         { text: '阅读进度条', link: '/plugins/progress' },
@@ -190,7 +194,10 @@ export const enSidebar = defineSidebar({
     {
       text: 'Overview',
       collapsed: false,
-      items: [{ text: 'Feature Examples', link: '/en/examples/' }]
+      items: [
+        { text: 'Feature Examples', link: '/en/examples/' },
+        { text: 'Component Playground', link: '/en/examples/playground' }
+      ]
     },
     {
       text: 'Markdown',
@@ -241,6 +248,7 @@ export const enSidebar = defineSidebar({
       collapsed: false,
       items: [
         { text: 'Demo', link: '/en/plugins/demo' },
+        { text: 'Component Playground', link: '/en/plugins/component-playground' },
         { text: 'Search', link: '/en/plugins/search' },
         { text: 'Comment', link: '/en/plugins/comment' },
         { text: 'Progress', link: '/en/plugins/progress' },

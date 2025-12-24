@@ -490,6 +490,14 @@ export const routes = [
     }
   },
   {
+    path: '/examples/playground',
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/playground.md'),
+    meta: { 
+      title: '组件 Playground 示例',
+      frontmatter: {"title":"组件 Playground 示例"}
+    }
+  },
+  {
     path: '/examples/vue/basic',
     component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/basic.md'),
     meta: { 
@@ -623,6 +631,14 @@ export const routes = [
     meta: { 
       title: 'comment',
       frontmatter: {}
+    }
+  },
+  {
+    path: '/plugins/component-playground',
+    component: () => import('D:/workspace/ldesign/libraries/doc/playground/.ldesign/docs/plugins/component-playground.md'),
+    meta: { 
+      title: '组件 Playground',
+      frontmatter: {"title":"组件 Playground"}
     }
   },
   {

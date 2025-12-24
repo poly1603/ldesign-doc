@@ -15,11 +15,11 @@ import {
   progressPlugin,
   copyCodePlugin,
   demoPlugin,
-  searchPlugin,
   imageViewerPlugin,
   lastUpdatedPlugin,
   wordCountPlugin,
-  authPlugin
+  authPlugin,
+  componentPlaygroundPlugin
 } from '@ldesign/doc/plugins'
 
 // 导入导航和侧边栏配置
@@ -104,7 +104,7 @@ export default defineConfig({
       maxWidth: 1400
     },
     ui: {
-      progressBar: { enabled: true, height: 3, color: '#3b82f6', trackFetch: true, trackXHR: true },
+      progressBar: { enabled: true, height: 3, color: '#3b82f6', trackFetch: process.env.NODE_ENV === 'production', trackXHR: process.env.NODE_ENV === 'production' },
       modal: { type: 'scale', enterDuration: 300, easing: 'cubic-bezier(0.4,0,0.2,1)' },
       searchModal: { type: 'zoom', enterDuration: 350, leaveDuration: 220 },
       loginModal: { type: 'scale', enterDuration: 250 }
@@ -119,22 +119,26 @@ export default defineConfig({
 
   // ==================== 插件配置 ====================
   plugins: [
-    searchPlugin({ hotkeys: ['/', 'Ctrl+K'] }),
     progressPlugin({ color: 'var(--ldoc-c-brand)', height: 3, exclude: ['/'] }),
     copyCodePlugin({ showLanguage: true }),
     imageViewerPlugin({ zoom: true }),
     demoPlugin({ defaultTitle: '示例', defaultExpanded: false }),
+    componentPlaygroundPlugin(),
     readingTimePlugin({ wordsPerMinute: 300, position: 'doc-top', exclude: [] }),
     wordCountPlugin(),
     lastUpdatedPlugin({ useGitTime: false, position: 'doc-top', exclude: [] }),
-    commentPlugin({
-      provider: 'artalk',
-      artalk: {
-        server: 'http://swimly.cn:8080/',
-        site: 'LDesign Docs',
-        darkMode: 'auto'
-      }
-    }),
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+        commentPlugin({
+          provider: 'artalk',
+          artalk: {
+            server: 'http://swimly.cn:8080/',
+            site: 'LDesign Docs',
+            darkMode: 'auto'
+          }
+        })
+      ]
+      : []),
     authPlugin({
       loginText: '登录',
       onLogin: async (data) => {

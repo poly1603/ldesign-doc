@@ -115,7 +115,15 @@ export function searchPlugin(options: SearchPluginOptions = {}): LDocPlugin {
         }
       });
       `
-    ]
+    ],
+
+    // 在客户端注册搜索按钮组件，供插槽渲染
+    clientConfigFile: `
+import { globalComponents } from '@ldesign/doc/plugins/search/client'
+
+export { globalComponents }
+export default { globalComponents }
+`
   })
 }
 

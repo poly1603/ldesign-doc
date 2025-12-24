@@ -4,6 +4,7 @@
 
 import { resolve, dirname, relative } from 'path'
 import { readFileSync, existsSync } from 'fs'
+import { fileURLToPath } from 'url'
 import type { Plugin, PluginOption, ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
@@ -12,6 +13,13 @@ import { getHighlighter, type Highlighter } from 'shiki'
 import type { SiteConfig, MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
+
+// 运行时路径：包根目录与全局样式文件
+// __dirname 在构建产物中会指向 dist/es/node 目录
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const packageRoot = resolve(__dirname, '../../..')
+// 全局运行时样式（包含 LDocPlayground 等插件样式）
+const runtimeStylePath = normalizePath(resolve(packageRoot, 'dist/es/style.css'))
 
 // Demo 组件信息
 interface DemoInfo {
@@ -306,16 +314,23 @@ function generateVueComponent(
     const htmlJson = JSON.stringify(html)
     return `
 <template>
-  <div class="ldoc-content" v-html="contentHtml"></div>
+  <div class="ldoc-content" v-html="contentHtml" ref="contentRef"></div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, createApp, h } from 'vue'
+import { LDocPlayground } from '@ldesign/doc/plugins/component-playground/client'
+import builtinPlugins from '@ldesign/doc/plugins/builtin-client'
+import { plugins as runtimePlugins } from 'virtual:ldoc/plugins'
+import { useRouter } from 'vue-router'
 
 const componentId = '${componentId}'
 const contentHtml = ref(${htmlJson})
 const frontmatter = ${frontmatterJson}
 const lastUpdated = ${lastUpdated}
+const contentRef = ref(null)
+const mountedPlaygrounds = []
+const parentRouter = useRouter && typeof useRouter === 'function' ? useRouter() : null
 
 const updatePageData = () => {
   if (typeof window !== 'undefined' && window.__LDOC_PAGE_DATA__) {
@@ -329,7 +344,55 @@ const updatePageData = () => {
 }
 
 updatePageData()
-onMounted(() => { updatePageData() })
+onMounted(() => {
+  updatePageData()
+  const root = contentRef.value
+  if (root) {
+    const nodes = root.querySelectorAll('ldocplayground, LDocPlayground')
+    nodes.forEach((el) => {
+      const getAttr = (name) => el.getAttribute(name) ?? el.getAttribute(name.toLowerCase()) ?? el.getAttribute(':' + name)
+      const props = {}
+      const pass = ['componentName','title','panelWidth','playgroundHeight','propsStr','controlsStr','eventsStr','slotsStr']
+      pass.forEach((k) => {
+        const v = getAttr(k)
+        if (v != null && v !== '') props[k] = v
+      })
+      const sc = getAttr('showCode')
+      if (sc === 'true') props.showCode = true
+      const st = getAttr('showToolbar')
+      if (st === 'false') props.showToolbar = false
+
+      const inner = el.innerHTML
+      const app = createApp({
+        render: () => h(LDocPlayground, props, { default: () => h('div', { innerHTML: inner }) })
+      })
+      // 继承主应用 router，避免 useRoute 注入报错
+      try { if (parentRouter) app.use(parentRouter) } catch {}
+      // 只注册当前需要的全局组件，避免重复注册所有组件产生 warn
+      try {
+        const all = [
+          ...(builtinPlugins?.globalComponents || []),
+          ...((runtimePlugins || []).flatMap(p => p.globalComponents || []))
+        ]
+        const compName = props.componentName
+        if (compName) {
+          const found = all.find(c => c && c.name === compName)
+          const ctx = app._context || {}
+          const registered = ctx.components || {}
+          if (found && !registered[compName]) {
+            app.component(compName, found.component)
+          }
+        }
+      } catch {}
+      app.mount(el)
+      mountedPlaygrounds.push(app)
+    })
+  }
+})
+
+onUnmounted(() => {
+  mountedPlaygrounds.forEach(app => app.unmount())
+})
 
 if (import.meta.hot) {
   import.meta.hot.accept(() => { updatePageData() })
@@ -392,6 +455,9 @@ defineExpose({ frontmatter })
 <script setup>
 import { ref, onMounted, onUnmounted, createApp, h } from 'vue'
 ${demoImports}
+import { LDocPlayground } from '@ldesign/doc/plugins/component-playground/client'
+import builtinPlugins from '@ldesign/doc/plugins/builtin-client'
+import { plugins as runtimePlugins } from 'virtual:ldoc/plugins'
 
 // UTF-8 安全的 Base64 解码
 const decodeBase64 = (str) => decodeURIComponent(atob(str))
@@ -419,6 +485,7 @@ ${demoComponentsMap}
 }
 
 const mountedApps = []
+const mountedPlaygrounds = []
 
 onMounted(() => {
   // 挂载所有 demo
@@ -477,11 +544,53 @@ onMounted(() => {
   })
   
   updatePageData()
+
+  // 挂载由 markdown 渲染出的 <LDocPlayground> 标签
+  const mountPlaygrounds = () => {
+    const root = contentRef.value
+    if (!root) return
+    const nodes = root.querySelectorAll('ldocplayground, LDocPlayground')
+    nodes.forEach((el) => {
+      const getAttr = (name) => el.getAttribute(name) ?? el.getAttribute(name.toLowerCase()) ?? el.getAttribute(':' + name)
+      const props = {}
+      const pass = ['componentName','title','panelWidth','playgroundHeight','propsStr','controlsStr','eventsStr','slotsStr']
+      pass.forEach((k) => {
+        const v = getAttr(k)
+        if (v != null && v !== '') props[k] = v
+      })
+      const sc = getAttr('showCode')
+      if (sc === 'true') props.showCode = true
+      const st = getAttr('showToolbar')
+      if (st === 'false') props.showToolbar = false
+
+      const inner = el.innerHTML
+      const app = createApp({
+        render: () => h(LDocPlayground, props, { default: () => h('div', { innerHTML: inner }) })
+      })
+      try {
+        const all = [
+          ...(builtinPlugins?.globalComponents || []),
+          ...((runtimePlugins || []).flatMap(p => p.globalComponents || []))
+        ]
+        const compName = (props as any).componentName
+        if (compName) {
+          const found = all.find(c => c && c.name === compName)
+          if (found && !(app as any)._context?.components?.[compName]) {
+            app.component(compName, found.component as any)
+          }
+        }
+      } catch {}
+      app.mount(el)
+      mountedPlaygrounds.push(app)
+    })
+  }
+  mountPlaygrounds()
 })
 
 onUnmounted(() => {
   // 卸载所有 demo 应用
   mountedApps.forEach(app => app.unmount())
+  mountedPlaygrounds.forEach(app => app.unmount())
 })
 
 const updatePageData = () => {
@@ -755,6 +864,16 @@ function createVirtualModulesPlugin(config: SiteConfig, pluginContainer: PluginC
     ? userPluginSlots.map(p => `plugins.push({ name: '${p.name}', slots: ${JSON.stringify(p.slots)} });`).join('\n')
     : ''
 
+  // 主题样式导入：主题自身样式 + 运行时样式（包括 Playground 等全局组件样式）
+  const themeStylesImport = config.themePkg
+    ? `import '@ldesign/doc/theme-default/styles/index.css'`
+    : `import '${normalizePath(config.themeDir)}/styles/index.css'`
+
+  const themeStylesModuleCode = `
+${themeStylesImport}
+import '${runtimeStylePath}'
+`
+
   const virtualModules: Record<string, string> = {
     'virtual:ldoc/site-data': `
 export const siteData = ${JSON.stringify({
@@ -802,9 +921,7 @@ export * from '${normalizePath(config.themeDir)}/index'
     // 主题样式虚拟模块
     // 始终导入默认主题的基础样式，因为大多数自定义主题都继承默认主题
     // npm 包主题的自定义样式会在其入口文件中导入
-    '@theme-styles': config.themePkg
-      ? `import '@ldesign/doc/theme-default/styles/index.css'`
-      : `import '${normalizePath(config.themeDir)}/styles/index.css'`
+    '@theme-styles': themeStylesModuleCode
   }
 
   // 将内联插件的代码添加到虚拟模块中

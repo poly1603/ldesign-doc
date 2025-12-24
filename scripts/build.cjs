@@ -118,6 +118,8 @@ async function buildLibrary() {
           'plugins/builtin-client': resolve(rootDir, 'src/plugins/builtin-client.ts'),
           'plugins/comment/client': resolve(rootDir, 'src/plugins/comment/client.ts'),
           'plugins/demo/client': resolve(rootDir, 'src/plugins/demo/client.ts'),
+          'plugins/component-playground/client': resolve(rootDir, 'src/plugins/component-playground/client.ts'),
+          'plugins/search/client': resolve(rootDir, 'src/plugins/search/client.ts'),
           'markdown/index': resolve(rootDir, 'src/markdown/index.ts')
         },
         formats: ['es'],

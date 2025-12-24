@@ -641,7 +641,7 @@ import { DemoBox, Demo } from './demo/client'
 
 // ============== Auth 组件 ==============
 
-import { LDocAuthButton } from './auth/client'
+import { LDocAuthButton, LoginPanel } from './auth/client'
 
 // ============== 导出配置 ==============
 
@@ -701,6 +701,38 @@ export function getBuiltinComponents(): PluginGlobalComponent[] {
     { name: 'LDocReadingTime', component: ReadingTimeDisplay },
     { name: 'LDocLastUpdated', component: LastUpdatedDisplay },
     { name: 'LDocAuthButton', component: LDocAuthButton },
+    { name: 'LDocLoginPanel', component: LoginPanel },
+    {
+      name: 'LDocCounterDemo', component: defineComponent({
+        name: 'LDocCounterDemo',
+        props: {
+          label: { type: String, default: '计数' },
+          count: { type: Number, default: 0 },
+          color: { type: String, default: 'var(--ldoc-c-brand, #3b82f6)' }
+        },
+        emits: ['update:count', 'increment', 'decrement', 'click'],
+        setup(props, { emit }) {
+          const inc = () => { emit('update:count', (props.count || 0) + 1); emit('increment', props.count) }
+          const dec = () => { emit('update:count', Math.max(0, (props.count || 0) - 1)); emit('decrement', props.count) }
+          const click = () => emit('click')
+          return () => h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } }, [
+            h('button', {
+              onClick: click,
+              style: {
+                padding: '8px 12px',
+                border: 'none',
+                borderRadius: '8px',
+                background: props.color,
+                color: '#fff',
+                cursor: 'pointer'
+              }
+            }, `${props.label}: ${props.count}`),
+            h('button', { onClick: dec, style: { padding: '6px 10px', border: '1px solid var(--ldoc-c-divider)', borderRadius: '6px', background: 'var(--ldoc-c-bg-soft)' } }, '-'),
+            h('button', { onClick: inc, style: { padding: '6px 10px', border: '1px solid var(--ldoc-c-divider)', borderRadius: '6px', background: 'var(--ldoc-c-bg-soft)' } }, '+')
+          ])
+        }
+      })
+    },
     { name: 'Demo', component: Demo },
     { name: 'DemoBox', component: DemoBox }
   ]
