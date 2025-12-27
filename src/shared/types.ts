@@ -245,6 +245,9 @@ export interface ThemeConfig {
   // UI 扩展配置
   ui?: UIConfig
 
+  // 上下页导航配置
+  docFooter?: DocFooterConfig
+
   // 自定义扩展
   [key: string]: unknown
 }
@@ -329,6 +332,7 @@ export interface SidebarItem {
   link?: string
   items?: SidebarItem[]
   collapsed?: boolean
+  description?: string
 }
 
 export interface SocialLink {
@@ -360,6 +364,24 @@ export interface SearchConfig {
 export interface OutlineConfig {
   level?: number | [number, number] | 'deep'
   label?: string
+}
+
+export interface DocFooterConfig {
+  /** 上一页文本 */
+  prev?: string | false
+  /** 下一页文本 */
+  next?: string | false
+  /** 自定义阅读顺序，如果不设置则使用侧边栏顺序 */
+  readingOrder?: ReadingOrderItem[]
+}
+
+export interface ReadingOrderItem {
+  /** 页面链接 */
+  link: string
+  /** 页面标题 */
+  text: string
+  /** 页面描述（可选） */
+  description?: string
 }
 
 // ============== 主题开发 API ==============
@@ -797,6 +819,34 @@ export interface MarkdownOptions {
 
   // 组件演示配置
   demo?: DemoOptions
+
+  // Playground 配置
+  playground?: PlaygroundOptions
+
+  // 代码折叠配置
+  codeCollapse?: CodeCollapseOptions
+}
+
+export interface CodeCollapseOptions {
+  /** 是否启用代码折叠 */
+  enabled?: boolean
+  /** 触发折叠的最小行数 */
+  threshold?: number
+  /** 展开按钮文本 */
+  expandText?: string
+  /** 收起按钮文本 */
+  collapseText?: string
+}
+
+export interface PlaygroundOptions {
+  /** 是否启用 playground 链接 */
+  enabled?: boolean
+  /** Playground URL 模板，{code} 会被替换为编码后的代码 */
+  url?: string
+  /** 按钮文本 */
+  buttonText?: string
+  /** 支持的语言列表，为空表示所有语言 */
+  languages?: string[]
 }
 
 export interface AnchorOptions {

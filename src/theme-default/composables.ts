@@ -19,6 +19,12 @@ export {
   useThemeColor
 } from '@ldesign/doc/client'
 
+// 导出标签系统
+export { useTags, usePageTags } from './composables/tags'
+
+// 导出站点地图
+export { useSitemap } from './composables/sitemap'
+
 export interface SidebarItem {
   text: string
   link?: string

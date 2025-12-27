@@ -297,16 +297,33 @@ function setupCodeHighlight(
       return `<div class="mermaid">${code}</div>`
     }
 
+    // 解析标题，如 typescript title="example.ts"
+    const title = parseCodeBlockTitle(info)
+
     // 解析高亮行信息，如 typescript{2,4-5}
     const highlightLines = parseHighlightLines(info)
 
+    // 解析聚焦行信息，如 typescript{focus:1-3}
+    const focusLines = parseFocusLines(info)
+
     // 使用代码高亮
     let highlighted = highlighter(code, lang)
+
+    // 处理 diff 高亮
+    highlighted = addDiffHighlight(highlighted)
 
     // 处理高亮行
     if (highlightLines.length > 0) {
       highlighted = addLineHighlight(highlighted, highlightLines)
     }
+
+    // 处理聚焦行
+    if (focusLines.length > 0) {
+      highlighted = addLineFocus(highlighted, focusLines)
+    }
+
+    // 处理代码注释标注
+    highlighted = processCodeAnnotations(highlighted)
 
     // 计算实际行数 - 基于高亮输出中的 .line 元素数量
     const lineMatches = highlighted.match(/<span class="line/g)
@@ -320,26 +337,218 @@ function setupCodeHighlight(
     // 使用 Base64 编码存储代码，避免 HTML 属性值中的特殊字符问题
     const base64Code = Buffer.from(code.trim(), 'utf-8').toString('base64')
 
+    // 构建标题栏
+    const titleHtml = title
+      ? `<div class="vp-code-title">${escapeHtml(title)}</div>`
+      : ''
+
+    // 构建 Playground 链接
+    const playgroundHtml = buildPlaygroundLink(code, lang, options.playground)
+
+    // 检查是否需要折叠
+    const shouldCollapse = options.codeCollapse?.enabled &&
+      actualLineCount > (options.codeCollapse?.threshold || 20)
+
+    const collapseClass = shouldCollapse ? ' collapsible' : ''
+    const collapseButton = shouldCollapse
+      ? `<button class="vp-code-collapse-toggle" data-expand-text="${options.codeCollapse?.expandText || 'Show more'}" data-collapse-text="${options.codeCollapse?.collapseText || 'Show less'}">
+          ${options.codeCollapse?.expandText || 'Show more'}
+        </button>`
+      : ''
+
     // 包装代码块
-    return `<div class="vp-code-block${showLineNumbers ? ' line-numbers' : ''}" data-lang="${lang}">
+    return `<div class="vp-code-block${showLineNumbers ? ' line-numbers' : ''}${title ? ' has-title' : ''}${collapseClass}" data-lang="${lang}">
+  ${titleHtml}
   <div class="vp-code-header">
     <span class="vp-code-lang">${lang}</span>
-    <button class="vp-code-copy" data-code-base64="${base64Code}" title="复制代码">
-      <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-      </svg>
-      <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    </button>
+    <div class="vp-code-actions">
+      ${playgroundHtml}
+      <button class="vp-code-copy" data-code-base64="${base64Code}" title="复制代码">
+        <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </button>
+    </div>
   </div>
   <div class="vp-code-content">
     ${lineNumbersHtml}
     <pre><code class="language-${lang}">${highlighted}</code></pre>
   </div>
+  ${collapseButton}
 </div>`
   }
+}
+
+/**
+ * 处理代码注释标注
+ * 支持 // [!code highlight], // [!code warning], // [!code error] 等
+ */
+function processCodeAnnotations(html: string): string {
+  let result = html
+  let pos = 0
+
+  while (true) {
+    // 查找下一个 <span class="line"> 标签
+    const lineStart = result.indexOf('<span class="line', pos)
+    if (lineStart === -1) break
+
+    // 找到开始标签的结束位置
+    const tagEnd = result.indexOf('>', lineStart)
+    if (tagEnd === -1) break
+
+    // 提取类名
+    const tagMatch = result.substring(lineStart, tagEnd + 1).match(/<span class="line([^"]*)"/)
+    const existingClasses = tagMatch ? tagMatch[1] : ''
+
+    // 找到匹配的结束标签
+    let depth = 1
+    let searchPos = tagEnd + 1
+    let contentEnd = -1
+
+    while (depth > 0 && searchPos < result.length) {
+      const nextOpen = result.indexOf('<span', searchPos)
+      const nextClose = result.indexOf('</span>', searchPos)
+
+      if (nextClose === -1) break
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++
+        searchPos = nextOpen + 5
+      } else {
+        depth--
+        if (depth === 0) {
+          contentEnd = nextClose
+        }
+        searchPos = nextClose + 7
+      }
+    }
+
+    if (contentEnd === -1) {
+      pos = tagEnd + 1
+      continue
+    }
+
+    // 提取内容
+    const content = result.substring(tagEnd + 1, contentEnd)
+    const textContent = content.replace(/<[^>]+>/g, '')
+
+    // 检查是否包含注释标注
+    const highlightMatch = textContent.match(/\/\/\s*\[!code\s+highlight\]/)
+    const warningMatch = textContent.match(/\/\/\s*\[!code\s+warning\]/)
+    const errorMatch = textContent.match(/\/\/\s*\[!code\s+error\]/)
+    const focusMatch = textContent.match(/\/\/\s*\[!code\s+focus\]/)
+
+    if (highlightMatch || warningMatch || errorMatch || focusMatch) {
+      // 移除包含注释的span标签
+      let cleanedContent = content.replace(/<span[^>]*>.*?\/\/\s*\[!code\s+(?:highlight|warning|error|focus)\].*?<\/span>/g, '')
+
+      // 确定类型
+      let annotationClass = ''
+      if (highlightMatch) annotationClass = 'annotated-highlight'
+      else if (warningMatch) annotationClass = 'annotated-warning'
+      else if (errorMatch) annotationClass = 'annotated-error'
+      else if (focusMatch) annotationClass = 'annotated-focus'
+
+      // 构建新的类列表
+      const newClasses = existingClasses ? `${existingClasses} ${annotationClass}` : ` ${annotationClass}`
+
+      // 替换整个line span
+      const oldSpan = result.substring(lineStart, contentEnd + 7)
+      const newSpan = `<span class="line${newClasses}">${cleanedContent}</span>`
+      result = result.substring(0, lineStart) + newSpan + result.substring(contentEnd + 7)
+
+      pos = lineStart + newSpan.length
+    } else {
+      pos = contentEnd + 7
+    }
+  }
+
+  return result
+}
+
+/**
+ * 构建 Playground 链接
+ */
+function buildPlaygroundLink(code: string, lang: string, playgroundOptions?: { enabled?: boolean; url?: string; buttonText?: string; languages?: string[] }): string {
+  if (!playgroundOptions?.enabled || !playgroundOptions?.url) {
+    return ''
+  }
+
+  // 检查语言是否支持
+  if (playgroundOptions.languages && playgroundOptions.languages.length > 0) {
+    if (!playgroundOptions.languages.includes(lang)) {
+      return ''
+    }
+  }
+
+  // 编码代码
+  const encodedCode = encodeURIComponent(code.trim())
+
+  // 替换 URL 模板中的 {code} 占位符
+  const playgroundUrl = playgroundOptions.url.replace('{code}', encodedCode)
+
+  const buttonText = playgroundOptions.buttonText || 'Try it'
+
+  return `<a href="${playgroundUrl}" target="_blank" rel="noopener noreferrer" class="vp-code-playground" title="${buttonText}">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+  </a>`
+}
+
+/**
+ * 解析代码块标题
+ */
+function parseCodeBlockTitle(info: string): string | null {
+  // 支持单引号和双引号
+  const doubleQuoteMatch = info.match(/title="([^"]*)"/)
+  const singleQuoteMatch = info.match(/title='([^']*)'/)
+
+  const match = doubleQuoteMatch || singleQuoteMatch
+  return match ? match[1] : null
+}
+
+/**
+ * 解析聚焦行配置
+ */
+function parseFocusLines(info: string): number[] {
+  const match = info.match(/\{focus:([\d,-]+)\}/)
+  if (!match) return []
+
+  const lines: number[] = []
+  const parts = match[1].split(',')
+
+  for (const part of parts) {
+    if (part.includes('-')) {
+      const [start, end] = part.split('-').map(Number)
+      for (let i = start; i <= end; i++) {
+        lines.push(i)
+      }
+    } else {
+      lines.push(Number(part))
+    }
+  }
+
+  return lines
+}
+
+/**
+ * 添加行聚焦 - 给非聚焦行添加淡化样式
+ */
+function addLineFocus(html: string, focusLines: number[]): string {
+  let lineNumber = 0
+  return html.replace(/<span class="line([^"]*)">/g, (match, existingClasses) => {
+    lineNumber++
+    if (!focusLines.includes(lineNumber)) {
+      // 非聚焦行添加 dimmed 类
+      return `<span class="line${existingClasses} dimmed">`
+    }
+    return match
+  })
 }
 
 /**
@@ -367,18 +576,46 @@ function parseHighlightLines(info: string): number[] {
 }
 
 /**
+ * 添加 diff 高亮 - 识别以 + 或 - 开头的行并添加相应的样式类
+ */
+function addDiffHighlight(html: string): string {
+  // Shiki 输出的 HTML 中,每行被包装在 <span class="line">...</span> 中
+  // 但是这些 span 之间没有换行符,需要用正则匹配每个 span
+  return html.replace(/<span class="line">([^<]*(?:<[^>]+>[^<]*)*?)<\/span>/g, (match, content) => {
+    // 移除 HTML 标签后检查第一个字符
+    const textContent = content.replace(/<[^>]+>/g, '').trim()
+
+    // 处理空字符串情况
+    if (!textContent || textContent.length === 0) {
+      return match
+    }
+
+    const firstChar = textContent[0]
+
+    if (firstChar === '+') {
+      // 添加行添加 diff-add 类
+      return match.replace('<span class="line">', '<span class="line diff-add">')
+    } else if (firstChar === '-') {
+      // 删除行添加 diff-remove 类
+      return match.replace('<span class="line">', '<span class="line diff-remove">')
+    }
+
+    return match
+  })
+}
+
+/**
  * 添加行高亮 - 给已有的 .line 元素添加高亮类
  */
 function addLineHighlight(html: string, highlightLines: number[]): string {
-  const lines = html.split('\n')
-  return lines.map((line, i) => {
-    const lineNum = i + 1
-    if (highlightLines.includes(lineNum)) {
-      // 替换 class="line" 为 class="line highlighted"
-      return line.replace('<span class="line">', '<span class="line highlighted">')
+  let lineNumber = 0
+  return html.replace(/<span class="line">/g, (match) => {
+    lineNumber++
+    if (highlightLines.includes(lineNumber)) {
+      return '<span class="line highlighted">'
     }
-    return line
-  }).join('\n')
+    return match
+  })
 }
 
 /**

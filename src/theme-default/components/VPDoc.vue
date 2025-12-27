@@ -4,11 +4,7 @@
     <PluginSlot name="doc-before" />
 
     <!-- 面包屑 -->
-    <nav v-if="showBreadcrumb" class="vp-doc-breadcrumb">
-      <a :href="homeLink">{{ i18nText.home }}</a>
-      <span class="vp-doc-breadcrumb-separator">/</span>
-      <span>{{ page.title }}</span>
-    </nav>
+    <VPBreadcrumb v-if="showBreadcrumb" :home-text="i18nText.home" />
 
     <!-- 文档内容 -->
     <article class="vp-doc-content">
@@ -53,6 +49,12 @@
       </a>
     </div>
 
+    <!-- 相关页面推荐 -->
+    <VPRelatedPages v-if="showRelatedPages" />
+
+    <!-- 子页面目录 -->
+    <VPSubpageTOC v-if="showSubpageTOC" :title="subpageTOCTitle" />
+
     <!-- 文档页脚前插槽 -->
     <PluginSlot name="doc-footer-before" />
 
@@ -66,6 +68,7 @@
           {{ i18nText.prevPage }}
         </span>
         <span class="vp-doc-pagination-title">{{ prevPage.text }}</span>
+        <span v-if="prevPage.description" class="vp-doc-pagination-description">{{ prevPage.description }}</span>
       </router-link>
       <router-link v-if="nextPage" :to="nextPage.link" class="vp-doc-pagination-next">
         <span class="vp-doc-pagination-label">
@@ -75,6 +78,7 @@
           </svg>
         </span>
         <span class="vp-doc-pagination-title">{{ nextPage.text }}</span>
+        <span v-if="nextPage.description" class="vp-doc-pagination-description">{{ nextPage.description }}</span>
       </router-link>
     </nav>
 
@@ -90,6 +94,9 @@
 import { computed, ref, onMounted, nextTick } from 'vue'
 import { useData, useRoute, Content } from '@ldesign/doc/client'
 import { PluginSlot, usePluginSlots } from '@ldesign/doc/client'
+import VPBreadcrumb from './VPBreadcrumb.vue'
+import VPRelatedPages from './VPRelatedPages.vue'
+import VPSubpageTOC from './VPSubpageTOC.vue'
 
 const { page, site, theme, frontmatter } = useData()
 const route = useRoute()
@@ -140,6 +147,22 @@ const i18nText = computed(() => {
 // 是否显示面包屑
 const showBreadcrumb = computed(() => {
   return frontmatter.value.breadcrumb !== false
+})
+
+// 是否显示相关页面
+const showRelatedPages = computed(() => {
+  return frontmatter.value.relatedPages !== false
+})
+
+// 是否显示子页面目录
+const showSubpageTOC = computed(() => {
+  return frontmatter.value.subpageTOC !== false
+})
+
+// 子页面目录标题
+const subpageTOCTitle = computed(() => {
+  const isEn = currentLocale.value === 'en'
+  return (frontmatter.value.subpageTOCTitle as string) || (isEn ? 'Subpages' : '子页面')
 })
 
 // 是否显示标题
@@ -202,9 +225,10 @@ const editLink = computed(() => {
 interface NavLink {
   text: string
   link: string
+  description?: string
 }
 
-// 上一页/下一页：根据当前路由在侧边栏的顺序计算
+// 上一页/下一页：根据配置的阅读顺序或侧边栏顺序计算
 function normalizePath(p: string) {
   let s = p || '/'
   if (!s.startsWith('/')) s = '/' + s
@@ -214,8 +238,30 @@ function normalizePath(p: string) {
 
 function getOrderedLinks(): NavLink[] {
   const themeCfg = localeTheme.value as unknown as {
-    sidebar?: Record<string, Array<{ text?: string; items?: Array<{ text: string; link: string }> }>>
+    sidebar?: Record<string, Array<{ text?: string; items?: Array<{ text: string; link: string; description?: string }> }>>
+    docFooter?: {
+      readingOrder?: Array<{ link: string; text: string; description?: string }>
+    }
   }
+  
+  // 优先使用配置的阅读顺序
+  const readingOrder = themeCfg?.docFooter?.readingOrder
+  if (readingOrder && readingOrder.length > 0) {
+    // Filter duplicates based on normalized paths
+    const seen = new Set<string>()
+    return readingOrder.filter(item => {
+      const normalized = normalizePath(item.link)
+      if (seen.has(normalized)) return false
+      seen.add(normalized)
+      return true
+    }).map(item => ({
+      text: item.text,
+      link: item.link,
+      description: item.description
+    }))
+  }
+  
+  // 否则使用侧边栏顺序
   const current = normalizePath(route.path)
   const sidebar = themeCfg?.sidebar || {}
 
@@ -224,13 +270,24 @@ function getOrderedLinks(): NavLink[] {
     .sort((a, b) => b.length - a.length)
     .find(k => current.startsWith(normalizePath(k)))
 
-  const groups = base ? sidebar[base] : ([] as Array<{ items?: Array<{ text: string; link: string }> }>)
+  const groups = base ? sidebar[base] : ([] as Array<{ items?: Array<{ text: string; link: string; description?: string }> }>)
   const list: NavLink[] = []
+  const seen = new Set<string>()
+  
   for (const g of groups) {
     const items = g.items || []
     for (const it of items) {
+      // Filter out items without links, external links, and duplicates
       if (it.link && !/^https?:/i.test(it.link)) {
-        list.push({ text: it.text, link: it.link })
+        const normalized = normalizePath(it.link)
+        if (!seen.has(normalized)) {
+          seen.add(normalized)
+          list.push({ 
+            text: it.text, 
+            link: it.link,
+            description: it.description
+          })
+        }
       }
     }
   }
@@ -238,6 +295,13 @@ function getOrderedLinks(): NavLink[] {
 }
 
 const prevPage = computed<NavLink | null>(() => {
+  const themeCfg = localeTheme.value as unknown as {
+    docFooter?: { prev?: string | false }
+  }
+  
+  // 如果配置中禁用了上一页，返回 null
+  if (themeCfg?.docFooter?.prev === false) return null
+  
   const list = getOrderedLinks()
   const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
   if (idx > 0) return list[idx - 1]
@@ -245,6 +309,13 @@ const prevPage = computed<NavLink | null>(() => {
 })
 
 const nextPage = computed<NavLink | null>(() => {
+  const themeCfg = localeTheme.value as unknown as {
+    docFooter?: { next?: string | false }
+  }
+  
+  // 如果配置中禁用了下一页，返回 null
+  if (themeCfg?.docFooter?.next === false) return null
+  
   const list = getOrderedLinks()
   const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
   if (idx >= 0 && idx < list.length - 1) return list[idx + 1]
@@ -266,28 +337,6 @@ const formatDate = (timestamp: number) => {
   width: 100%;
   max-width: 100%;
   padding: 24px 0;
-}
-
-.vp-doc-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  font-size: 14px;
-  color: var(--ldoc-c-text-2);
-}
-
-.vp-doc-breadcrumb a {
-  color: var(--ldoc-c-text-2);
-  text-decoration: none;
-}
-
-.vp-doc-breadcrumb a:hover {
-  color: var(--ldoc-c-brand);
-}
-
-.vp-doc-breadcrumb-separator {
-  color: var(--ldoc-c-divider);
 }
 
 .vp-doc-title {
@@ -438,6 +487,7 @@ const formatDate = (timestamp: number) => {
   transition: all 0.2s;
   max-width: 50%;
   background: transparent;
+  gap: 4px;
 }
 
 .vp-doc-pagination-prev {
@@ -461,12 +511,27 @@ const formatDate = (timestamp: number) => {
   font-size: 12px;
   color: var(--ldoc-c-text-3);
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .vp-doc-pagination-title {
   font-size: 14px;
   font-weight: 500;
   color: var(--ldoc-c-brand);
+}
+
+.vp-doc-pagination-description {
+  font-size: 12px;
+  color: var(--ldoc-c-text-2);
+  line-height: 1.4;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* 底部元信息：阅读时间（左） + 最后更新时间（右） */
@@ -513,12 +578,6 @@ const formatDate = (timestamp: number) => {
 @media (max-width: 767px) {
   .vp-doc {
     padding: 16px 0;
-  }
-
-  .vp-doc-breadcrumb {
-    font-size: 13px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
   }
 
   .vp-doc-title {
@@ -602,11 +661,6 @@ const formatDate = (timestamp: number) => {
 @media (min-width: 1920px) {
   .vp-doc {
     padding: 32px 0;
-  }
-
-  .vp-doc-breadcrumb {
-    font-size: 15px;
-    margin-bottom: 28px;
   }
 
   .vp-doc-title {

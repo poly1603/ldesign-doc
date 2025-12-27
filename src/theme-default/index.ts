@@ -38,6 +38,7 @@ export { default as VPHome } from './components/VPHome.vue'
 export { default as VPDoc } from './components/VPDoc.vue'
 export { default as VPOutline } from './components/VPOutline.vue'
 export { default as VPBanner } from './components/VPBanner.vue'
+export { default as VPBreadcrumb } from './components/VPBreadcrumb.vue'
 export { default as Demo } from './components/Demo.vue'
 export { default as CodeGroup } from './components/CodeGroup.vue'
 

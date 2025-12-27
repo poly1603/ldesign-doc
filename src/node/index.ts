@@ -22,3 +22,12 @@ export { initProject } from './init'
 export { createDevServer } from './server/devServer'
 export { createVitePlugins } from './vitePlugin'
 export type { VitePluginOptions } from './vitePlugin'
+export {
+  extractTags,
+  buildTagIndex,
+  getTagList,
+  getTagByName,
+  getRelatedPagesByTags,
+  generateTagPageData
+} from './tags'
+export type { TagInfo, TaggedPage, TagIndex } from './tags'

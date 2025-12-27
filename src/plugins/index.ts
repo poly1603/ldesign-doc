@@ -132,3 +132,23 @@ export type { DemoPluginOptions } from './demo'
 
 export { componentPlaygroundPlugin } from './component-playground'
 export type { ComponentPlaygroundOptions } from './component-playground'
+
+// ============== 版本管理插件 ==============
+
+export { versionPlugin, defineVersionConfig, resolveVersionAlias, isVersionDeprecated, generateVersionManifest } from './version'
+export type {
+  VersionPluginOptions,
+  VersionConfig,
+  VersionItem,
+  VersionManifest
+} from './version'
+
+// ============== 标签系统插件 ==============
+
+export { tagsPlugin } from './tags'
+export type { TagsPluginOptions } from './tags'
+
+// ============== 站点地图插件 ==============
+
+export { sitemapPlugin } from './sitemap'
+export type { SitemapPluginOptions } from './sitemap'
