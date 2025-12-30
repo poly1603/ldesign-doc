@@ -152,3 +152,43 @@ export type { TagsPluginOptions } from './tags'
 
 export { sitemapPlugin } from './sitemap'
 export type { SitemapPluginOptions } from './sitemap'
+
+// ============== 增强搜索插件 ==============
+
+export { enhancedSearchPlugin } from './search-enhanced'
+export type { EnhancedSearchOptions } from './search-enhanced'
+
+// ============== PWA 插件 ==============
+
+export { pwaPlugin } from './pwa'
+export type { PWAOptions } from './pwa'
+
+// ============== 分析插件 ==============
+
+export { analyticsPlugin } from './analytics'
+export type { AnalyticsOptions } from './analytics'
+
+// ============== 反馈插件 ==============
+
+export { feedbackPlugin } from './feedback'
+export type { FeedbackOptions } from './feedback'
+
+// ============== 导出插件 ==============
+
+export { exportPlugin } from './export'
+export type { ExportOptions } from './export'
+
+// ============== API 文档插件 ==============
+
+export { apiDocPlugin } from './api-doc'
+export type { ApiDocOptions } from './api-doc'
+
+// ============== 性能优化插件 ==============
+
+export { performancePlugin } from './performance'
+export type { PerformanceOptions } from './performance'
+
+// ============== 国际化增强插件 ==============
+
+export { i18nPlugin } from './i18n'
+export type { I18nPluginOptions } from './i18n'

@@ -3,7 +3,33 @@
  * 使用 Playwright 生成 PDF
  */
 
-import type { PDFConfig } from './index'
+/**
+ * PDF 导出配置
+ */
+export interface PDFConfig {
+  /** 页面大小 */
+  pageSize?: 'A4' | 'Letter' | 'Legal'
+  /** 页边距 */
+  margin?: {
+    top?: string
+    right?: string
+    bottom?: string
+    left?: string
+  }
+  /** 是否显示页眉页脚 */
+  displayHeaderFooter?: boolean
+  /** 页眉页脚配置 */
+  headerFooter?: {
+    header?: string
+    footer?: string
+  }
+  /** 是否打印背景图 */
+  printBackground?: boolean
+  /** 缩放比例 */
+  scale?: number
+  /** 是否包含目录 */
+  toc?: boolean
+}
 
 /**
  * PDF 页面尺寸映射

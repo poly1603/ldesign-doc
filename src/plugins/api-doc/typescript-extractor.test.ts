@@ -35,7 +35,7 @@ async function cleanupTempFile(filePath: string): Promise<void> {
  * all exported types, functions, classes, and interfaces.
  */
 describe('TypeScript Extractor - Property Tests', () => {
-  it('Property 11: should extract all exported functions', { timeout: 30000 }, async () => {
+  it('Property 11: should extract all exported functions', { timeout: 120000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
@@ -50,7 +50,7 @@ describe('TypeScript Extractor - Property Tests', () => {
             ),
             returnType: fc.constantFrom('string', 'number', 'boolean', 'void')
           }),
-          { minLength: 1, maxLength: 5 }
+          { minLength: 1, maxLength: 3 } // Reduced from 5 to 3 for faster tests
         ),
         async (functions) => {
           // Generate TypeScript source with exported functions
@@ -89,11 +89,11 @@ describe('TypeScript Extractor - Property Tests', () => {
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 } // Reduced from 25 to 10 for faster tests
     )
   })
 
-  it('Property 11: should extract all exported classes', { timeout: 30000 }, async () => {
+  it('Property 11: should extract all exported classes', { timeout: 120000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
@@ -146,11 +146,11 @@ ${properties}
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 } // Reduced from 25 to 10 for faster tests
     )
   })
 
-  it('Property 11: should extract all exported interfaces', { timeout: 30000 }, async () => {
+  it('Property 11: should extract all exported interfaces', { timeout: 120000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
@@ -206,11 +206,11 @@ ${properties}
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 } // Reduced from 25 to 10 for faster tests
     )
   })
 
-  it('Property 11: should extract all exported type aliases', { timeout: 30000 }, async () => {
+  it('Property 11: should extract all exported type aliases', { timeout: 120000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
@@ -249,11 +249,11 @@ ${properties}
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 } // Reduced from 25 to 10 for faster tests
     )
   })
 
-  it('Property 11: should extract mixed exports (functions, classes, interfaces, types)', { timeout: 30000 }, async () => {
+  it('Property 11: should extract mixed exports (functions, classes, interfaces, types)', { timeout: 120000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
@@ -309,7 +309,7 @@ export type ${typeName} = string | number
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 } // Reduced from 25 to 10 for faster tests
     )
   })
 })

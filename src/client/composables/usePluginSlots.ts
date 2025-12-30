@@ -138,8 +138,9 @@ export function collectPluginSlots(
 
     // 注册全局组件
     if (plugin.globalComponents) {
-      console.log(`[collectPluginSlots] Registering ${plugin.globalComponents.length} global components from ${plugin.name}:`, plugin.globalComponents.map(c => c.name))
-      context.registerGlobalComponents(plugin.globalComponents)
+      const globalComponents = Array.isArray(plugin.globalComponents) ? plugin.globalComponents : []
+      console.log(`[collectPluginSlots] Registering ${globalComponents.length} global components from ${plugin.name}:`, globalComponents.map(c => c.name))
+      context.registerGlobalComponents(globalComponents)
     }
   }
 }

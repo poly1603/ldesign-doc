@@ -213,30 +213,29 @@ export function validateFeedbackConfig(options: FeedbackOptions): {
 /**
  * 过滤对象中的 undefined 值
  */
-function filterUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const result: Partial<T> = {}
+function filterUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj
+  if (Array.isArray(obj)) {
+    return obj.filter(item => item !== undefined).map(item => filterUndefined(item)) as unknown as T
+  }
+  if (typeof obj !== 'object') {
+    return obj
+  }
+
+  const result: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
       // 递归处理嵌套对象
       if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        const filtered = filterUndefined(value as Record<string, unknown>)
-        // 只有在过滤后的对象不为空时才包含它
-        if (Object.keys(filtered).length > 0) {
-          result[key as keyof T] = filtered as T[keyof T]
-        }
+        result[key] = filterUndefined(value)
       } else if (Array.isArray(value)) {
-        // 过滤数组中的 undefined
-        const filteredArray = value.filter(item => item !== undefined)
-        // 只有在过滤后的数组不为空时才包含它
-        if (filteredArray.length > 0) {
-          result[key as keyof T] = filteredArray as T[keyof T]
-        }
+        result[key] = value.filter(item => item !== undefined).map(item => filterUndefined(item))
       } else {
-        result[key as keyof T] = value as T[keyof T]
+        result[key] = value
       }
     }
   }
-  return result
+  return result as unknown as T
 }
 
 /**
@@ -247,7 +246,7 @@ export async function storeFeedback(
   storage: FeedbackStorageConfig
 ): Promise<void> {
   // 过滤掉 undefined 值，避免 JSON 序列化问题
-  const cleanData = filterUndefined(data as Record<string, unknown>) as FeedbackData
+  const cleanData = filterUndefined(data)
 
   switch (storage.type) {
     case 'local':
@@ -337,7 +336,8 @@ export async function extractContributors(
       { cwd: repoPath, encoding: 'utf-8' }
     )
 
-    const lines = gitLog.trim().split('\n').filter(Boolean)
+    const gitLogStr = typeof gitLog === 'string' ? gitLog : gitLog.toString()
+    const lines = gitLogStr.trim().split('\n').filter(Boolean)
     const contributorMap = new Map<string, Contributor>()
 
     for (const line of lines) {

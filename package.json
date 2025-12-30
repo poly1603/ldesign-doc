@@ -54,6 +54,10 @@
       "types": "./dist/types/plugins/search/client.d.ts",
       "import": "./dist/es/plugins/search/client.js"
     },
+    "./plugins/*/client": {
+      "types": "./dist/types/plugins/*/client.d.ts",
+      "import": "./dist/es/plugins/*/client.js"
+    },
     "./node": {
       "types": "./dist/types/node/index.d.ts",
       "import": "./dist/es/node/index.js"
@@ -127,7 +131,9 @@
     "@types/markdown-it": "^13.0.0",
     "@types/node": "^20.0.0",
     "@types/prompts": "^2.4.9",
+    "@vue/test-utils": "^2.4.6",
     "fast-check": "^4.5.2",
+    "jsdom": "^27.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"

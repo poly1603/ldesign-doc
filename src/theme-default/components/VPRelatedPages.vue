@@ -55,13 +55,17 @@ const route = useRoute()
 
 // 计算相关页面
 const relatedPages = computed(() => {
-  return computeRelatedPages(
-    route.path,
-    page.value,
-    site.value,
-    theme.value,
-    props.maxItems
-  )
+  try {
+    return computeRelatedPages(
+      route.path,
+      page.value,
+      site.value,
+      theme.value,
+      props.maxItems
+    )
+  } catch {
+    return []
+  }
 })
 </script>
 

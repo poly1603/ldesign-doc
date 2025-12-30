@@ -170,18 +170,26 @@ export class JSDocParser {
    * 获取注释文本
    */
   private static getCommentText(comment: string | ts.NodeArray<ts.JSDocComment>): string {
+    let text: string
+
     if (typeof comment === 'string') {
-      return comment
+      text = comment
+    } else {
+      text = comment
+        .map(c => {
+          if (typeof c === 'string') {
+            return c
+          }
+          return c.text || ''
+        })
+        .join('')
     }
 
-    return comment
-      .map(c => {
-        if (typeof c === 'string') {
-          return c
-        }
-        return c.text || ''
-      })
-      .join('')
+    // Strip leading "- " prefix that TypeScript JSDoc parser adds
+    text = text.replace(/^\s*-\s*/, '')
+
+    // Trim whitespace
+    return text.trim()
   }
 
   /**

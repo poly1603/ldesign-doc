@@ -19,7 +19,25 @@ import {
   lastUpdatedPlugin,
   wordCountPlugin,
   authPlugin,
-  componentPlaygroundPlugin
+  componentPlaygroundPlugin,
+  backToTopPlugin,
+  announcementPlugin,
+  socialSharePlugin,
+  outlinePlugin,
+  lightboxPlugin,
+  versionPlugin,
+  tagsPlugin,
+  sitemapPlugin,
+  enhancedSearchPlugin,
+  pwaPlugin,
+  analyticsPlugin,
+  feedbackPlugin,
+  exportPlugin,
+  apiDocPlugin,
+  performancePlugin,
+  i18nPlugin,
+  vuePlugin,
+  reactPlugin
 } from '@ldesign/doc/plugins'
 
 // 导入导航和侧边栏配置
@@ -103,6 +121,9 @@ export default defineConfig({
       navHeight: 64,
       maxWidth: 1400
     },
+    search: {
+      disabled: false
+    },
     ui: {
       progressBar: { enabled: true, height: 3, color: '#3b82f6', trackFetch: process.env.NODE_ENV === 'production', trackXHR: process.env.NODE_ENV === 'production' },
       modal: { type: 'scale', enterDuration: 300, easing: 'cubic-bezier(0.4,0,0.2,1)' },
@@ -122,11 +143,53 @@ export default defineConfig({
     progressPlugin({ color: 'var(--ldoc-c-brand)', height: 3, exclude: ['/'] }),
     copyCodePlugin({ showLanguage: true }),
     imageViewerPlugin({ zoom: true }),
+    lightboxPlugin({}),
     demoPlugin({ defaultTitle: '示例', defaultExpanded: false }),
     componentPlaygroundPlugin(),
+    vuePlugin({ devtools: process.env.NODE_ENV !== 'production' }),
+    reactPlugin({ version: '18', strictMode: true }),
     readingTimePlugin({ wordsPerMinute: 300, position: 'doc-top', exclude: [] }),
     wordCountPlugin(),
     lastUpdatedPlugin({ useGitTime: false, position: 'doc-top', exclude: [] }),
+    backToTopPlugin({}),
+    outlinePlugin({ title: '本页目录', minLevel: 2, maxLevel: 3, position: 'right' }),
+    socialSharePlugin({ showAtBottom: false }),
+    announcementPlugin({
+      content: '这是公告栏插件示例（Playground 默认开启）。',
+      type: 'info',
+      closable: true,
+      storageKey: 'playground-announcement',
+      link: '/examples/',
+      linkText: '查看示例'
+    }),
+    i18nPlugin({
+      statusTracking: { enabled: true },
+      fallback: { enabled: true, showMissingNotice: true },
+      rtl: { enabled: true, rtlLocales: ['ar', 'he', 'fa'] }
+    }),
+    performancePlugin({
+      imageOptimization: { enabled: true, webp: true, webpQuality: 80, lazyLoading: true },
+      codeSplitting: { enabled: true },
+      preloadHints: { enabled: true, strategy: 'prefetch', maxLinks: 20 }
+    }),
+    pwaPlugin({ enabled: false }),
+    analyticsPlugin({ provider: 'custom', custom: { script: '/* playground: analytics disabled */' }, healthCheck: { enabled: false }, searchTracking: { enabled: false }, enableInDev: false }),
+    feedbackPlugin({
+      type: 'helpful',
+      storage: { type: 'local' },
+      position: 'doc-footer',
+      contributors: { enabled: false }
+    }),
+    exportPlugin({ formats: ['pdf'], enablePrintStyles: true, buttonPosition: 'floating' }),
+    apiDocPlugin({ include: [], exclude: [], outDir: 'api', template: 'minimal', typeLinks: false, watch: false }),
+    versionPlugin({
+      versions: [{ version: '1.0.0', path: '/', label: 'v1.0.0' }],
+      current: '1.0.0',
+      aliases: { latest: '1.0.0', stable: '1.0.0' },
+      selectorPosition: 'nav'
+    }),
+    tagsPlugin({ enabled: false }),
+    sitemapPlugin({ enabled: false }),
     ...(process.env.NODE_ENV === 'production'
       ? [
         commentPlugin({

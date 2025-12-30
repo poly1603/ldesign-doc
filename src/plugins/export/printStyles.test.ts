@@ -37,12 +37,13 @@ describe('Export Plugin - Print Stylesheet Inclusion', () => {
 
           // Simulate HTML generation with plugin styles
           const headStyles = plugin.headStyles || []
+          const stylesArray = typeof headStyles === 'function' ? [] : headStyles
           const htmlWithStyles = `
             <!DOCTYPE html>
             <html>
               <head>
                 <title>${pageConfig.title}</title>
-                <style>${headStyles.join('\n')}</style>
+                <style>${stylesArray.join('\n')}</style>
               </head>
               <body>
                 ${pageConfig.content}
@@ -268,7 +269,8 @@ describe('Export Plugin - Print Stylesheet Inclusion', () => {
 
           // When disabled, headStyles should be undefined or empty
           const headStyles = plugin.headStyles || []
-          const stylesContent = headStyles.join('\n')
+          const stylesArray = typeof headStyles === 'function' ? [] : headStyles
+          const stylesContent = stylesArray.join('\n')
 
           expect(stylesContent).not.toContain('@media print')
 

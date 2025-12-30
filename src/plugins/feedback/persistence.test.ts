@@ -219,9 +219,16 @@ describe('Feedback Plugin - Data Persistence', () => {
 
         if (feedbackData.formData !== undefined) {
           // formData 可能包含嵌套的 undefined，这些会被过滤掉
-          // 我们需要递归比较，忽略 undefined 值
+          // JSON.parse/stringify 也会过滤掉 __proto__ 等危险属性（这是正确的安全行为）
           const cleanFormData = JSON.parse(JSON.stringify(feedbackData.formData))
-          expect(retrievedData.formData).toEqual(cleanFormData)
+          // 移除 __proto__ 等特殊属性，因为它们会被 JSON 序列化过滤
+          const sanitizedFormData = Object.keys(cleanFormData).reduce((acc, key) => {
+            if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+              acc[key] = cleanFormData[key]
+            }
+            return acc
+          }, {} as Record<string, any>)
+          expect(retrievedData.formData).toEqual(sanitizedFormData)
         } else {
           expect(retrievedData.formData).toBeUndefined()
         }

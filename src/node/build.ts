@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
-import type { SiteConfig, PageData } from '../shared/types'
+import type { SiteConfig, PageData, BuildHookFunction } from '../shared/types'
 import type { MarkdownRenderer } from '../shared/types'
 import type { PluginContainer } from '../plugin/pluginContainer'
 import { normalizePath } from '../shared/utils'
@@ -18,6 +18,7 @@ import { scanPages } from './pages'
 import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainCode, generateHtmlTemplate, pageDataToRoutes } from './core/siteData'
 import pc from 'picocolors'
 import * as logger from './logger'
+import { generateBuildReport, printBuildReport, saveBuildReport } from './buildReport'
 
 // 获取当前包的根目录
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -65,6 +66,9 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       logger.printBuildStart()
 
       const startTime = Date.now()
+
+      // 执行 pre-build 钩子
+      await executeBuildHooks(config.build.hooks?.preBuild, config, 'pre-build')
 
       // 调用 buildStart 钩子
       await pluginContainer.callHook('buildStart', config)
@@ -179,7 +183,18 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
         await config.buildEnd(config)
       }
 
+      // 执行 post-build 钩子
+      await executeBuildHooks(config.build.hooks?.postBuild, config, 'post-build')
+
       const endTime = Date.now()
+
+      // 生成并打印构建报告
+      const buildReport = generateBuildReport(config, pages, endTime - startTime)
+      printBuildReport(buildReport)
+
+      // 保存构建报告到文件
+      saveBuildReport(buildReport, config.outDir)
+
       logger.printBuildComplete(endTime - startTime, config.outDir)
     }
   }
@@ -211,6 +226,33 @@ export async function build(root: string = process.cwd()): Promise<void> {
 
   const builder = createBuilder(config, { md, pluginContainer })
   await builder.build()
+}
+
+/**
+ * 执行构建钩子
+ * @param hooks - 钩子函数或钩子函数数组
+ * @param config - 站点配置
+ * @param hookName - 钩子名称（用于日志）
+ */
+async function executeBuildHooks(
+  hooks: BuildHookFunction | BuildHookFunction[] | undefined,
+  config: SiteConfig,
+  hookName: string
+): Promise<void> {
+  if (!hooks) return
+
+  const hookArray = Array.isArray(hooks) ? hooks : [hooks]
+
+  for (let i = 0; i < hookArray.length; i++) {
+    const hook = hookArray[i]
+    try {
+      logger.printBuildStep(`Executing ${hookName} hook`, `${i + 1}/${hookArray.length}`)
+      await hook(config)
+    } catch (error) {
+      logger.printError(`${hookName} hook failed`, String(error))
+      throw error
+    }
+  }
 }
 
 /**

@@ -22,10 +22,10 @@ describe('Navigation Generator - Property Tests', () => {
           fc.record({
             name: fc.stringMatching(/^[a-z][a-zA-Z0-9]*$/),
             path: fc.stringMatching(/^[a-z][a-zA-Z0-9/]*\.ts$/),
-            exports: fc.constant([])
+            exports: fc.constant([]) as fc.Arbitrary<[]>
           }),
           { minLength: 1, maxLength: 10 }
-        ),
+        ).map(modules => modules.map(m => ({ ...m, exports: [] as [] }))),
         (modules) => {
           // Generate navigation
           const navigation = generateNavigation(modules as ApiModule[], {
@@ -51,10 +51,10 @@ describe('Navigation Generator - Property Tests', () => {
           fc.record({
             name: fc.stringMatching(/^[a-z][a-zA-Z0-9]*$/),
             path: fc.stringMatching(/^[a-z][a-zA-Z0-9]*\.ts$/),
-            exports: fc.constant([])
+            exports: fc.constant([]) as fc.Arbitrary<[]>
           }),
           { minLength: 1, maxLength: 5 }
-        ),
+        ).map(modules => modules.map(m => ({ ...m, exports: [] as [] }))),
         (modules) => {
           // Generate navigation
           const navigation = generateNavigation(modules as ApiModule[], {
@@ -94,10 +94,10 @@ describe('Navigation Generator - Property Tests', () => {
           fc.record({
             name: fc.stringMatching(/^[a-z][a-zA-Z0-9]*$/),
             path: fc.constantFrom('src/core/test.ts', 'src/utils/helper.ts', 'src/main.ts'),
-            exports: fc.constant([])
+            exports: fc.constant([]) as fc.Arbitrary<[]>
           }),
           { minLength: 1, maxLength: 5 }
-        ),
+        ).map(modules => modules.map(m => ({ ...m, exports: [] as [] }))),
         (group, modules) => {
           // Generate grouped navigation
           const navigation = generateNavigation(modules as ApiModule[], {
@@ -125,10 +125,10 @@ describe('Navigation Generator - Property Tests', () => {
           fc.record({
             name: fc.stringMatching(/^[a-z][a-zA-Z0-9]*$/),
             path: fc.stringMatching(/^[a-z][a-zA-Z0-9]*\.ts$/),
-            exports: fc.constant([])
+            exports: fc.constant([]) as fc.Arbitrary<[]>
           }),
           { minLength: 2, maxLength: 10 }
-        ),
+        ).map(modules => modules.map(m => ({ ...m, exports: [] as [] }))),
         (modules) => {
           // Generate navigation with sorting
           const navigation = generateNavigation(modules as ApiModule[], {

@@ -12,6 +12,14 @@ import type {
   HotUpdateContext,
   ConfigEnv
 } from '../shared/types'
+import {
+  resolvePluginDependencies,
+  validatePluginConfig,
+  composePlugins,
+  detectPluginConflicts,
+  formatValidationErrors,
+  formatConflicts
+} from './pluginSystem'
 
 export interface PluginContainer {
   register: (plugin: LDocPlugin) => Promise<void>
@@ -36,11 +44,42 @@ interface PluginHooks {
 /**
  * 创建插件容器
  */
-export function createPluginContainer(config: SiteConfig): PluginContainer {
-  const plugins: LDocPlugin[] = []
+export function createPluginContainer(config: SiteConfig, plugins: LDocPlugin[] = []): PluginContainer {
+  // 验证所有插件配置
+  const allErrors: string[] = []
+  for (const plugin of plugins) {
+    const errors = validatePluginConfig(plugin)
+    if (errors.length > 0) {
+      allErrors.push(formatValidationErrors(errors))
+    }
+  }
+
+  if (allErrors.length > 0) {
+    throw new Error(allErrors.join('\n\n'))
+  }
+
+  // 检测冲突（仅警告，不阻止）
+  const conflicts = detectPluginConflicts(plugins)
+  if (conflicts.length > 0) {
+    console.warn(formatConflicts(conflicts))
+  }
+
+  // 组合插件（处理继承）
+  let composedPlugins = composePlugins(plugins)
+
+  // 解析依赖并排序
+  composedPlugins = resolvePluginDependencies(composedPlugins)
+
+  const registeredPlugins: LDocPlugin[] = []
 
   return {
     async register(plugin: LDocPlugin) {
+      // 验证插件配置
+      const errors = validatePluginConfig(plugin)
+      if (errors.length > 0) {
+        throw new Error(formatValidationErrors(errors))
+      }
+
       // 调用插件的 config 钩子
       if (plugin.config) {
         const env: ConfigEnv = {
@@ -54,11 +93,11 @@ export function createPluginContainer(config: SiteConfig): PluginContainer {
         }
       }
 
-      plugins.push(plugin)
+      registeredPlugins.push(plugin)
     },
 
     async callHook(name, ...args) {
-      for (const plugin of plugins) {
+      for (const plugin of composedPlugins) {
         const hook = plugin[name as keyof LDocPlugin]
         if (typeof hook === 'function') {
           await (hook as (...args: unknown[]) => unknown)(...args)
@@ -69,7 +108,7 @@ export function createPluginContainer(config: SiteConfig): PluginContainer {
     async getVitePlugins() {
       const vitePlugins: VitePlugin[] = []
 
-      for (const plugin of plugins) {
+      for (const plugin of composedPlugins) {
         if (plugin.vitePlugins) {
           const pluginsFromHook = await plugin.vitePlugins()
           vitePlugins.push(...pluginsFromHook)
@@ -85,10 +124,17 @@ export function createPluginContainer(config: SiteConfig): PluginContainer {
  * 排序插件（按优先级）
  */
 export function sortPlugins(plugins: LDocPlugin[]): LDocPlugin[] {
-  // 内置插件优先级最高，然后是用户插件
   return [...plugins].sort((a, b) => {
-    const aBuiltin = a.name.startsWith('ldoc:') ? 0 : 1
-    const bBuiltin = b.name.startsWith('ldoc:') ? 0 : 1
-    return aBuiltin - bBuiltin
+    // 获取优先级值
+    const getPriority = (plugin: LDocPlugin): number => {
+      if (plugin.enforce === 'pre') return -1000
+      if (plugin.enforce === 'post') return 1000
+      if (typeof plugin.enforce === 'number') return plugin.enforce
+
+      // 内置插件默认优先级较高
+      return plugin.name.startsWith('ldoc:') ? 0 : 100
+    }
+
+    return getPriority(a) - getPriority(b)
   })
 }

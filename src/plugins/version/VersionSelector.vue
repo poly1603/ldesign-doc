@@ -1,25 +1,10 @@
 <template>
   <div class="ldoc-version-selector" :class="{ 'is-open': isOpen }">
-    <button
-      class="version-selector-button"
-      :aria-label="ariaLabel"
-      :aria-expanded="isOpen"
-      @click="toggleDropdown"
-      @keydown.escape="closeDropdown"
-    >
+    <button class="version-selector-button" :aria-label="ariaLabel" :aria-expanded="isOpen" @click="toggleDropdown"
+      @keydown.escape="closeDropdown">
       <span class="version-label">{{ currentVersionLabel }}</span>
-      <svg
-        class="version-icon"
-        :class="{ 'is-rotated': isOpen }"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
+      <svg class="version-icon" :class="{ 'is-rotated': isOpen }" width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="6 9 12 15 18 9"></polyline>
       </svg>
     </button>
@@ -27,21 +12,12 @@
     <transition name="version-dropdown">
       <div v-if="isOpen" class="version-dropdown" role="menu">
         <div class="version-dropdown-inner">
-          <div
-            v-for="version in versions"
-            :key="version.version"
-            class="version-item"
-            :class="{
-              'is-current': version.version === currentVersion,
-              'is-deprecated': version.deprecated,
-              'is-prerelease': version.prerelease
-            }"
-            role="menuitem"
-            :tabindex="version.version === currentVersion ? -1 : 0"
-            @click="selectVersion(version)"
-            @keydown.enter="selectVersion(version)"
-            @keydown.space.prevent="selectVersion(version)"
-          >
+          <div v-for="version in versions" :key="version.version" class="version-item" :class="{
+            'is-current': version.version === currentVersion,
+            'is-deprecated': version.deprecated,
+            'is-prerelease': version.prerelease
+          }" role="menuitem" :tabindex="version.version === currentVersion ? -1 : 0" @click="selectVersion(version)"
+            @keydown.enter="selectVersion(version)" @keydown.space.prevent="selectVersion(version)">
             <div class="version-item-content">
               <span class="version-item-label">{{ version.label }}</span>
               <span v-if="version.deprecated" class="version-badge deprecated">
@@ -63,11 +39,7 @@
     </transition>
 
     <!-- Backdrop to close dropdown when clicking outside -->
-    <div
-      v-if="isOpen"
-      class="version-backdrop"
-      @click="closeDropdown"
-    ></div>
+    <div v-if="isOpen" class="version-backdrop" @click="closeDropdown"></div>
   </div>
 </template>
 
@@ -231,21 +203,25 @@ onUnmounted(() => {
 .version-selector-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  height: 36px;
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--ldoc-c-text-1);
+  color: var(--ldoc-c-text-2);
   background-color: var(--ldoc-c-bg-soft);
   border: 1px solid var(--ldoc-c-divider);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .version-selector-button:hover {
+  border-color: var(--ldoc-c-brand);
   background-color: var(--ldoc-c-bg-mute);
-  border-color: var(--ldoc-c-brand-1);
+  color: var(--ldoc-c-text-1);
 }
 
 .version-selector-button:focus {

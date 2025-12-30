@@ -27,6 +27,8 @@ const pageDataArb = fc.record({
   title: fc.string({ minLength: 1, maxLength: 100 }),
   description: fc.string({ minLength: 0, maxLength: 200 }),
   relativePath: fc.string({ minLength: 1, maxLength: 50 }).map(s => `${s}.md`),
+  filePath: fc.string({ minLength: 1, maxLength: 50 }).map(s => `/test/${s}.md`),
+  headers: fc.constant([]),
   frontmatter: fc.record({
     tags: fc.oneof(
       fc.constant(undefined),
@@ -149,10 +151,12 @@ describe('Tag Indexing - Property Tests', () => {
       fc.property(
         tagArb,
         (tag) => {
-          const pageData: PageData = {
+          const pageData = {
             title: 'Test',
             description: '',
             relativePath: 'test.md',
+            filePath: '/test/test.md',
+            headers: [],
             frontmatter: { tags: tag }
           } as PageData
 
@@ -173,10 +177,12 @@ describe('Tag Indexing - Property Tests', () => {
       fc.property(
         tagsArrayArb,
         (tags) => {
-          const pageData: PageData = {
+          const pageData = {
             title: 'Test',
             description: '',
             relativePath: 'test.md',
+            filePath: '/test/test.md',
+            headers: [],
             frontmatter: { tags }
           } as PageData
 
@@ -202,10 +208,12 @@ describe('Tag Indexing - Property Tests', () => {
       fc.property(
         fc.string({ minLength: 1, maxLength: 50 }),
         (title) => {
-          const pageData: PageData = {
+          const pageData = {
             title,
             description: '',
             relativePath: 'test.md',
+            filePath: '/test/test.md',
+            headers: [],
             frontmatter: {}
           } as PageData
 
@@ -420,10 +428,12 @@ describe('Tag Indexing - Property Tests', () => {
         (tag, duplicateCount, config) => {
           // Create a page with duplicate tags
           const duplicateTags = Array(duplicateCount).fill(tag)
-          const pageData: PageData = {
+          const pageData = {
             title: 'Test',
             description: '',
             relativePath: 'test.md',
+            filePath: '/test/test.md',
+            headers: [],
             frontmatter: { tags: duplicateTags }
           } as PageData
 
@@ -460,10 +470,12 @@ describe('Tag Indexing - Property Tests', () => {
         ),
         siteConfigArb,
         (tags, config) => {
-          const pageData: PageData = {
+          const pageData = {
             title: 'Test',
             description: '',
             relativePath: 'test.md',
+            filePath: '/test/test.md',
+            headers: [],
             frontmatter: { tags }
           } as PageData
 

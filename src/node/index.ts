@@ -31,3 +31,30 @@ export {
   generateTagPageData
 } from './tags'
 export type { TagInfo, TaggedPage, TagIndex } from './tags'
+export {
+  lintDocumentation,
+  generateLintSummary,
+  extractLinks,
+  isInternalLink,
+  isValidInternalLink,
+  checkSpellingInContent,
+  checkStyleInContent
+} from './linter'
+export type {
+  LinterOptions,
+  StyleRuleConfig,
+  LintReport,
+  BrokenLinkIssue,
+  SpellingIssue,
+  StyleIssue
+} from './linter'
+export {
+  generateBuildReport,
+  printBuildReport,
+  saveBuildReport
+} from './buildReport'
+export type {
+  BuildReport,
+  BuildWarning,
+  BuildSuggestion
+} from './buildReport'

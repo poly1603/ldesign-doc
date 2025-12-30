@@ -4,7 +4,7 @@
  * 功能：
  * - 打印样式优化
  * - PDF 导出
- * - EPUB 导出
+ * - EPUB 导出 (实验性功能)
  * - 单页 HTML 导出
  */
 
@@ -13,11 +13,23 @@ import type { LDocPlugin } from '../../shared/types'
 
 // 导出 PDF 功能
 export { exportToPDF, exportMultiplePDFs, validatePDFConfig } from './pdf'
-export type { PDFExportOptions } from './pdf'
+export type { PDFExportOptions, PDFConfig } from './pdf'
 
-// 导出 EPUB 功能
-export { exportToEPUB, exportURLsToEPUB, validateEPUBConfig } from './epub'
-export type { EPUBExportOptions, EPUBPage } from './epub'
+// 导出 EPUB 功能 (实验性 - 需要 epub-gen-memory 依赖)
+// export { exportToEPUB, exportURLsToEPUB, validateEPUBConfig } from './epub'
+// export type { EPUBExportOptions, EPUBPage } from './epub'
+
+// EPUB 功能临时禁用，直到添加依赖
+export const exportToEPUB = () => {
+  throw new Error('EPUB export is experimental and requires epub-gen-memory package. Install it with: npm install epub-gen-memory')
+}
+export const exportURLsToEPUB = () => {
+  throw new Error('EPUB export is experimental and requires epub-gen-memory package. Install it with: npm install epub-gen-memory')
+}
+export const validateEPUBConfig = () => false
+
+export type EPUBExportOptions = any
+export type EPUBPage = any
 
 // 导出单页 HTML 功能
 export { exportToSinglePage, exportURLsToSinglePage } from './singlePage'
@@ -25,27 +37,8 @@ export type { SinglePageExportOptions, PageContent } from './singlePage'
 
 // ============== 类型定义 ==============
 
-/**
- * PDF 导出配置
- */
-export interface PDFConfig {
-  /** 页面大小 */
-  pageSize?: 'A4' | 'Letter' | 'Legal'
-  /** 页边距 */
-  margin?: {
-    top?: string
-    right?: string
-    bottom?: string
-    left?: string
-  }
-  /** 是否包含目录 */
-  toc?: boolean
-  /** 页眉页脚 */
-  headerFooter?: {
-    header?: string
-    footer?: string
-  }
-}
+// Import PDFConfig from pdf.ts
+import type { PDFConfig } from './pdf'
 
 /**
  * EPUB 导出配置
@@ -80,7 +73,7 @@ export interface ExportOptions {
   /** 单页 HTML 配置 */
   html?: HTMLConfig
   /** 导出按钮位置 */
-  buttonPosition?: 'nav' | 'doc-top' | 'doc-bottom'
+  buttonPosition?: 'nav' | 'doc-top' | 'doc-bottom' | 'floating'
   /** 是否启用打印样式优化 */
   enablePrintStyles?: boolean
 }
@@ -222,7 +215,9 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
     // 注入导出按钮组件
     slots: formats.length > 0
       ? {
-        [buttonPosition === 'nav' ? 'nav-bar-content-after' : 'doc-after']: {
+        [buttonPosition === 'nav' ? 'nav-bar-content-after' :
+          buttonPosition === 'floating' ? 'back-to-top-before' :
+            buttonPosition === 'doc-top' ? 'doc-before' : 'doc-after']: {
           component: 'LDocExportButton',
           props: {
             formats,
@@ -231,7 +226,36 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
           order: 100
         }
       }
-      : undefined
+      : undefined,
+
+    // 注入导出脚本
+    headScripts: formats.length > 0 ? [
+      `window.addEventListener('ldoc:export', function(e) { 
+        const format = e.detail.format; 
+        if (format === 'pdf') { 
+          const btn = document.querySelector('.ldoc-export-button__btn'); 
+          if (btn) { 
+            btn.disabled = true; 
+            btn.innerHTML = '<div class="ldoc-export-button__spinner"></div><span>导出中...</span>'; 
+          } 
+          setTimeout(function() { window.print(); }, 100); 
+          setTimeout(function() { 
+            if (btn) { 
+              btn.disabled = false; 
+              btn.innerHTML = '<svg class="ldoc-export-button__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span>导出文档</span>'; 
+            } 
+          }, 2000); 
+        } 
+      });`
+    ] : undefined,
+
+    // 在客户端注册导出组件
+    clientConfigFile: `
+import { globalComponents } from '@ldesign/doc/plugins/export/client'
+
+export { globalComponents }
+export default { globalComponents }
+`
   })
 }
 

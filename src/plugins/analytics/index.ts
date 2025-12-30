@@ -191,7 +191,12 @@ export {
   injectScripts
 } from './scriptInjection'
 
-import { generateCustomScript } from './scriptInjection'
+import {
+  generateGoogleAnalyticsScript,
+  generatePlausibleScript,
+  generateUmamiScript,
+  generateCustomScript
+} from './scriptInjection'
 
 /**
  * 验证分析配置

@@ -134,9 +134,9 @@ export function computeRelatedPages(
   maxItems: number = 5
 ): RelatedPage[] {
   const normalizedCurrent = normalizePath(currentPath)
-  const currentTags = extractTags(currentPage.frontmatter)
+  const currentTags = extractTags((currentPage.frontmatter || {}) as Record<string, unknown>)
   const currentWords = extractWords(
-    `${currentPage.title} ${currentPage.description} ${currentPage.headers.map(h => h.title).join(' ')}`
+    `${currentPage.title} ${currentPage.description} ${(currentPage.headers || []).map(h => h.title).join(' ')}`
   )
 
   const theme = themeConfig as ThemeConfig
@@ -206,9 +206,9 @@ export function computeRelatedPagesWithData(
   maxItems: number = 5
 ): RelatedPage[] {
   const normalizedCurrent = normalizePath(currentPath)
-  const currentTags = extractTags(currentPage.frontmatter)
+  const currentTags = extractTags((currentPage.frontmatter || {}) as Record<string, unknown>)
   const currentWords = extractWords(
-    `${currentPage.title} ${currentPage.description} ${currentPage.headers.map(h => h.title).join(' ')}`
+    `${currentPage.title} ${currentPage.description} ${(currentPage.headers || []).map(h => h.title).join(' ')}`
   )
 
   const scoredPages: RelatedPage[] = []

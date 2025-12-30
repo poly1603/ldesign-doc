@@ -16,6 +16,8 @@ export interface PageData {
   relativePath: string
   filePath: string
   lastUpdated?: number
+  /** Markdown content (used by health check and other plugins) */
+  content?: string
 }
 
 export interface Header {
@@ -158,6 +160,12 @@ export interface SiteConfig extends Required<Omit<UserConfig, 'theme' | 'plugins
 
   /** 部署配置 */
   deploy?: DeployConfig
+
+  /** 图片优化配置（由性能插件使用） */
+  imageOptimization?: {
+    lazyLoadImages?: string[]
+    [key: string]: unknown
+  }
 
   // 可选的扩展钩子
   transformHead?: (ctx: TransformContext) => Promise<HeadConfig[]> | HeadConfig[]
@@ -496,12 +504,63 @@ export interface PluginGlobalComponent {
   component: unknown
 }
 
+/**
+ * 插件依赖声明
+ */
+export interface PluginDependency {
+  /** 依赖的插件名称 */
+  name: string
+  /** 版本约束（可选），支持 semver 格式 */
+  version?: string
+  /** 是否为可选依赖 */
+  optional?: boolean
+}
+
+/**
+ * 插件冲突信息
+ */
+export interface PluginConflict {
+  /** 冲突的插件名称 */
+  plugins: string[]
+  /** 冲突类型 */
+  type: 'slot' | 'hook' | 'name'
+  /** 冲突位置 */
+  location: string
+  /** 解决建议 */
+  suggestions: string[]
+}
+
+/**
+ * 插件验证错误
+ */
+export interface PluginValidationError {
+  /** 插件名称 */
+  pluginName: string
+  /** 错误字段 */
+  field: string
+  /** 错误消息 */
+  message: string
+  /** 期望值 */
+  expected?: string
+  /** 实际值 */
+  actual?: string
+}
+
 export interface LDocPlugin {
   /** 插件名称，必须唯一 */
   name: string
 
   /** 插件执行顺序，数字越小越先执行，默认 100 */
   enforce?: 'pre' | 'post' | number
+
+  /** 插件依赖声明 */
+  dependencies?: PluginDependency[]
+
+  /** 插件版本 */
+  version?: string
+
+  /** 插件扩展配置（用于插件组合） */
+  extends?: string
 
   // ============== 配置阶段钩子 ==============
 
@@ -921,7 +980,35 @@ export interface BuildConfig {
 
   // MPA 模式
   mpa?: boolean
+
+  // 构建钩子
+  hooks?: BuildHooks
 }
+
+/**
+ * 构建钩子配置
+ * 允许在构建的不同阶段执行自定义逻辑
+ */
+export interface BuildHooks {
+  /**
+   * 构建开始前执行
+   * 可用于准备构建环境、清理旧文件等
+   */
+  preBuild?: BuildHookFunction | BuildHookFunction[]
+
+  /**
+   * 构建完成后执行
+   * 可用于后处理、文件复制、通知等
+   */
+  postBuild?: BuildHookFunction | BuildHookFunction[]
+}
+
+/**
+ * 构建钩子函数
+ * @param config - 站点配置
+ * @returns 可以返回 Promise 以支持异步操作
+ */
+export type BuildHookFunction = (config: SiteConfig) => void | Promise<void>
 
 // ============== 部署配置 ==============
 

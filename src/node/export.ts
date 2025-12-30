@@ -4,10 +4,18 @@
 
 import { resolve } from 'node:path'
 import { existsSync, mkdirSync } from 'node:fs'
-import { logger } from './logger'
+import { printInfo, printError, printSuccess, printWarning } from './logger'
 import { exportToPDF } from '../plugins/export/pdf'
 import { exportURLsToEPUB } from '../plugins/export/epub'
 import type { PDFConfig, EPUBConfig } from '../plugins/export'
+
+// Create a simple logger object using the exported functions
+const logger = {
+  info: printInfo,
+  warn: printWarning,
+  error: (msg: string) => printError('Error', msg),
+  success: printSuccess
+}
 
 /**
  * 导出命令选项

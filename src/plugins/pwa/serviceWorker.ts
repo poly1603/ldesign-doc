@@ -236,7 +236,7 @@ function cleanupExpiredCache(cacheName, maxEntries, maxAgeSeconds) {
  * 生成默认 Fetch 策略代码
  */
 function generateFetchStrategy(strategy: string): string {
-  const strategyMap = {
+  const strategyMap: Record<string, string> = {
     'cache-first': `
   event.respondWith(cacheFirst(request));`,
     'network-first': `

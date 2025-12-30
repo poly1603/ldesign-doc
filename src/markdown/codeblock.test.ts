@@ -12,14 +12,14 @@ describe('Code Block Enhancements', () => {
   let renderer: Awaited<ReturnType<typeof createMarkdownRenderer>>
 
   beforeAll(async () => {
-    const config: SiteConfig = {
+    const config = {
       title: 'Test',
       description: 'Test',
       base: '/',
       markdown: {
         lineNumbers: true
       }
-    }
+    } as SiteConfig
     renderer = await createMarkdownRenderer(config)
   })
 
@@ -191,7 +191,7 @@ describe('Code Block Enhancements', () => {
      * the rendered HTML SHALL include a link to the configured playground URL with the code properly encoded.
      */
     it('should generate playground link when enabled', async () => {
-      const playgroundConfig: SiteConfig = {
+      const playgroundConfig = {
         title: 'Test',
         description: 'Test',
         base: '/',
@@ -202,7 +202,7 @@ describe('Code Block Enhancements', () => {
             url: 'https://playground.example.com?code={code}'
           }
         }
-      }
+      } as SiteConfig
       const playgroundRenderer = await createMarkdownRenderer(playgroundConfig)
 
       await fc.assert(
@@ -240,7 +240,7 @@ describe('Code Block Enhancements', () => {
     })
 
     it('should respect language restrictions', async () => {
-      const restrictedConfig: SiteConfig = {
+      const restrictedConfig = {
         title: 'Test',
         description: 'Test',
         base: '/',
@@ -252,7 +252,7 @@ describe('Code Block Enhancements', () => {
             languages: ['javascript', 'typescript']
           }
         }
-      }
+      } as SiteConfig
       const restrictedRenderer = await createMarkdownRenderer(restrictedConfig)
 
       await fc.assert(
@@ -327,7 +327,7 @@ describe('Code Block Enhancements', () => {
      * the rendered HTML SHALL include a collapse wrapper with expand/collapse functionality.
      */
     it('should add collapsible class when code exceeds threshold', async () => {
-      const collapseConfig: SiteConfig = {
+      const collapseConfig = {
         title: 'Test',
         description: 'Test',
         base: '/',
@@ -338,7 +338,7 @@ describe('Code Block Enhancements', () => {
             threshold: 5
           }
         }
-      }
+      } as SiteConfig
       const collapseRenderer = await createMarkdownRenderer(collapseConfig)
 
       await fc.assert(

@@ -65,7 +65,7 @@
         <!-- 右侧内容左边插槽 -->
         <PluginSlot name="nav-bar-content-before" />
         <!-- 搜索 -->
-        <button class="vp-nav-search" @click="openSearch">
+        <button v-if="!(localeTheme as any)?.search?.disabled" class="vp-nav-search" @click="openSearch">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -90,8 +90,8 @@
           </button>
           <Transition name="dropdown">
             <div v-show="isLangMenuOpen" class="vp-nav-lang-menu">
-              <a v-for="(locale, key) in locales" :key="key" :href="getLocaleLink(key as string)" class="vp-nav-lang-item"
-                :class="{ active: isCurrentLocale(key as string) }" @click="closeAllDropdowns">
+              <a v-for="(locale, key) in locales" :key="key" :href="getLocaleLink(key as string)"
+                class="vp-nav-lang-item" :class="{ active: isCurrentLocale(key as string) }" @click="closeAllDropdowns">
                 {{ locale.label }}
               </a>
             </div>
@@ -115,7 +115,8 @@
               <div class="vp-theme-color-header">选择主题色</div>
               <div class="vp-theme-color-grid">
                 <button v-for="color in themeColors" :key="color.name" class="vp-theme-color-card"
-                  :class="{ active: currentThemeColor === color.name }" @click="setThemeColor(color.name); closeAllDropdowns()">
+                  :class="{ active: currentThemeColor === color.name }"
+                  @click="setThemeColor(color.name); closeAllDropdowns()">
                   <span class="vp-theme-color-dot" :style="{ background: `hsl(${color.hue}, 70%, 55%)` }"></span>
                   <span class="vp-theme-color-info">
                     <span class="vp-theme-color-label">{{ color.label }}</span>
@@ -626,10 +627,15 @@ onUnmounted(() => {
   gap: 16px;
 }
 
-.vp-nav-search {
+/* 统一的右侧按钮基础样式 */
+.vp-nav-search,
+.vp-nav-lang-trigger,
+.vp-nav-theme-color-trigger,
+.vp-nav-theme-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  height: 36px;
   padding: 6px 12px;
   background: var(--ldoc-c-bg-soft);
   border: 1px solid var(--ldoc-c-divider);
@@ -641,9 +647,39 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.vp-nav-search:hover {
+.vp-nav-search:hover,
+.vp-nav-lang-trigger:hover,
+.vp-nav-theme-color-trigger:hover,
+.vp-nav-theme-toggle:hover {
   border-color: var(--ldoc-c-brand);
   background: var(--ldoc-c-bg-mute);
+  color: var(--ldoc-c-text-1);
+}
+
+/* 搜索按钮特殊样式 */
+.vp-nav-search {
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* 语言切换特殊样式 */
+.vp-nav-lang-trigger {
+  gap: 6px;
+  color: var(--ldoc-c-text-1);
+}
+
+/* 主题色选择特殊样式 */
+.vp-nav-theme-color-trigger {
+  width: 36px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+/* 暗黑模式切换特殊样式 */
+.vp-nav-theme-toggle {
+  width: 36px;
+  padding: 0;
+  border-radius: 8px;
 }
 
 .vp-nav-search-text {
@@ -678,25 +714,6 @@ onUnmounted(() => {
 /* 语言切换器 */
 .vp-nav-lang {
   position: relative;
-}
-
-.vp-nav-lang-trigger {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: none;
-  border: 1px solid var(--ldoc-c-divider);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--ldoc-c-text-1);
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.vp-nav-lang-trigger:hover {
-  border-color: var(--ldoc-c-brand);
-  background: var(--ldoc-c-bg-soft);
 }
 
 .vp-nav-lang-label {
@@ -755,25 +772,6 @@ onUnmounted(() => {
 /* 主题色选择器 */
 .vp-nav-theme-color {
   position: relative;
-}
-
-.vp-nav-theme-color-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--ldoc-c-text-1);
-  transition: background-color 0.2s;
-}
-
-.vp-nav-theme-color-trigger:hover {
-  background: var(--ldoc-c-bg-soft);
 }
 
 .vp-nav-theme-color-panel {
@@ -884,24 +882,10 @@ onUnmounted(() => {
   color: var(--ldoc-c-brand);
 }
 
-/* 暗黑模式切换 */
-.vp-nav-theme-toggle {
+/* 社交链接 */
+.vp-nav-social {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--ldoc-c-text-1);
-  transition: background-color 0.2s;
-}
-
-.vp-nav-theme-toggle:hover {
-  background: var(--ldoc-c-bg-soft);
+  gap: 8px;
 }
 
 /* 图标切换动画 */
@@ -918,11 +902,6 @@ onUnmounted(() => {
 .icon-fade-leave-to {
   opacity: 0;
   transform: rotate(90deg) scale(0.8);
-}
-
-.vp-nav-social {
-  display: flex;
-  gap: 8px;
 }
 
 .vp-nav-social-link {
@@ -1182,6 +1161,7 @@ onUnmounted(() => {
 
 /* 触摸设备优化 */
 @media (hover: none) and (pointer: coarse) {
+
   .vp-nav-hamburger,
   .vp-nav-theme-toggle,
   .vp-nav-theme-color-trigger,

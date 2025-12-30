@@ -9,33 +9,17 @@
 
     <!-- Avatars Mode -->
     <div v-if="mode === 'avatars'" class="ldoc-contributors-avatars">
-      <a
-        v-for="contributor in contributors"
-        :key="contributor.email"
-        :href="`mailto:${contributor.email}`"
+      <a v-for="contributor in contributors" :key="contributor.email" :href="`mailto:${contributor.email}`"
         :title="`${contributor.name}${showStats && contributor.commits ? ` (${contributor.commits} commits)` : ''}`"
-        class="ldoc-contributor-avatar"
-      >
-        <img
-          :src="contributor.avatar"
-          :alt="contributor.name"
-          class="ldoc-contributor-avatar-img"
-        />
+        class="ldoc-contributor-avatar">
+        <img :src="contributor.avatar" :alt="contributor.name" class="ldoc-contributor-avatar-img" />
       </a>
     </div>
 
     <!-- List Mode -->
     <ul v-else-if="mode === 'list'" class="ldoc-contributors-list">
-      <li
-        v-for="contributor in contributors"
-        :key="contributor.email"
-        class="ldoc-contributor-list-item"
-      >
-        <img
-          :src="contributor.avatar"
-          :alt="contributor.name"
-          class="ldoc-contributor-list-avatar"
-        />
+      <li v-for="contributor in contributors" :key="contributor.email" class="ldoc-contributor-list-item">
+        <img :src="contributor.avatar" :alt="contributor.name" class="ldoc-contributor-list-avatar" />
         <div class="ldoc-contributor-list-info">
           <span class="ldoc-contributor-list-name">{{ contributor.name }}</span>
           <span v-if="showStats && contributor.commits" class="ldoc-contributor-list-stats">
@@ -47,54 +31,25 @@
 
     <!-- Detailed Mode -->
     <div v-else-if="mode === 'detailed'" class="ldoc-contributors-detailed">
-      <div
-        v-for="contributor in contributors"
-        :key="contributor.email"
-        class="ldoc-contributor-detailed-card"
-      >
-        <img
-          :src="contributor.avatar"
-          :alt="contributor.name"
-          class="ldoc-contributor-detailed-avatar"
-        />
+      <div v-for="contributor in contributors" :key="contributor.email" class="ldoc-contributor-detailed-card">
+        <img :src="contributor.avatar" :alt="contributor.name" class="ldoc-contributor-detailed-avatar" />
         <div class="ldoc-contributor-detailed-info">
           <h4 class="ldoc-contributor-detailed-name">{{ contributor.name }}</h4>
-          <a
-            :href="`mailto:${contributor.email}`"
-            class="ldoc-contributor-detailed-email"
-          >
+          <a :href="`mailto:${contributor.email}`" class="ldoc-contributor-detailed-email">
             {{ contributor.email }}
           </a>
           <div v-if="showStats" class="ldoc-contributor-detailed-stats">
             <span v-if="contributor.commits" class="ldoc-contributor-stat">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
               {{ contributor.commits }} {{ contributor.commits === 1 ? 'commit' : 'commits' }}
             </span>
             <span v-if="contributor.lastCommit" class="ldoc-contributor-stat">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -111,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useData } from 'vitepress'
+import { useData } from '../../client'
 
 // ============== Props ==============
 

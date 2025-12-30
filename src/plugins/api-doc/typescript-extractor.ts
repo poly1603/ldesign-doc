@@ -3,6 +3,7 @@
  */
 
 import * as ts from 'typescript'
+import * as path from 'path'
 import { enrichWithJSDoc } from './jsdoc-parser'
 import type { ApiExport, ApiModule, ApiParam, ApiReturn, ApiTypeParameter, ApiMember } from './index'
 
@@ -31,13 +32,19 @@ export class TypeScriptExtractor {
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
       esModuleInterop: true,
       skipLibCheck: true,
+      skipDefaultLibCheck: true,
+      noLib: true,  // Don't include default lib files
       ...options.compilerOptions
     }
 
     this.program = ts.createProgram(options.files, compilerOptions)
     this.checker = this.program.getTypeChecker()
+
+    // Normalize file paths for comparison
+    const normalizedFiles = options.files.map(f => path.normalize(f).toLowerCase())
+
     this.sourceFiles = this.program.getSourceFiles().filter(
-      sf => !sf.isDeclarationFile && options.files.includes(sf.fileName)
+      sf => !sf.isDeclarationFile && normalizedFiles.includes(path.normalize(sf.fileName).toLowerCase())
     )
   }
 

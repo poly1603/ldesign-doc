@@ -200,6 +200,142 @@ cli
     }
   })
 
+// new 命令 - 创建新页面
+cli
+  .command('new <type> [path]', 'Create a new documentation page')
+  .option('--template <template>', 'Template to use (default, api, guide, tutorial, minimal)')
+  .option('--title <title>', 'Page title')
+  .option('--description <description>', 'Page description')
+  .option('--tags <tags>', 'Comma-separated tags')
+  .option('--list-templates', 'List available templates')
+  .action(async (type: string, path: string | undefined, options: Record<string, unknown>) => {
+    try {
+      const { scaffoldPage, scaffoldPageInteractive, listTemplates } = await import('./scaffold')
+
+      // List templates if requested
+      if (options.listTemplates) {
+        listTemplates()
+        return
+      }
+
+      // Only support 'page' type for now
+      if (type !== 'page') {
+        console.error(pc.red(`\n  Invalid type: ${type}`))
+        console.error(pc.gray('  Valid types: page'))
+        console.error(pc.gray('  Example: ldoc new page my-page.md'))
+        process.exit(1)
+      }
+
+      logger.printBanner()
+
+      // Interactive mode if no path provided
+      if (!path) {
+        await scaffoldPageInteractive(process.cwd())
+        return
+      }
+
+      // Non-interactive mode
+      const tags = options.tags
+        ? String(options.tags)
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length > 0)
+        : undefined
+
+      const result = await scaffoldPage(process.cwd(), {
+        path,
+        template: options.template as any,
+        title: options.title as string,
+        description: options.description as string,
+        tags
+      })
+
+      console.log()
+      console.log(pc.green('✔ Page created successfully!'))
+      console.log(pc.gray(`  File: ${result.filePath}`))
+      console.log()
+    } catch (error) {
+      logger.printError('Failed to create page', error instanceof Error ? error.message : String(error))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// lint 命令 - 检查文档质量
+cli
+  .command('lint [root]', 'Check documentation for issues')
+  .option('--no-broken-links', 'Skip broken link checks')
+  .option('--no-spelling', 'Skip spelling checks')
+  .option('--no-style', 'Skip style checks')
+  .option('--dictionary <words>', 'Custom dictionary (comma-separated)')
+  .option('--max-line-length <length>', 'Maximum line length', { default: 120 })
+  .option('--output <file>', 'Output report to file')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { resolveConfig } = await import('./config')
+      const { scanPages } = await import('./pages')
+      const { lintDocumentation, generateLintSummary } = await import('./linter')
+      const { writeFileSync } = await import('fs')
+
+      logger.printBanner()
+      logger.printCommandTitle('lint', 'Checking Documentation')
+
+      // Load config
+      const config = await resolveConfig(root, 'build', 'production')
+
+      // Scan pages
+      console.log(pc.gray('  Scanning pages...'))
+      const pages = await scanPages(config)
+      console.log(pc.gray(`  Found ${pages.length} pages\n`))
+
+      // Parse custom dictionary
+      const customDictionary = options.dictionary
+        ? String(options.dictionary)
+          .split(',')
+          .map(w => w.trim())
+          .filter(w => w.length > 0)
+        : []
+
+      // Run linter
+      console.log(pc.gray('  Running checks...'))
+      const report = await lintDocumentation(pages, {
+        checkBrokenLinks: options.brokenLinks !== false,
+        checkSpelling: options.spelling !== false,
+        checkStyle: options.style !== false,
+        customDictionary,
+        styleRules: {
+          maxLineLength: options.maxLineLength as number
+        }
+      })
+
+      // Generate summary
+      const summary = generateLintSummary(report)
+
+      // Output to file if requested
+      if (options.output) {
+        writeFileSync(options.output as string, summary, 'utf-8')
+        console.log(pc.green(`\n✔ Report saved to ${options.output}`))
+      }
+
+      // Print summary
+      console.log()
+      console.log(summary)
+      console.log()
+
+      // Exit with error code if issues found
+      if (report.totalIssues > 0) {
+        console.log(pc.yellow(`⚠ Found ${report.totalIssues} issue(s)`))
+        process.exit(1)
+      } else {
+        console.log(pc.green('✔ No issues found!'))
+      }
+    } catch (error) {
+      logger.printError('Lint failed', error instanceof Error ? error.message : String(error))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
 // 帮助信息
 cli.help()
 

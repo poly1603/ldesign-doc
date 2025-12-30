@@ -31,12 +31,7 @@
 
     <div class="ldoc-cpg__body">
       <div class="ldoc-cpg__preview" :style="{ minHeight: playgroundHeight }">
-        <component
-          v-if="resolvedComponent"
-          :is="resolvedComponent"
-          v-bind="currentProps"
-          v-on="listeners"
-        >
+        <component v-if="resolvedComponent" :is="resolvedComponent" v-bind="currentProps" v-on="listeners">
           <template #default>
             <slot v-if="$slots.default" />
             <div v-else v-html="slotText('default')" />
@@ -140,7 +135,7 @@
 <script setup lang="ts">
 import { computed, h, reactive, ref, watch, toRaw, getCurrentInstance } from 'vue'
 
-interface ControlField {
+export interface ControlField {
   name: string
   type: 'boolean' | 'number' | 'text' | 'select' | 'radio' | 'color' | 'json'
   options?: Array<string | number>

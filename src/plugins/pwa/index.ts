@@ -131,6 +131,8 @@ export interface PWAOptions {
 // 导入 Service Worker 生成函数
 export { generateServiceWorker, mergeRuntimeCaching, getDefaultRuntimeCaching } from './serviceWorker'
 
+import { generateServiceWorker } from './serviceWorker'
+
 // 导入 Manifest 生成函数
 export {
   generateManifest,
@@ -139,6 +141,12 @@ export {
   serializeManifest
 } from './manifest'
 export type { WebAppManifest } from './manifest'
+
+import {
+  generateManifest,
+  validateManifestConfig,
+  serializeManifest
+} from './manifest'
 
 /**
  * 验证 PWA 配置
@@ -253,12 +261,14 @@ export function pwaPlugin(options: PWAOptions = {}): LDocPlugin {
     },
 
     // 注入 PWA 相关的 head 标签
-    headScripts: [
-      // Service Worker 注册脚本
-      `
+    get headScripts() {
+      const base = siteConfig?.base || '/'
+      return [
+        // Service Worker 注册脚本
+        `
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('${siteConfig?.base || '/'}sw.js')
+          navigator.serviceWorker.register('${base}sw.js')
             .then((registration) => {
               console.log('[PWA] Service Worker registered:', registration.scope);
               
@@ -283,7 +293,8 @@ export function pwaPlugin(options: PWAOptions = {}): LDocPlugin {
         });
       }
       `
-    ],
+      ]
+    },
 
     // 注入 manifest 链接和主题色
     async buildEnd(config) {

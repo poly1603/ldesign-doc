@@ -117,3 +117,9 @@ declare module 'compression' {
   function compression(options?: CompressionOptions): CompressionMiddleware
   export default compression
 }
+
+// Optional dependency used by EPUB export
+declare module 'epub-gen-memory' {
+  const EPub: any
+  export default EPub
+}

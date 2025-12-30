@@ -177,7 +177,7 @@ describe('Sitemap', () => {
                 category: fc.option(fc.string({ minLength: 1, maxLength: 20 }).filter(s => !['toString', 'constructor', 'valueOf', '__proto__'].includes(s)), { nil: undefined }),
                 tags: fc.option(fc.array(fc.string({ minLength: 1, maxLength: 15 }), { maxLength: 5 }), { nil: undefined })
               }),
-              headers: fc.constant([]),
+              headers: fc.constant([]) as fc.Arbitrary<[]>,
               relativePath: fc.stringMatching(/^[a-z0-9/-]+\.md$/),
               filePath: fc.string({ minLength: 1, maxLength: 100 }),
               lastUpdated: fc.option(fc.integer({ min: 1000000000000, max: 2000000000000 }), { nil: undefined })
@@ -187,12 +187,13 @@ describe('Sitemap', () => {
             // Ensure unique relativePath for each page
             return pages.map((page, index) => ({
               ...page,
-              relativePath: `page-${index}.md`
+              relativePath: `page-${index}.md`,
+              headers: [] as []
             }))
           }),
           (pages) => {
             // Build sitemap data
-            const sitemapData = buildSitemapData(pages, mockConfig)
+            const sitemapData = buildSitemapData(pages as PageData[], mockConfig)
 
             // Count non-hidden pages in input
             const nonHiddenPages = pages.filter(p => p.frontmatter.hidden !== true)
@@ -241,7 +242,7 @@ describe('Sitemap', () => {
                 category: fc.option(fc.string({ minLength: 1, maxLength: 20 }).filter(s => !['toString', 'constructor', 'valueOf', '__proto__'].includes(s)), { nil: undefined }),
                 tags: fc.option(fc.array(fc.string({ minLength: 1, maxLength: 15 }), { maxLength: 5 }), { nil: undefined })
               }),
-              headers: fc.constant([]),
+              headers: fc.constant([]) as fc.Arbitrary<[]>,
               relativePath: fc.stringMatching(/^[a-z0-9/-]+\.md$/),
               filePath: fc.string({ minLength: 1, maxLength: 100 }),
               lastUpdated: fc.option(fc.integer({ min: 1000000000000, max: 2000000000000 }), { nil: undefined })
@@ -251,11 +252,12 @@ describe('Sitemap', () => {
             // Ensure unique relativePath for each page
             return pages.map((page, index) => ({
               ...page,
-              relativePath: `page-${index}.md`
+              relativePath: `page-${index}.md`,
+              headers: [] as []
             }))
           }),
           (pages) => {
-            const sitemapData = buildSitemapData(pages, mockConfig)
+            const sitemapData = buildSitemapData(pages as PageData[], mockConfig)
 
             // Property: All page metadata should be preserved
             pages.forEach(page => {
@@ -286,7 +288,7 @@ describe('Sitemap', () => {
                 hidden: fc.constant(false),
                 category: fc.option(fc.constantFrom('Guide', 'API', 'Tutorial', 'Reference'), { nil: undefined })
               }),
-              headers: fc.constant([]),
+              headers: fc.constant([]) as fc.Arbitrary<[]>,
               relativePath: fc.stringMatching(/^[a-z0-9/-]+\.md$/),
               filePath: fc.string({ minLength: 1, maxLength: 100 }),
               lastUpdated: fc.option(fc.integer({ min: 1000000000000, max: 2000000000000 }), { nil: undefined })
@@ -296,11 +298,12 @@ describe('Sitemap', () => {
             // Ensure unique relativePath for each page
             return pages.map((page, index) => ({
               ...page,
-              relativePath: `page-${index}.md`
+              relativePath: `page-${index}.md`,
+              headers: [] as []
             }))
           }),
           (pages) => {
-            const sitemapData = buildSitemapData(pages, mockConfig)
+            const sitemapData = buildSitemapData(pages as PageData[], mockConfig)
 
             // Property: Each page should be in its correct category
             Object.entries(sitemapData.categories).forEach(([categoryName, category]) => {
