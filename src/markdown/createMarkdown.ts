@@ -9,14 +9,18 @@ import containerPlugin from 'markdown-it-container'
 import type { SiteConfig, MarkdownOptions, MarkdownRenderer } from '../shared/types'
 import { slugify } from '../shared/utils'
 import { createCodeHighlighter } from './highlight'
+import type { BuildCache } from '../node/cache'
 
 import mathjax3 from 'markdown-it-mathjax3'
 
 /**
  * 创建 Markdown 渲染器
+ * @param config - 站点配置
+ * @param cache - 可选的构建缓存实例
  */
 export async function createMarkdownRenderer(
-  config: SiteConfig
+  config: SiteConfig,
+  cache?: BuildCache
 ): Promise<MarkdownRenderer> {
   const options = config.markdown || {}
 
@@ -55,8 +59,8 @@ export async function createMarkdownRenderer(
   // 添加容器插件
   setupContainers(md, options.container as Record<string, string | undefined> | undefined)
 
-  // 设置代码高亮
-  const highlighter = await createCodeHighlighter(options)
+  // 设置代码高亮（传入缓存实例）
+  const highlighter = await createCodeHighlighter(options, cache)
   setupCodeHighlight(md, highlighter, options)
 
   // 设置行号

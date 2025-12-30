@@ -276,5 +276,41 @@ export function printNewLine(count: number = 1): void {
   }
 }
 
+// 打印缓存统计
+export function printCacheStats(stats: {
+  hits: number
+  misses: number
+  hitRate: string
+  entries: number
+  size: string
+}): void {
+  console.log()
+  console.log(`  ${brand.primary('📦')} ${brand.bold(brand.primary('Cache Statistics'))}`)
+  console.log(`  ${brand.dim(line('─', 35))}`)
+  console.log(`  ${brand.dim('Hits:')}       ${brand.success(String(stats.hits))}`)
+  console.log(`  ${brand.dim('Misses:')}     ${brand.warning(String(stats.misses))}`)
+  console.log(`  ${brand.dim('Hit Rate:')}   ${brand.info(stats.hitRate)}`)
+  console.log(`  ${brand.dim('Entries:')}    ${brand.white(String(stats.entries))}`)
+  console.log(`  ${brand.dim('Size:')}       ${brand.white(stats.size)}`)
+  console.log()
+}
+
+// 打印缓存清理
+export function printCachePruned(count: number): void {
+  if (count > 0) {
+    console.log(`  ${brand.dim(icons.arrow)} ${brand.dim(`Pruned ${count} expired cache entries`)}`)
+  }
+}
+
+// 打印缓存命中
+export function printCacheHit(type: string): void {
+  console.log(`  ${brand.dim(icons.arrow)} ${brand.success('cache hit')} ${brand.dim(`[${type}]`)}`)
+}
+
+// 打印缓存未命中
+export function printCacheMiss(type: string): void {
+  console.log(`  ${brand.dim(icons.arrow)} ${brand.warning('cache miss')} ${brand.dim(`[${type}]`)}`)
+}
+
 // 导出品牌色彩和图标
 export { brand, icons }

@@ -9,6 +9,7 @@ import { createRequire } from 'module'
 import { build } from 'esbuild'
 import type { UserConfig, SiteConfig, ThemeConfig, LDocPlugin, Theme, LocaleConfig, NavItem, Sidebar } from '../shared/types'
 import { deepMerge, normalizePath } from '../shared/utils'
+import { validateUserConfig, formatValidationErrors } from './configValidator'
 import * as logger from './logger'
 
 const require = createRequire(import.meta.url)
@@ -64,14 +65,82 @@ export const defaultConfig: UserConfig = {
 }
 
 /**
- * 定义配置（带类型提示）
+ * 定义文档系统配置
+ * 
+ * 这是创建 LDoc 配置文件的主要方式，提供完整的 TypeScript 类型提示。
+ * 
+ * @param config - 用户配置对象
+ * @returns 原样返回配置对象（用于类型推断）
+ * 
+ * @example 基础配置
+ * ```ts
+ * // doc.config.ts
+ * import { defineConfig } from '@ldesign/doc'
+ * 
+ * export default defineConfig({
+ *   title: '我的文档站',
+ *   description: '使用 LDoc 构建的文档站点',
+ *   srcDir: 'docs',
+ *   themeConfig: {
+ *     nav: [{ text: '指南', link: '/guide/' }]
+ *   }
+ * })
+ * ```
+ * 
+ * @example 完整配置
+ * ```ts
+ * export default defineConfig({
+ *   title: 'LDesign',
+ *   description: '企业级 UI 组件库',
+ *   base: '/ldesign/',
+ *   lang: 'zh-CN',
+ *   
+ *   themeConfig: {
+ *     logo: '/logo.svg',
+ *     nav: [...],
+ *     sidebar: {...},
+ *     footer: { message: 'Released under the MIT License.' }
+ *   },
+ *   
+ *   markdown: {
+ *     lineNumbers: true,
+ *     theme: { light: 'github-light', dark: 'github-dark' }
+ *   },
+ *   
+ *   plugins: [
+ *     searchPlugin(),
+ *     commentPlugin({ provider: 'giscus' })
+ *   ]
+ * })
+ * ```
+ * 
+ * @see {@link UserConfig} 完整的配置选项列表
  */
 export function defineConfig(config: UserConfig): UserConfig {
   return config
 }
 
 /**
- * 定义带主题配置的配置
+ * 定义带自定义主题配置类型的配置
+ * 
+ * 当使用自定义主题时，此函数可以为主题配置提供更精确的类型推断。
+ * 
+ * @typeParam T - 主题配置类型，必须扩展自 ThemeConfig
+ * @param config - 用户配置对象
+ * @returns 配置对象
+ * 
+ * @example
+ * ```ts
+ * import { defineConfigWithTheme } from '@ldesign/doc'
+ * import type { MyThemeConfig } from './theme'
+ * 
+ * export default defineConfigWithTheme<MyThemeConfig>({
+ *   themeConfig: {
+ *     // 此处获得 MyThemeConfig 的完整类型提示
+ *     customOption: 'value'
+ *   }
+ * })
+ * ```
  */
 export function defineConfigWithTheme<T extends ThemeConfig>(
   config: UserConfig & { themeConfig?: T }
@@ -169,6 +238,21 @@ export async function resolveConfig(
   let userConfig: UserConfig = {}
   if (configPath) {
     userConfig = await loadConfigFile(configPath)
+  }
+
+  // 验证用户配置
+  const validationResult = validateUserConfig(userConfig)
+  if (!validationResult.valid) {
+    const errorMessage = formatValidationErrors(validationResult)
+    logger.printError('Config validation failed', '')
+    console.error(errorMessage)
+    throw new Error('配置验证失败，请检查配置文件')
+  }
+
+  // 打印警告（不中断）
+  if (validationResult.warnings.length > 0) {
+    const warningMessage = formatValidationErrors({ valid: true, errors: [], warnings: validationResult.warnings })
+    console.warn(warningMessage)
   }
 
   // 合并默认配置

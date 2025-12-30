@@ -191,3 +191,5 @@ export const ReactDemo = defineComponent({
 export { default as PluginSlot } from './components/PluginSlot.vue'
 export { default as PluginUI } from './components/PluginUI.vue'
 export { default as LDocModal } from './components/LDocModal.vue'
+export { default as ErrorBoundary } from './components/ErrorBoundary.vue'
+export { default as DevErrorOverlay } from './components/DevErrorOverlay.vue'

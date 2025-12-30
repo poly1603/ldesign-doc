@@ -1,24 +1,15 @@
 <template>
-  <div v-if="relatedPages.length > 0" class="vp-related-pages">
+  <div v-if="relatedPages.length > 0" class="vp-related-pages" :class="{ 'compact': compact }">
     <h2 class="vp-related-pages-title">{{ title }}</h2>
     <div class="vp-related-pages-list">
-      <router-link
-        v-for="page in relatedPages"
-        :key="page.link"
-        :to="page.link"
-        class="vp-related-page-item"
-      >
+      <router-link v-for="page in relatedPages" :key="page.link" :to="page.link" class="vp-related-page-item">
         <div class="vp-related-page-content">
           <h3 class="vp-related-page-title">{{ page.title }}</h3>
-          <p v-if="page.description" class="vp-related-page-description">
+          <p v-if="page.description && !compact" class="vp-related-page-description">
             {{ page.description }}
           </p>
-          <div v-if="page.tags && page.tags.length > 0" class="vp-related-page-tags">
-            <span
-              v-for="tag in page.tags"
-              :key="tag"
-              class="vp-related-page-tag"
-            >
+          <div v-if="page.tags && page.tags.length > 0 && !compact" class="vp-related-page-tags">
+            <span v-for="tag in page.tags" :key="tag" class="vp-related-page-tag">
               {{ tag }}
             </span>
           </div>
@@ -43,11 +34,14 @@ interface Props {
   maxItems?: number
   /** 标题文本 */
   title?: string
+  /** 是否使用紧凑模式 */
+  compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxItems: 5,
-  title: '相关页面'
+  title: '相关页面',
+  compact: false
 })
 
 const { page, site, theme } = useData()
@@ -71,21 +65,21 @@ const relatedPages = computed(() => {
 
 <style scoped>
 .vp-related-pages {
-  margin-top: 48px;
-  padding-top: 32px;
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px solid var(--ldoc-c-divider);
 }
 
 .vp-related-pages-title {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
-  margin: 0 0 24px;
+  margin: 0 0 16px;
   color: var(--ldoc-c-text-1);
 }
 
 .vp-related-pages-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 12px;
 }
 
@@ -93,9 +87,9 @@ const relatedPages = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid var(--ldoc-c-divider);
-  border-radius: 8px;
+  border-radius: 6px;
   text-decoration: none;
   transition: all 0.2s;
   background: transparent;
@@ -113,9 +107,9 @@ const relatedPages = computed(() => {
 }
 
 .vp-related-page-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   color: var(--ldoc-c-text-1);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -123,14 +117,15 @@ const relatedPages = computed(() => {
 }
 
 .vp-related-page-description {
-  font-size: 14px;
-  margin: 0 0 8px;
+  font-size: 12px;
+  margin: 0;
   color: var(--ldoc-c-text-2);
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-clamp: 2;
 }
 
 .vp-related-page-tags {
@@ -150,9 +145,11 @@ const relatedPages = computed(() => {
 
 .vp-related-page-arrow {
   flex-shrink: 0;
-  margin-left: 16px;
+  margin-left: 12px;
   color: var(--ldoc-c-text-3);
   transition: transform 0.2s;
+  width: 14px;
+  height: 14px;
 }
 
 .vp-related-page-item:hover .vp-related-page-arrow {
@@ -211,6 +208,37 @@ const relatedPages = computed(() => {
   .vp-related-page-description {
     font-size: 15px;
   }
+}
+
+/* 紧凑模式 */
+.vp-related-pages.compact {
+  margin-top: 24px;
+  padding-top: 16px;
+}
+
+.vp-related-pages.compact .vp-related-pages-title {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.vp-related-pages.compact .vp-related-pages-list {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.vp-related-pages.compact .vp-related-page-item {
+  padding: 8px 12px;
+}
+
+.vp-related-pages.compact .vp-related-page-title {
+  font-size: 13px;
+  margin: 0;
+}
+
+.vp-related-pages.compact .vp-related-page-arrow {
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
 }
 
 /* 打印样式 */

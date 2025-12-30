@@ -1,0 +1,418 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ldoc.ldesign.dev/schemas/config.schema.json",
+  "title": "LDoc Configuration",
+  "description": "@ldesign/doc 文档系统配置文件 Schema",
+  "type": "object",
+  "properties": {
+    "srcDir": {
+      "type": "string",
+      "default": "docs",
+      "description": "文档源目录，相对于项目根目录"
+    },
+    "outDir": {
+      "type": "string",
+      "default": ".ldesign/.doc-cache/dist",
+      "description": "构建输出目录"
+    },
+    "base": {
+      "type": "string",
+      "default": "/",
+      "pattern": "^/",
+      "description": "站点基础路径，必须以 / 开头"
+    },
+    "title": {
+      "type": "string",
+      "description": "站点标题"
+    },
+    "description": {
+      "type": "string",
+      "description": "站点描述，用于 SEO"
+    },
+    "lang": {
+      "type": "string",
+      "default": "zh-CN",
+      "description": "默认语言",
+      "examples": ["zh-CN", "en-US", "ja-JP"]
+    },
+    "head": {
+      "type": "array",
+      "description": "额外的 HTML head 标签",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 3,
+        "items": [
+          {
+            "type": "string",
+            "description": "标签名称",
+            "examples": ["meta", "link", "script"]
+          },
+          {
+            "type": "object",
+            "description": "标签属性",
+            "additionalProperties": { "type": "string" }
+          },
+          {
+            "type": "string",
+            "description": "标签内容（可选）"
+          }
+        ]
+      },
+      "examples": [
+        [["meta", { "name": "author", "content": "LDesign Team" }]],
+        [["link", { "rel": "icon", "href": "/favicon.ico" }]]
+      ]
+    },
+    "framework": {
+      "type": "string",
+      "enum": ["vue", "react", "auto"],
+      "default": "auto",
+      "description": "组件框架，auto 会根据文件自动检测"
+    },
+    "themeConfig": {
+      "$ref": "#/definitions/ThemeConfig"
+    },
+    "locales": {
+      "type": "object",
+      "description": "多语言配置",
+      "additionalProperties": {
+        "$ref": "#/definitions/LocaleConfig"
+      }
+    },
+    "markdown": {
+      "$ref": "#/definitions/MarkdownOptions"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "插件列表",
+      "items": {
+        "description": "插件实例（由插件工厂函数返回）"
+      }
+    },
+    "build": {
+      "$ref": "#/definitions/BuildConfig"
+    },
+    "vite": {
+      "type": "object",
+      "description": "Vite 配置，会与内置配置合并"
+    }
+  },
+  "definitions": {
+    "ThemeConfig": {
+      "type": "object",
+      "description": "主题配置",
+      "properties": {
+        "logo": {
+          "oneOf": [
+            { "type": "string", "description": "Logo 图片路径" },
+            {
+              "type": "object",
+              "properties": {
+                "light": { "type": "string", "description": "亮色模式 Logo" },
+                "dark": { "type": "string", "description": "暗色模式 Logo" }
+              }
+            }
+          ]
+        },
+        "siteTitle": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "boolean", "const": false }
+          ],
+          "description": "站点标题，设为 false 可隐藏"
+        },
+        "nav": {
+          "type": "array",
+          "description": "顶部导航栏配置",
+          "items": { "$ref": "#/definitions/NavItem" }
+        },
+        "sidebar": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "$ref": "#/definitions/SidebarItem" }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/SidebarItem" }
+              }
+            }
+          ],
+          "description": "侧边栏配置，可以是数组或按路径分组的对象"
+        },
+        "footer": {
+          "type": "object",
+          "description": "页脚配置",
+          "properties": {
+            "message": { "type": "string", "description": "页脚消息" },
+            "copyright": { "type": "string", "description": "版权信息" }
+          }
+        },
+        "editLink": {
+          "type": "object",
+          "description": "编辑链接配置",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "编辑链接模板，:path 会被替换为文件路径",
+              "examples": ["https://github.com/user/repo/edit/main/docs/:path"]
+            },
+            "text": {
+              "type": "string",
+              "default": "在 GitHub 上编辑此页",
+              "description": "编辑链接文本"
+            }
+          }
+        },
+        "lastUpdated": {
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string", "default": "最后更新于" },
+                "formatOptions": {
+                  "type": "object",
+                  "description": "Intl.DateTimeFormat 选项"
+                }
+              }
+            }
+          ],
+          "description": "显示最后更新时间"
+        },
+        "outline": {
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "oneOf": [
+                    { "type": "number", "minimum": 1, "maximum": 6 },
+                    {
+                      "type": "array",
+                      "items": { "type": "number", "minimum": 1, "maximum": 6 },
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  ],
+                  "default": 2,
+                  "description": "大纲显示的标题级别"
+                },
+                "label": { "type": "string", "default": "本页目录" }
+              }
+            }
+          ],
+          "description": "页面大纲配置"
+        },
+        "search": {
+          "type": "object",
+          "description": "搜索配置",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": ["local", "algolia"],
+              "default": "local"
+            },
+            "options": { "type": "object" }
+          }
+        },
+        "socialLinks": {
+          "type": "array",
+          "description": "社交链接",
+          "items": {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "type": "string",
+                "enum": ["github", "twitter", "discord", "facebook", "instagram", "linkedin", "youtube", "npm"],
+                "description": "图标类型"
+              },
+              "link": { "type": "string", "description": "链接地址" },
+              "ariaLabel": { "type": "string", "description": "无障碍标签" }
+            },
+            "required": ["icon", "link"]
+          }
+        },
+        "darkMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用暗色模式切换"
+        },
+        "i18nRouting": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否启用国际化路由"
+        }
+      }
+    },
+    "NavItem": {
+      "type": "object",
+      "description": "导航项",
+      "properties": {
+        "text": { "type": "string", "description": "显示文本" },
+        "link": { "type": "string", "description": "链接地址" },
+        "activeMatch": {
+          "type": "string",
+          "description": "激活匹配正则，用于高亮当前导航"
+        },
+        "target": { "type": "string", "description": "链接 target 属性" },
+        "rel": { "type": "string", "description": "链接 rel 属性" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/NavItem" },
+          "description": "下拉菜单项"
+        }
+      },
+      "required": ["text"]
+    },
+    "SidebarItem": {
+      "type": "object",
+      "description": "侧边栏项",
+      "properties": {
+        "text": { "type": "string", "description": "显示文本" },
+        "link": { "type": "string", "description": "链接地址" },
+        "collapsed": {
+          "type": "boolean",
+          "description": "是否默认折叠（仅对有子项的组有效）"
+        },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/SidebarItem" },
+          "description": "子项"
+        }
+      },
+      "required": ["text"]
+    },
+    "LocaleConfig": {
+      "type": "object",
+      "description": "语言配置",
+      "properties": {
+        "label": { "type": "string", "description": "语言显示名称" },
+        "lang": { "type": "string", "description": "语言代码" },
+        "link": { "type": "string", "description": "语言切换链接" },
+        "themeConfig": { "$ref": "#/definitions/ThemeConfig" }
+      }
+    },
+    "MarkdownOptions": {
+      "type": "object",
+      "description": "Markdown 渲染配置",
+      "properties": {
+        "lineNumbers": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否显示代码行号"
+        },
+        "theme": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "light": { "type": "string", "default": "github-light" },
+                "dark": { "type": "string", "default": "github-dark" }
+              }
+            }
+          ],
+          "description": "代码高亮主题"
+        },
+        "languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "额外加载的语言"
+        },
+        "anchor": {
+          "type": "object",
+          "description": "markdown-it-anchor 插件配置"
+        },
+        "toc": {
+          "type": "object",
+          "description": "目录插件配置",
+          "properties": {
+            "includeLevel": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [2, 3],
+              "description": "包含的标题级别"
+            }
+          }
+        },
+        "container": {
+          "type": "object",
+          "description": "容器标签文本配置",
+          "properties": {
+            "tipLabel": { "type": "string", "default": "TIP" },
+            "warningLabel": { "type": "string", "default": "WARNING" },
+            "dangerLabel": { "type": "string", "default": "DANGER" },
+            "infoLabel": { "type": "string", "default": "INFO" },
+            "detailsLabel": { "type": "string", "default": "Details" }
+          }
+        }
+      }
+    },
+    "BuildConfig": {
+      "type": "object",
+      "description": "构建配置",
+      "properties": {
+        "outDir": { "type": "string", "description": "输出目录" },
+        "assetsDir": {
+          "type": "string",
+          "default": "assets",
+          "description": "静态资源目录"
+        },
+        "minify": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string", "enum": ["terser", "esbuild"] }
+          ],
+          "default": true,
+          "description": "是否压缩代码"
+        },
+        "sourcemap": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否生成 source map"
+        },
+        "ssr": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用 SSR 构建"
+        },
+        "chunkSizeWarningLimit": {
+          "type": "number",
+          "default": 500,
+          "description": "chunk 大小警告阈值 (KB)"
+        },
+        "cache": {
+          "type": "object",
+          "description": "构建缓存配置",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "是否启用缓存"
+            },
+            "cacheDir": {
+              "type": "string",
+              "default": ".ldoc-cache",
+              "description": "缓存目录"
+            },
+            "maxAge": {
+              "type": "number",
+              "default": 604800000,
+              "description": "缓存过期时间（毫秒），默认 7 天"
+            },
+            "printStats": {
+              "type": "boolean",
+              "default": true,
+              "description": "是否打印缓存统计"
+            }
+          }
+        }
+      }
+    }
+  }
+}

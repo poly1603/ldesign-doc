@@ -336,6 +336,77 @@ cli
     }
   })
 
+// doctor 命令 - 项目诊断
+cli
+  .command('doctor [root]', 'Diagnose project issues')
+  .option('--category <category>', 'Only check specific category (config, deps, env, files, performance)')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { runDiagnostics, printDiagnosticReport } = await import('./doctor')
+
+      logger.printBanner()
+
+      const categories = options.category
+        ? [options.category as 'config' | 'deps' | 'env' | 'files' | 'performance']
+        : undefined
+
+      const report = await runDiagnostics(root, { categories })
+      printDiagnosticReport(report)
+
+      // 有问题时退出码为 1
+      if (report.status === 'issues') {
+        process.exit(1)
+      }
+    } catch (error) {
+      logger.printError('Diagnosis failed', error instanceof Error ? error.message : String(error))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
+// analyze 命令 - 构建分析
+cli
+  .command('analyze [root]', 'Analyze build output')
+  .option('--json', 'Output as JSON')
+  .action(async (root: string = '.', options: Record<string, unknown>) => {
+    try {
+      const { resolveConfig } = await import('./config')
+      const { analyzeOutputDir } = await import('./buildAnalyzer')
+
+      logger.printBanner()
+      logger.printCommandTitle('analyze', 'Analyzing Build Output')
+
+      const config = await resolveConfig(root, 'build', 'production')
+      const analysis = analyzeOutputDir(config.outDir)
+
+      if (options.json) {
+        console.log(JSON.stringify(analysis, null, 2))
+      } else {
+        console.log()
+        console.log(pc.bold('  📦 构建输出分析'))
+        console.log(pc.gray('  ─'.repeat(25)))
+        console.log()
+        console.log(`  总大小: ${pc.green((analysis.totalSize / 1024 / 1024).toFixed(2) + ' MB')}`) 
+        console.log(`  文件数: ${pc.white(String(analysis.files.length))}`)
+        console.log()
+        console.log(pc.bold('  按类型统计:'))
+        for (const [ext, stats] of Object.entries(analysis.byExtension)) {
+          console.log(`    ${pc.dim(ext.padEnd(8))} ${pc.white(String(stats.count).padStart(4))} 个  ${pc.gray(((stats.size / 1024).toFixed(1) + ' KB').padStart(12))}`)
+        }
+        console.log()
+        console.log(pc.bold('  最大的 10 个文件:'))
+        for (const file of analysis.files.slice(0, 10)) {
+          console.log(`    ${pc.gray(((file.size / 1024).toFixed(1) + ' KB').padStart(10))}  ${file.path}`)
+        }
+        console.log()
+      }
+    } catch (error) {
+      logger.printError('Analysis failed', error instanceof Error ? error.message : String(error))
+      console.error(error)
+      process.exit(1)
+    }
+  })
+
 // 帮助信息
 cli.help()
 

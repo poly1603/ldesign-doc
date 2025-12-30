@@ -44,7 +44,7 @@ export {
 
 // 应用和组件
 export { createApp } from './app'
-export { Content, PluginSlot, PluginUI, LDocModal } from './components'
+export { Content, PluginSlot, PluginUI, LDocModal, ErrorBoundary, DevErrorOverlay } from './components'
 
 // Re-export types
 export type {

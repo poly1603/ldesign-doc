@@ -19,6 +19,7 @@ import { generateRoutes, generateRoutesCode, generateSiteDataCode, generateMainC
 import pc from 'picocolors'
 import * as logger from './logger'
 import { generateBuildReport, printBuildReport, saveBuildReport } from './buildReport'
+import { createBuildCache, type BuildCache } from './cache'
 
 // 获取当前包的根目录
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -49,6 +50,7 @@ function resolvePackagePath(pkgName: string) {
 export interface BuildOptions {
   md: MarkdownRenderer
   pluginContainer: PluginContainer
+  cache?: BuildCache
 }
 
 export interface Builder {
@@ -59,11 +61,17 @@ export interface Builder {
  * 创建构建器
  */
 export function createBuilder(config: SiteConfig, options: BuildOptions): Builder {
-  const { md, pluginContainer } = options
+  const { md, pluginContainer, cache } = options
 
   return {
     async build() {
       logger.printBuildStart()
+
+      // 清理过期缓存
+      if (cache?.isEnabled()) {
+        const prunedCount = cache.prune()
+        logger.printCachePruned(prunedCount)
+      }
 
       const startTime = Date.now()
 
@@ -195,6 +203,11 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
       // 保存构建报告到文件
       saveBuildReport(buildReport, config.outDir)
 
+      // 打印缓存统计
+      if (cache?.isEnabled() && config.build.cache?.printStats !== false) {
+        cache.printStats()
+      }
+
       logger.printBuildComplete(endTime - startTime, config.outDir)
     }
   }
@@ -219,12 +232,22 @@ export async function build(root: string = process.cwd()): Promise<void> {
   // 调用 configResolved 钩子
   await pluginContainer.callHook('configResolved', config)
 
-  const md = await createMarkdownRenderer(config)
+  // 创建构建缓存
+  const cacheEnabled = config.build.cache?.enabled !== false
+  const cache = cacheEnabled
+    ? createBuildCache(root, {
+        cacheDir: config.build.cache?.cacheDir || config.cacheDir,
+        maxAge: config.build.cache?.maxAge,
+        enabled: true
+      })
+    : undefined
+
+  const md = await createMarkdownRenderer(config, cache)
 
   // 扩展 Markdown
   await pluginContainer.callHook('extendMarkdown', md)
 
-  const builder = createBuilder(config, { md, pluginContainer })
+  const builder = createBuilder(config, { md, pluginContainer, cache })
   await builder.build()
 }
 

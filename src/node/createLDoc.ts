@@ -9,6 +9,7 @@ import { createBuilder } from './build'
 import { createMarkdownRenderer } from '../markdown/createMarkdown'
 import { createPluginContainer } from '../plugin/pluginContainer'
 import { createAdminServer } from './admin'
+import { createBuildCache } from './cache'
 import * as logger from './logger'
 
 export interface LDocInstance {
@@ -63,8 +64,18 @@ export async function createLDoc(
   // 调用 configResolved 钩子
   await pluginContainer.callHook('configResolved', config)
 
+  // 创建构建缓存（dev 模式也可以使用缓存提升性能）
+  const cacheEnabled = config.build.cache?.enabled !== false
+  const cache = cacheEnabled
+    ? createBuildCache(root, {
+        cacheDir: config.build.cache?.cacheDir || config.cacheDir,
+        maxAge: config.build.cache?.maxAge,
+        enabled: true
+      })
+    : undefined
+
   // 创建 Markdown 渲染器
-  const md = await createMarkdownRenderer(config)
+  const md = await createMarkdownRenderer(config, cache)
 
   // 扩展 Markdown（通过插件）
   await pluginContainer.callHook('extendMarkdown', md)
@@ -109,7 +120,8 @@ export async function createLDoc(
     async build() {
       const builder = createBuilder(config, {
         md,
-        pluginContainer
+        pluginContainer,
+        cache
       })
       await builder.build()
     },

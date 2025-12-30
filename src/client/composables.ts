@@ -428,3 +428,16 @@ export function useThemeColor() {
 
   return { colors, currentColor, setColor }
 }
+
+// Re-export performance monitoring
+export {
+  usePerformance,
+  createPerformanceTracker,
+  gradeWebVitals
+} from './composables/usePerformance'
+export type {
+  WebVitalsMetrics,
+  ResourceTiming,
+  PerformanceReport,
+  PerformanceGrade
+} from './composables/usePerformance'

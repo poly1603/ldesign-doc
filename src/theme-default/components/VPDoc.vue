@@ -50,7 +50,7 @@
     </div>
 
     <!-- 相关页面推荐 -->
-    <VPRelatedPages v-if="showRelatedPages" />
+    <VPRelatedPages v-if="showRelatedPages" :compact="frontmatter.relatedPagesCompact !== false" />
 
     <!-- 子页面目录 -->
     <VPSubpageTOC v-if="showSubpageTOC" :title="subpageTOCTitle" />
@@ -243,7 +243,7 @@ function getOrderedLinks(): NavLink[] {
       readingOrder?: Array<{ link: string; text: string; description?: string }>
     }
   }
-  
+
   // 优先使用配置的阅读顺序
   const readingOrder = themeCfg?.docFooter?.readingOrder
   if (readingOrder && readingOrder.length > 0) {
@@ -260,7 +260,7 @@ function getOrderedLinks(): NavLink[] {
       description: item.description
     }))
   }
-  
+
   // 否则使用侧边栏顺序
   const current = normalizePath(route.path)
   const sidebar = themeCfg?.sidebar || {}
@@ -273,7 +273,7 @@ function getOrderedLinks(): NavLink[] {
   const groups = base ? sidebar[base] : ([] as Array<{ items?: Array<{ text: string; link: string; description?: string }> }>)
   const list: NavLink[] = []
   const seen = new Set<string>()
-  
+
   for (const g of groups) {
     const items = g.items || []
     for (const it of items) {
@@ -282,8 +282,8 @@ function getOrderedLinks(): NavLink[] {
         const normalized = normalizePath(it.link)
         if (!seen.has(normalized)) {
           seen.add(normalized)
-          list.push({ 
-            text: it.text, 
+          list.push({
+            text: it.text,
             link: it.link,
             description: it.description
           })
@@ -298,10 +298,10 @@ const prevPage = computed<NavLink | null>(() => {
   const themeCfg = localeTheme.value as unknown as {
     docFooter?: { prev?: string | false }
   }
-  
+
   // 如果配置中禁用了上一页，返回 null
   if (themeCfg?.docFooter?.prev === false) return null
-  
+
   const list = getOrderedLinks()
   const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
   if (idx > 0) return list[idx - 1]
@@ -312,10 +312,10 @@ const nextPage = computed<NavLink | null>(() => {
   const themeCfg = localeTheme.value as unknown as {
     docFooter?: { next?: string | false }
   }
-  
+
   // 如果配置中禁用了下一页，返回 null
   if (themeCfg?.docFooter?.next === false) return null
-  
+
   const list = getOrderedLinks()
   const idx = list.findIndex(i => normalizePath(i.link) === normalizePath(route.path))
   if (idx >= 0 && idx < list.length - 1) return list[idx + 1]

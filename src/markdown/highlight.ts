@@ -4,14 +4,19 @@
 
 import { getHighlighter, type Highlighter, type BundledLanguage, type BundledTheme } from 'shiki'
 import type { MarkdownOptions } from '../shared/types'
+import type { BuildCache, HighlightCacheData } from '../node/cache'
+import { createHighlightCacheKey, computeContentHash } from '../node/cache'
 
 let highlighter: Highlighter | null = null
 
 /**
  * 创建代码高亮器
+ * @param options - Markdown 配置选项
+ * @param cache - 可选的构建缓存实例
  */
 export async function createCodeHighlighter(
-  options: MarkdownOptions
+  options: MarkdownOptions,
+  cache?: BuildCache
 ): Promise<(code: string, lang: string) => string> {
   // 解析主题配置
   const theme = options.theme || {
@@ -58,6 +63,16 @@ export async function createCodeHighlighter(
       return wrapLines(escapeHtml(code))
     }
 
+    // 尝试从缓存获取
+    if (cache) {
+      const cacheKey = createHighlightCacheKey(code, lang, theme)
+      const contentHash = computeContentHash(code)
+      const cached = cache.get<HighlightCacheData>('highlight', cacheKey, contentHash)
+      if (cached) {
+        return cached.html
+      }
+    }
+
     try {
       // 获取支持的语言列表
       const supportedLangs = highlighter.getLoadedLanguages()
@@ -75,10 +90,19 @@ export async function createCodeHighlighter(
 
       // 提取 code 内容并包装每行
       const match = html.match(/<code[^>]*>([\s\S]*?)<\/code>/)
-      if (match) {
-        return wrapLines(match[1])
+      const result = match ? wrapLines(match[1]) : wrapLines(escapeHtml(code))
+
+      // 写入缓存
+      if (cache) {
+        const cacheKey = createHighlightCacheKey(code, lang, theme)
+        const contentHash = computeContentHash(code)
+        cache.set<HighlightCacheData>('highlight', cacheKey, contentHash, {
+          html: result,
+          lang
+        })
       }
-      return wrapLines(escapeHtml(code))
+
+      return result
     } catch {
       return wrapLines(escapeHtml(code))
     }
