@@ -456,11 +456,15 @@ const handleKeydown = (e: KeyboardEvent) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('ldoc:search-open', openSearch)
+  window.addEventListener('ldoc:search-enhanced-open', openSearch)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('ldoc:search-open', openSearch)
+  window.removeEventListener('ldoc:search-enhanced-open', openSearch)
 })
 </script>
 

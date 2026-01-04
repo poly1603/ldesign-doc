@@ -64,13 +64,13 @@ export function createPluginContainer(config: SiteConfig, plugins: LDocPlugin[] 
     console.warn(formatConflicts(conflicts))
   }
 
-  // 组合插件（处理继承）
-  let composedPlugins = composePlugins(plugins)
+  const registeredPlugins: LDocPlugin[] = [...plugins]
 
-  // 解析依赖并排序
-  composedPlugins = resolvePluginDependencies(composedPlugins)
-
-  const registeredPlugins: LDocPlugin[] = []
+  const getComposedPlugins = (): LDocPlugin[] => {
+    const composed = composePlugins(registeredPlugins)
+    const sorted = sortPlugins(composed)
+    return resolvePluginDependencies(sorted)
+  }
 
   return {
     async register(plugin: LDocPlugin) {
@@ -97,7 +97,7 @@ export function createPluginContainer(config: SiteConfig, plugins: LDocPlugin[] 
     },
 
     async callHook(name, ...args) {
-      for (const plugin of composedPlugins) {
+      for (const plugin of getComposedPlugins()) {
         const hook = plugin[name as keyof LDocPlugin]
         if (typeof hook === 'function') {
           await (hook as (...args: unknown[]) => unknown)(...args)
@@ -108,7 +108,7 @@ export function createPluginContainer(config: SiteConfig, plugins: LDocPlugin[] 
     async getVitePlugins() {
       const vitePlugins: VitePlugin[] = []
 
-      for (const plugin of composedPlugins) {
+      for (const plugin of getComposedPlugins()) {
         if (plugin.vitePlugins) {
           const pluginsFromHook = await plugin.vitePlugins()
           vitePlugins.push(...pluginsFromHook)

@@ -118,10 +118,32 @@ export async function exportToPDF(options: PDFExportOptions): Promise<void> {
     timeout = 30000
   } = options
 
+  const pdfCss = `
+@media print {
+  html, body { background: #fff !important; }
+  body { font-size: 13px !important; line-height: 1.65 !important; color: #111827 !important; }
+  .vp-nav,.vp-sidebar,.vp-local-nav,.back-to-top,.vp-related-pages,.vp-social-share,.vp-breadcrumb,.vp-doc-edit,.vp-doc-pagination,.vp-subpage-toc,.skip-link,.ldoc-export-button { display:none !important; }
+  .vp-doc { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+  .vp-doc-content { max-width: 920px !important; margin: 0 auto !important; }
+  .vp-doc-title { font-size: 28px !important; margin: 0 0 12px !important; line-height: 1.25 !important; }
+  .vp-doc-body h2 { margin: 26px 0 10px !important; padding-bottom: 6px !important; break-after: avoid; page-break-after: avoid; }
+  .vp-doc-body h3 { margin: 18px 0 8px !important; break-after: avoid; page-break-after: avoid; }
+  .vp-doc-body p { margin: 10px 0 !important; }
+  .vp-doc-body pre { padding: 12px !important; border-radius: 8px !important; overflow: hidden !important; break-inside: avoid; page-break-inside: avoid; }
+  .vp-doc-body pre code { font-size: 11px !important; line-height: 1.55 !important; white-space: pre-wrap !important; word-break: break-word !important; }
+  .vp-doc-body table { font-size: 12px !important; break-inside: avoid; page-break-inside: avoid; }
+  .vp-doc-body th,.vp-doc-body td { padding: 8px 10px !important; }
+  .vp-doc-body blockquote { break-inside: avoid; page-break-inside: avoid; }
+  .vp-doc-body img { max-width: 100% !important; break-inside: avoid; page-break-inside: avoid; }
+  .vp-doc-body ul, .vp-doc-body ol { margin: 10px 0 !important; }
+  .vp-doc-body li { margin: 6px 0 !important; }
+}`.trim()
+
   // 动态导入 Playwright
   let playwright: any
   try {
-    playwright = await import('playwright')
+    const id = 'play' + 'wright'
+    playwright = await import(/* @vite-ignore */ id)
   } catch (error) {
     throw new Error(
       'Playwright is not installed. Please install it with: npm install -D playwright'
@@ -143,6 +165,28 @@ export async function exportToPDF(options: PDFExportOptions): Promise<void> {
     await page.goto(url, {
       waitUntil: waitForNetwork ? 'networkidle' : 'domcontentloaded'
     })
+
+    try {
+      await page.waitForFunction(() => {
+        const nodes = Array.from(document.querySelectorAll('.mermaid, .ldoc-echarts')) as HTMLElement[]
+        if (nodes.length === 0) return true
+        return nodes.every(n => n.getAttribute('data-rendered') === 'true')
+      }, { timeout: Math.min(timeout, 30000) })
+    } catch {
+      // ignore
+    }
+
+    try {
+      await page.emulateMediaType('print')
+    } catch {
+      // ignore
+    }
+
+    try {
+      await page.addStyleTag({ content: pdfCss })
+    } catch {
+      // ignore
+    }
 
     // 如果需要目录，注入目录生成脚本
     if (toc) {

@@ -124,6 +124,17 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
         command: 'build'
       })
 
+      if (process.env.LDOC_DEBUG_PLUGINS) {
+        try {
+          const order = vitePlugins
+            .map((p: any) => `${p?.enforce || 'normal'}:${p?.name || 'unknown'}`)
+            .join(' | ')
+          console.log('[ldoc] vite plugins order:', order)
+        } catch {
+          // ignore
+        }
+      }
+
       // 构建客户端
       const clientConfig: InlineConfig = {
         root: config.tempDir,
@@ -147,19 +158,20 @@ export function createBuilder(config: SiteConfig, options: BuildOptions): Builde
           chunkSizeWarningLimit: config.build.chunkSizeWarningLimit || 500
         },
         resolve: {
-          alias: {
-            '@theme': config.themeDir,
-            '@': config.srcDir,
+          alias: [
+            { find: '@theme', replacement: config.themeDir },
+            { find: '@', replacement: config.srcDir },
             // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
-            '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
-            '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
-            '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es'),
-            'vue': resolvePackagePath('vue'),
-            'vue-router': resolvePackagePath('vue-router'),
-            'react': resolvePackagePath('react'),
-            'react-dom/client': resolvePackagePath('react-dom/client'),
-            'react-dom': resolvePackagePath('react-dom')
-          }
+            { find: '@ldesign/doc/theme-default', replacement: resolve(LDOC_PKG_ROOT, 'dist/es/theme-default') },
+            { find: '@ldesign/doc/client', replacement: resolve(LDOC_PKG_ROOT, 'dist/es/client') },
+            { find: '@ldesign/doc', replacement: resolve(LDOC_PKG_ROOT, 'dist/es') },
+            // 避免将 vue/server-renderer 解析为 <vue-entry>/server-renderer
+            { find: /^vue$/, replacement: resolvePackagePath('vue') },
+            { find: /^vue-router$/, replacement: resolvePackagePath('vue-router') },
+            { find: /^react$/, replacement: resolvePackagePath('react') },
+            { find: /^react-dom\/client$/, replacement: resolvePackagePath('react-dom/client') },
+            { find: /^react-dom$/, replacement: resolvePackagePath('react-dom') }
+          ]
         }
       }
 
@@ -236,10 +248,10 @@ export async function build(root: string = process.cwd()): Promise<void> {
   const cacheEnabled = config.build.cache?.enabled !== false
   const cache = cacheEnabled
     ? createBuildCache(root, {
-        cacheDir: config.build.cache?.cacheDir || config.cacheDir,
-        maxAge: config.build.cache?.maxAge,
-        enabled: true
-      })
+      cacheDir: config.build.cache?.cacheDir || config.cacheDir,
+      maxAge: config.build.cache?.maxAge,
+      enabled: true
+    })
     : undefined
 
   const md = await createMarkdownRenderer(config, cache)
@@ -329,19 +341,20 @@ async function buildSSR(config: SiteConfig, vitePlugins: unknown[]): Promise<voi
       }
     },
     resolve: {
-      alias: {
-        '@theme': config.themeDir,
-        '@': config.srcDir,
+      alias: [
+        { find: '@theme', replacement: config.themeDir },
+        { find: '@', replacement: config.srcDir },
         // 解析 @ldesign/doc 子路径，支持自定义主题导入默认主题
-        '@ldesign/doc/theme-default': resolve(LDOC_PKG_ROOT, 'dist/es/theme-default'),
-        '@ldesign/doc/client': resolve(LDOC_PKG_ROOT, 'dist/es/client'),
-        '@ldesign/doc': resolve(LDOC_PKG_ROOT, 'dist/es'),
-        'vue': resolvePackagePath('vue'),
-        'vue-router': resolvePackagePath('vue-router'),
-        'react': resolvePackagePath('react'),
-        'react-dom/client': resolvePackagePath('react-dom/client'),
-        'react-dom': resolvePackagePath('react-dom')
-      }
+        { find: '@ldesign/doc/theme-default', replacement: resolve(LDOC_PKG_ROOT, 'dist/es/theme-default') },
+        { find: '@ldesign/doc/client', replacement: resolve(LDOC_PKG_ROOT, 'dist/es/client') },
+        { find: '@ldesign/doc', replacement: resolve(LDOC_PKG_ROOT, 'dist/es') },
+        // 避免将 vue/server-renderer 解析为 <vue-entry>/server-renderer
+        { find: /^vue$/, replacement: resolvePackagePath('vue') },
+        { find: /^vue-router$/, replacement: resolvePackagePath('vue-router') },
+        { find: /^react$/, replacement: resolvePackagePath('react') },
+        { find: /^react-dom\/client$/, replacement: resolvePackagePath('react-dom/client') },
+        { find: /^react-dom$/, replacement: resolvePackagePath('react-dom') }
+      ]
     }
   }
 

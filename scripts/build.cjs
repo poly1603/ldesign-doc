@@ -44,6 +44,8 @@ const external = [
   'debug',
   'defu',
   'ufo',
+  /^playwright(\/.*)?$/,
+  /^playwright-core(\/.*)?$/,
   // 评论插件可选依赖
   '@waline/client',
   'gitalk',

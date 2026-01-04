@@ -104,6 +104,77 @@ interface SearchResult {
   type: 'page' | 'heading'
 }
 
+type SearchIndexDoc = {
+  path: string
+  title: string
+  content?: string
+  headers?: string[]
+  headings?: Array<{ title: string; slug: string; level: number }>
+}
+
+let cachedIndex: SearchIndexDoc[] | null = null
+
+const toRoutePath = (raw: string): string => {
+  const p = (raw || '').trim()
+  if (!p) return '/'
+
+  let normalized = p
+  // strip query/hash if ever present
+  const qIdx = normalized.indexOf('?')
+  if (qIdx >= 0) normalized = normalized.slice(0, qIdx)
+  const hIdx = normalized.indexOf('#')
+  if (hIdx >= 0) normalized = normalized.slice(0, hIdx)
+
+  normalized = normalized.replace(/^\//, '')
+  normalized = normalized.replace(/\.md$/i, '')
+  normalized = normalized.replace(/\/index$/i, '')
+  normalized = normalized.replace(/\/+$/, '')
+
+  if (!normalized || normalized === 'index') return '/'
+  return '/' + normalized
+}
+
+const getBase = (): string => {
+  try {
+    const base = (import.meta as any).env?.BASE_URL
+    return typeof base === 'string' ? base : '/'
+  } catch {
+    return '/'
+  }
+}
+
+const loadSearchIndex = async (): Promise<SearchIndexDoc[] | null> => {
+  if (cachedIndex && Array.isArray(cachedIndex) && cachedIndex.length > 0) return cachedIndex
+
+  const injected = (window as any).__LDOC_SEARCH_INDEX__ as SearchIndexDoc[] | undefined
+  if (Array.isArray(injected) && injected.length > 0) {
+    cachedIndex = injected
+    return cachedIndex
+  }
+
+  const base = getBase()
+  const candidates = [
+    '/__ldoc/search-index.json',
+    (base.endsWith('/') ? base : base + '/') + 'ldoc-search-index.json'
+  ]
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { method: 'GET' })
+      if (!res.ok) continue
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        cachedIndex = data
+        return cachedIndex
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null
+}
+
 const props = defineProps<{
   isOpen: boolean
 }>()
@@ -234,6 +305,122 @@ watch(query, async (newQuery) => {
   await new Promise(resolve => setTimeout(resolve, 100))
 
   const searchTerm = newQuery.toLowerCase()
+  const fullIndex = await loadSearchIndex()
+
+  // 如果存在构建期索引，做全文检索；否则回退到旧逻辑（标题/侧边栏/当前页 headings）
+  if (Array.isArray(fullIndex) && fullIndex.length > 0) {
+    const raw = searchTerm.trim()
+    const isCjk = /[\u4e00-\u9fff]/.test(raw)
+    const tokens = isCjk
+      ? raw.split('').filter(Boolean)
+      : raw.split(/\s+/).filter(Boolean)
+
+    const countOccur = (hay: string, needle: string) => {
+      if (!needle) return 0
+      let n = 0
+      let idx = 0
+      while (idx !== -1) {
+        idx = hay.indexOf(needle, idx)
+        if (idx !== -1) {
+          n++
+          idx += Math.max(1, needle.length)
+        }
+      }
+      return n
+    }
+
+    const approxOk = (hay: string, t: string) => {
+      if (!t) return false
+      if (hay.includes(t)) return true
+      if (t.length <= 2) return false
+      const parts = [t.slice(0, Math.ceil(t.length / 2)), t.slice(Math.floor(t.length / 2))].filter(Boolean)
+      return parts.some(p => p.length >= 2 && hay.includes(p))
+    }
+
+    const scored: Array<{ score: number; item: SearchIndexDoc; excerpt?: string }> = []
+    const scoredHeadings: Array<{ score: number; item: SearchIndexDoc; heading: { title: string; slug: string; level: number } }> = []
+
+    for (const item of fullIndex) {
+      const hayTitle = (item.title || '').toLowerCase()
+      const hayContent = (item.content || '').toLowerCase()
+      const hay = (hayTitle + ' ' + hayContent).trim()
+
+      const pagePath = toRoutePath(item.path)
+
+      if (!hay) continue
+
+      const ok = tokens.every(t => approxOk(hay, t))
+      if (!ok) continue
+
+      let score = 0
+      for (const t of tokens) {
+        score += countOccur(hayTitle, t) * 12
+        score += countOccur(hayContent, t) * 4
+      }
+
+      if (raw && (hayTitle.includes(raw) || hayContent.includes(raw))) score += 20
+
+      // 生成摘要
+      let excerpt: string | undefined
+      if (hayContent) {
+        const idx = hayContent.indexOf(tokens[0] || raw)
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 30)
+          const end = Math.min(hayContent.length, idx + 90)
+          excerpt = (item.content || '').slice(start, end)
+        }
+      }
+
+      scored.push({ score, item, excerpt })
+
+      if (Array.isArray(item.headings) && item.headings.length > 0) {
+        for (const h of item.headings) {
+          const ht = (h.title || '').toLowerCase()
+          if (!ht) continue
+          const okH = tokens.every(t => approxOk(ht, t))
+          if (!okH) continue
+          let scoreH = 0
+          for (const t of tokens) {
+            scoreH += countOccur(ht, t) * 10
+          }
+          if (raw && ht.includes(raw)) scoreH += 12
+          scoreH += 6
+          scoredHeadings.push({ score: scoreH, item: { ...item, path: pagePath }, heading: h })
+        }
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score)
+    scoredHeadings.sort((a, b) => b.score - a.score)
+
+    const merged: SearchResult[] = []
+
+    for (const r of scored.slice(0, 8)) {
+      merged.push({
+        path: toRoutePath(r.item.path),
+        title: highlightText(r.item.title, searchTerm),
+        excerpt: r.excerpt ? highlightText(r.excerpt, searchTerm) : undefined,
+        type: 'page'
+      })
+    }
+
+    for (const r of scoredHeadings.slice(0, 8)) {
+      merged.push({
+        path: toRoutePath(r.item.path),
+        title: highlightText(r.heading.title, searchTerm),
+        excerpt: highlightText(r.item.title, searchTerm),
+        anchor: r.heading.slug,
+        type: 'heading'
+      })
+    }
+
+    results.value = merged.slice(0, 10)
+
+    isSearching.value = false
+    activeIndex.value = 0
+    return
+  }
+
   const allContent = getAllSearchableContent()
   const headings = extractHeadingsFromDOM()
 
@@ -303,29 +490,38 @@ const handleEnter = () => {
 const goToResult = (result: SearchResult) => {
   close()
 
-  // 如果有锚点，先导航再滚动
-  if (result.anchor) {
-    const currentPath = window.location.pathname
-    if (currentPath === result.path || result.path === currentPath.replace(/\/$/, '')) {
-      // 同页面，直接滚动
-      scrollToAnchor(result.anchor)
-    } else {
-      // 不同页面，先导航
-      router.push(result.path).then(() => {
-        setTimeout(() => scrollToAnchor(result.anchor!), 300)
-      })
-    }
-  } else {
-    router.push(result.path)
+  const q = query.value.trim()
+  const target = {
+    path: toRoutePath(result.path),
+    query: q ? { q } : undefined,
+    hash: result.anchor ? `#${result.anchor}` : undefined
   }
+
+  router.push(target as any).then(() => {
+    if (result.anchor) {
+      setTimeout(() => scrollToAnchor(result.anchor!), 120)
+    }
+  })
 }
 
 const scrollToAnchor = (anchor: string) => {
-  const el = document.getElementById(anchor)
-  if (el) {
-    const top = el.getBoundingClientRect().top + window.scrollY - 80
-    window.scrollTo({ top, behavior: 'smooth' })
+  const maxFrames = 30
+  let frames = 0
+
+  const tryScroll = () => {
+    frames++
+    const el = document.getElementById(anchor) || document.querySelector(`#${anchor}`)
+    if (el) {
+      const top = (el as HTMLElement).getBoundingClientRect().top + window.scrollY - 80
+      window.scrollTo({ top, behavior: 'smooth' })
+      return
+    }
+    if (frames < maxFrames) {
+      requestAnimationFrame(tryScroll)
+    }
   }
+
+  tryScroll()
 }
 
 // 全局快捷键

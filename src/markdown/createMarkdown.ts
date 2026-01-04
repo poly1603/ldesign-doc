@@ -53,8 +53,78 @@ export async function createMarkdownRenderer(
     ...options.toc
   })
 
-  // 添加 emoji 插件 (暂时禁用，存在 ESM 兼容问题)
-  // md.use(emojiPlugin)
+  try {
+    const mod = await import('markdown-it-emoji')
+    const emoji = (mod as any).default || mod
+    md.use(emoji as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'task-lists'
+    const mod = await import(/* @vite-ignore */ id)
+    const taskLists = (mod as any).default || mod
+    md.use(taskLists as any, { enabled: true, label: true, labelAfter: true })
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'footnote'
+    const mod = await import(/* @vite-ignore */ id)
+    const footnote = (mod as any).default || mod
+    md.use(footnote as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'attrs'
+    const mod = await import(/* @vite-ignore */ id)
+    const attrs = (mod as any).default || mod
+    md.use(attrs as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'mark'
+    const mod = await import(/* @vite-ignore */ id)
+    const mark = (mod as any).default || mod
+    md.use(mark as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'sub'
+    const mod = await import(/* @vite-ignore */ id)
+    const sub = (mod as any).default || mod
+    md.use(sub as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'sup'
+    const mod = await import(/* @vite-ignore */ id)
+    const sup = (mod as any).default || mod
+    md.use(sup as any)
+  } catch {
+    // ignore
+  }
+
+  try {
+    const id = 'markdown-it-' + 'deflist'
+    const mod = await import(/* @vite-ignore */ id)
+    const deflist = (mod as any).default || mod
+    md.use(deflist as any)
+  } catch {
+    // ignore
+  }
+
+  setupImages(md)
 
   // 添加容器插件
   setupContainers(md, options.container as Record<string, string | undefined> | undefined)
@@ -299,6 +369,14 @@ function setupCodeHighlight(
     // Mermaid 图表支持
     if (lang === 'mermaid') {
       return `<div class="mermaid">${code}</div>`
+    }
+
+    if (lang === 'echarts') {
+      const params = parseFenceParams(info)
+      const height = typeof params.height === 'string' ? params.height : ''
+      const theme = typeof params.theme === 'string' ? params.theme : ''
+      const base64 = Buffer.from(code.trim(), 'utf-8').toString('base64')
+      return `<div class="ldoc-echarts" data-echarts-base64="${base64}"${height ? ` data-height="${escapeHtml(height)}"` : ''}${theme ? ` data-theme="${escapeHtml(theme)}"` : ''}></div>`
     }
 
     // 解析标题，如 typescript title="example.ts"
@@ -630,6 +708,81 @@ function escapeHtml(str: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+}
+
+function setupImages(md: MarkdownIt): void {
+  const defaultImage = md.renderer.rules.image || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options))
+
+  md.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+
+    if (!token.attrGet('loading')) token.attrSet('loading', 'lazy')
+    if (!token.attrGet('decoding')) token.attrSet('decoding', 'async')
+
+    return defaultImage(tokens, idx, options, env, self)
+  }
+
+  const defaultParagraphOpen = md.renderer.rules.paragraph_open || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options))
+  const defaultParagraphClose = md.renderer.rules.paragraph_close || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options))
+
+  const getCaption = (inlineToken: any): string | null => {
+    const children = inlineToken?.children as any[] | undefined
+    if (!children) return null
+
+    if (children.length === 1 && children[0].type === 'image') {
+      const t = typeof children[0].attrGet === 'function' ? children[0].attrGet('title') : null
+      return t || null
+    }
+
+    if (children.length === 3 && children[0].type === 'link_open' && children[1].type === 'image' && children[2].type === 'link_close') {
+      const t = typeof children[1].attrGet === 'function' ? children[1].attrGet('title') : null
+      return t || null
+    }
+
+    return null
+  }
+
+  md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
+    const inline = tokens[idx + 1] as any
+    const close = tokens[idx + 2] as any
+
+    if (inline?.type === 'inline' && close?.type === 'paragraph_close') {
+      const caption = getCaption(inline)
+      if (caption) {
+        ; (tokens[idx] as any).__ldocFigureCaption = caption
+        return '<figure class="ldoc-figure">\n'
+      }
+    }
+
+    return defaultParagraphOpen(tokens, idx, options, env, self)
+  }
+
+  md.renderer.rules.paragraph_close = (tokens, idx, options, env, self) => {
+    const open = tokens[idx - 2] as any
+    const caption = open && (open as any).__ldocFigureCaption
+
+    if (caption) {
+      return `\n<figcaption class="ldoc-figure-caption">${escapeHtml(String(caption))}</figcaption>\n</figure>\n`
+    }
+
+    return defaultParagraphClose(tokens, idx, options, env, self)
+  }
+}
+
+function parseFenceParams(info: string): Record<string, string> {
+  const params: Record<string, string> = {}
+
+  const matches = info.matchAll(/\b([a-zA-Z][\w-]*)=("[^"]*"|'[^']*'|[^\s]+)\b/g)
+  for (const m of matches) {
+    const key = m[1]
+    let value = m[2]
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+    params[key] = value
+  }
+
+  return params
 }
 
 /**

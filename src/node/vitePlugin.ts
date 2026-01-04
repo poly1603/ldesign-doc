@@ -63,6 +63,10 @@ export async function createVitePlugins(
   const { md, pluginContainer, command } = options
   const plugins: PluginOption[] = []
 
+  // Markdown 插件（传入 pluginContainer 以支持 extendPageData）
+  // 需要在 Vue 插件处理 .md 之前运行，将 Markdown 转换为合法的 Vue SFC
+  plugins.push(createMarkdownPlugin(config, md, pluginContainer))
+
   // 根据框架添加插件
   if (config.framework === 'vue' || config.framework === 'auto') {
     plugins.push(vue({
@@ -73,9 +77,6 @@ export async function createVitePlugins(
   if (config.framework === 'react' || config.framework === 'auto') {
     plugins.push(react())
   }
-
-  // Markdown 插件（传入 pluginContainer 以支持 extendPageData）
-  plugins.push(createMarkdownPlugin(config, md, pluginContainer))
 
   // Demo 虚拟模块插件
   plugins.push(createDemoPlugin(config))
@@ -112,9 +113,19 @@ function createMarkdownPlugin(
     enforce: 'pre',
 
     async transform(code, id) {
-      if (!id.endsWith('.md')) return null
+      const cleanId = id.split('?')[0]
+      if (/[?&]vue&type=/.test(id)) return null
+      if (!cleanId.endsWith('.md')) return null
 
-      const filePath = normalizePath(id)
+      if (process.env.LDOC_DEBUG_MD && /[\\/]docs[\\/]plugins[\\/]demo\.md$/i.test(cleanId)) {
+        try {
+          console.log('[ldoc:markdown] transform start:', id)
+        } catch {
+          // ignore
+        }
+      }
+
+      const filePath = normalizePath(cleanId)
       const fileDir = dirname(filePath)
 
       // 解析 frontmatter
@@ -245,7 +256,8 @@ function createMarkdownPlugin(
         headers: [],
         relativePath,
         filePath,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
+        content: markdown
       }
 
       // 创建页面上下文
@@ -280,6 +292,14 @@ function createMarkdownPlugin(
         }
       }
 
+      if (process.env.LDOC_DEBUG_MD && /[\\/]docs[\\/]plugins[\\/]demo\.md$/i.test(cleanId)) {
+        try {
+          console.log('[ldoc:markdown] transform output head:', String(result || '').slice(0, 80))
+        } catch {
+          // ignore
+        }
+      }
+
       return {
         code: result,
         map: null
@@ -311,7 +331,8 @@ function generateVueComponent(
 
   // 如果没有 demo，使用简单的 v-html 模式
   if (demos.length === 0) {
-    const htmlJson = JSON.stringify(html)
+    // 使用 URI 编码 + Base64 处理 UTF-8 字符，避免 HTML 中出现 </script> 导致 SFC 提前闭合
+    const htmlEncoded = Buffer.from(encodeURIComponent(html)).toString('base64')
     return `
 <template>
   <div class="ldoc-content" v-html="contentHtml" ref="contentRef"></div>
@@ -324,8 +345,11 @@ import builtinPlugins from '@ldesign/doc/plugins/builtin-client'
 import { plugins as runtimePlugins } from 'virtual:ldoc/plugins'
 import { useRouter } from 'vue-router'
 
+// UTF-8 安全的 Base64 解码
+const decodeBase64 = (str) => decodeURIComponent(atob(str))
+
 const componentId = '${componentId}'
-const contentHtml = ref(${htmlJson})
+const contentHtml = ref(typeof atob !== 'undefined' ? decodeBase64('${htmlEncoded}') : '')
 const frontmatter = ${frontmatterJson}
 const lastUpdated = ${lastUpdated}
 const contentRef = ref(null)
@@ -572,11 +596,11 @@ onMounted(() => {
           ...(builtinPlugins?.globalComponents || []),
           ...((runtimePlugins || []).flatMap(p => p.globalComponents || []))
         ]
-        const compName = (props as any).componentName
+        const compName = props.componentName
         if (compName) {
           const found = all.find(c => c && c.name === compName)
-          if (found && !(app as any)._context?.components?.[compName]) {
-            app.component(compName, found.component as any)
+          if (found && !app._context?.components?.[compName]) {
+            app.component(compName, found.component)
           }
         }
       } catch {}
@@ -731,7 +755,11 @@ export default function MarkdownPage() {
  * 检查是否有 React 导入
  */
 function hasReactImport(code: string): boolean {
-  return /import\s+.*\s+from\s+['"]react['"]/.test(code)
+  // Markdown 中可能包含 React 示例代码块（```tsx / ```jsx 等），
+  // 不能据此判断当前页面需要使用 React 框架渲染。
+  // 这里先剔除 fenced code blocks 再做检测。
+  const withoutFences = code.replace(/```[\s\S]*?```/g, '')
+  return /import\s+.*\s+from\s+['"]react['"]/.test(withoutFences)
 }
 
 /**

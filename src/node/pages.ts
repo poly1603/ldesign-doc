@@ -197,6 +197,9 @@ function extractHeaders(markdown: string): Header[] {
   const lines = markdown.split('\n')
   const stack: Header[] = []
 
+  const usedSlugs = new Set<string>()
+  const baseSlugNextIndex = new Map<string, number>()
+
   let inCodeBlock = false
 
   for (const line of lines) {
@@ -214,7 +217,18 @@ function extractHeaders(markdown: string): Header[] {
 
     const level = match[1].length
     const title = match[2].trim()
-    const slug = slugify(title)
+
+    const baseSlug = slugify(title)
+    let slug = baseSlug
+    if (usedSlugs.has(slug)) {
+      let i = baseSlugNextIndex.get(baseSlug) ?? 1
+      while (usedSlugs.has(`${baseSlug}-${i}`)) i++
+      slug = `${baseSlug}-${i}`
+      baseSlugNextIndex.set(baseSlug, i + 1)
+    } else {
+      baseSlugNextIndex.set(baseSlug, 1)
+    }
+    usedSlugs.add(slug)
 
     const header: Header = {
       level,

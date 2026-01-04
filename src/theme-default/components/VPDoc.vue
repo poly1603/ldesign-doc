@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick } from 'vue'
+import { computed, ref, onMounted, nextTick, watch } from 'vue'
 import { useData, useRoute, Content } from '@ldesign/doc/client'
 import { PluginSlot, usePluginSlots } from '@ldesign/doc/client'
 import VPBreadcrumb from './VPBreadcrumb.vue'
@@ -209,6 +209,133 @@ onMounted(async () => {
     }
   }
 })
+
+const getSearchQuery = (): string => {
+  const q = (route.query as any)?.q
+  if (typeof q === 'string') return q
+  if (Array.isArray(q) && typeof q[0] === 'string') return q[0]
+  return ''
+}
+
+const clearSearchHighlights = () => {
+  if (typeof window === 'undefined') return
+  const root = document.querySelector('.vp-doc-content')
+  if (!root) return
+  root.querySelectorAll('mark.ldoc-search-hit').forEach((m) => {
+    const text = m.textContent || ''
+    const tn = document.createTextNode(text)
+    m.parentNode?.replaceChild(tn, m)
+  })
+}
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const applySearchHighlights = async () => {
+  if (typeof window === 'undefined') return
+  const term = getSearchQuery().trim()
+  await nextTick()
+  const root = document.querySelector('.vp-doc-content') as HTMLElement | null
+  if (!root) return
+
+  clearSearchHighlights()
+
+  if (!term) return
+
+  const tokens = term.includes(' ') ? term.split(/\s+/).filter(Boolean) : [term]
+  const pattern = tokens.map(escapeRegExp).filter(Boolean).join('|')
+  if (!pattern) return
+  const regex = new RegExp(`(${pattern})`, 'gi')
+
+  const marks: HTMLElement[] = []
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node: Node) {
+        const text = node.nodeValue || ''
+        if (!text.trim()) return NodeFilter.FILTER_REJECT
+        const parent = (node as any).parentElement as HTMLElement | null
+        if (!parent) return NodeFilter.FILTER_REJECT
+        if (parent.closest('code, pre, script, style, mark.ldoc-search-hit')) return NodeFilter.FILTER_REJECT
+        return NodeFilter.FILTER_ACCEPT
+      }
+    } as any
+  )
+
+  const textNodes: Text[] = []
+  let n: Node | null = walker.nextNode()
+  while (n) {
+    textNodes.push(n as Text)
+    n = walker.nextNode()
+  }
+
+  for (const tn of textNodes) {
+    const raw = tn.nodeValue || ''
+    regex.lastIndex = 0
+    if (!regex.test(raw)) continue
+    regex.lastIndex = 0
+
+    const frag = document.createDocumentFragment()
+    let last = 0
+    let m: RegExpExecArray | null
+    while ((m = regex.exec(raw)) !== null) {
+      const start = m.index
+      const end = start + m[0].length
+      if (start > last) frag.appendChild(document.createTextNode(raw.slice(last, start)))
+      const mark = document.createElement('mark')
+      mark.className = 'ldoc-search-hit'
+      mark.textContent = raw.slice(start, end)
+      frag.appendChild(mark)
+      marks.push(mark)
+      last = end
+    }
+    if (last < raw.length) frag.appendChild(document.createTextNode(raw.slice(last)))
+    tn.parentNode?.replaceChild(frag, tn)
+  }
+
+  if (route.hash) {
+    const id = decodeURIComponent(route.hash.slice(1))
+    const maxFrames = 30
+    let frames = 0
+    const tryScroll = () => {
+      frames++
+      const el = document.getElementById(id) || document.querySelector(`#${CSS.escape(id)}`)
+      if (el) {
+        const top = (el as HTMLElement).getBoundingClientRect().top + window.scrollY - 90
+        window.scrollTo({ top, behavior: 'smooth' })
+        return
+      }
+      if (frames < maxFrames) requestAnimationFrame(tryScroll)
+    }
+    tryScroll()
+    return
+  }
+
+  if (!route.hash && marks.length > 0) {
+    const first = marks[0]
+    const top = first.getBoundingClientRect().top + window.scrollY - 90
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    if (typeof window === 'undefined') return
+    setTimeout(() => {
+      applySearchHighlights().catch(() => {})
+    }, 60)
+  },
+  { immediate: true }
+)
+
+// 暴露函数到全局，便于调试和测试
+if (typeof window !== 'undefined') {
+  (window as any).applySearchHighlights = async () => {
+    await applySearchHighlights()
+  }
+  (window as any).clearSearchHighlights = clearSearchHighlights
+}
 
 // 编辑链接
 const editLink = computed(() => {
@@ -415,6 +542,13 @@ const formatDate = (timestamp: number) => {
 .vp-doc-body :deep(pre code) {
   padding: 0;
   background: none;
+}
+
+.vp-doc-body :deep(mark.ldoc-search-hit) {
+  background: var(--ldoc-c-brand-soft);
+  color: var(--ldoc-c-text-1);
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 .vp-doc-body :deep(blockquote) {

@@ -42,10 +42,13 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 const handleImageClick = (e: Event) => {
-  const target = e.target as HTMLElement
-  if (target.tagName === 'IMG' && target.closest('.vp-doc')) {
+  const ev = e as MouseEvent
+  if (ev.defaultPrevented) return
+
+  const target = ev.target as HTMLElement
+  if (target.tagName === 'IMG' && target.closest('.vp-doc') && !target.closest('.vp-image-zoom-overlay')) {
     const img = target as HTMLImageElement
-    // 排除小图标和 emoji
+    if (img.classList.contains('no-preview')) return
     if (img.naturalWidth > 100 && img.naturalHeight > 100) {
       open(img.src, img.alt)
     }

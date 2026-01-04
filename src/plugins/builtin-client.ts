@@ -21,6 +21,107 @@ const BackToTopButton = defineComponent({
   }
 })
 
+const EChartsRenderer = defineComponent({
+  name: 'LDocECharts',
+  setup() {
+    const route = useRoute()
+    let echartsLoaded = false
+    let echartsApi: any = null
+
+    const decodeBase64 = (base64: string) => {
+      try {
+        return decodeURIComponent(escape(atob(base64)))
+      } catch {
+        return atob(base64)
+      }
+    }
+
+    const loadECharts = async () => {
+      if (echartsLoaded) return
+
+      try {
+        const id = 'ech' + 'arts'
+        const mod = await import(/* @vite-ignore */ id)
+        echartsApi = (mod as any).default || mod
+        echartsLoaded = true
+      } catch {
+        echartsLoaded = true
+      }
+    }
+
+    const renderCharts = async () => {
+      if (typeof window === 'undefined') return
+      const blocks = document.querySelectorAll('.ldoc-echarts')
+      if (!blocks || blocks.length === 0) return
+
+      if (!echartsApi) {
+        await loadECharts()
+      }
+
+      for (let i = 0; i < blocks.length; i++) {
+        const el = blocks[i] as HTMLElement
+        if (el.getAttribute('data-processed')) continue
+        el.setAttribute('data-processed', 'true')
+
+        const base64 = el.getAttribute('data-echarts-base64') || ''
+        const height = el.getAttribute('data-height') || '360'
+        const themeAttr = el.getAttribute('data-theme') || 'auto'
+
+        el.style.height = /^\d+$/.test(height) ? `${height}px` : height
+        el.style.width = '100%'
+
+        if (!echartsApi) {
+          el.innerHTML = `<div class="ldoc-echarts-error">ECharts is not available. Please install it with: pnpm add echarts</div>`
+          el.setAttribute('data-rendered', 'true')
+          continue
+        }
+
+        let option: any
+        try {
+          const json = decodeBase64(base64)
+          option = JSON.parse(json)
+        } catch (e) {
+          el.innerHTML = `<div class="ldoc-echarts-error">ECharts option JSON parse failed: ${(e as Error).message}</div>`
+          el.setAttribute('data-rendered', 'true')
+          continue
+        }
+
+        try {
+          const theme = themeAttr === 'auto'
+            ? (document.documentElement.classList.contains('dark') ? 'dark' : undefined)
+            : (themeAttr === 'dark' ? 'dark' : undefined)
+
+          const chart = echartsApi.init(el, theme)
+          chart.setOption(option)
+
+          const ro = new ResizeObserver(() => {
+            try { chart.resize() } catch { }
+          })
+          ro.observe(el)
+
+            ; (el as any).__ldoc_chart__ = { chart, ro }
+          el.setAttribute('data-rendered', 'true')
+        } catch (e) {
+          el.innerHTML = `<div class="ldoc-echarts-error">ECharts render failed: ${(e as Error).message}</div>`
+          el.setAttribute('data-rendered', 'true')
+        }
+      }
+    }
+
+    onMounted(() => {
+      renderCharts()
+    })
+
+    watch(() => route.path, () => {
+      nextTick(() => {
+        renderCharts()
+      })
+    })
+
+    return () => null
+  }
+})
+
 // ============== 图片灯箱（已禁用，使用 imageViewerPlugin 替代）==============
 // 注意：内置灯箱已禁用以避免与 imageViewerPlugin 冲突
 // 如需图片预览功能，请使用 imageViewerPlugin
@@ -114,19 +215,34 @@ const MermaidRenderer = defineComponent({
   setup() {
     const route = useRoute()
     let mermaidLoaded = false
+    let mermaidApi: any = null
 
     const renderMermaid = async () => {
-      if (typeof window === 'undefined' || !(window as any).mermaid) {
-        // 如果页面上有 mermaid 代码块但库未加载，则尝试加载
-        if (document.querySelector('.mermaid')) {
-          console.log('[LDoc] Mermaid block found but lib not loaded, retrying...')
+      if (typeof window === 'undefined') return
+
+      if (!mermaidApi) {
+        const blocks = document.querySelectorAll('.mermaid')
+        if (blocks.length > 0 && !mermaidLoaded) {
           setTimeout(() => mermaidLoaded ? renderMermaid() : loadMermaid(), 500)
+          return
         }
+
+        if (blocks.length > 0 && mermaidLoaded) {
+          for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i] as HTMLElement
+            if (block.getAttribute('data-rendered')) continue
+            block.setAttribute('data-processed', 'true')
+            block.setAttribute('data-rendered', 'true')
+            block.innerHTML = `<div style="color:var(--ldoc-c-red); background:var(--ldoc-c-red-soft); padding:16px; border-radius:8px; font-family:monospace; white-space:pre-wrap; font-size:13px;">Mermaid is not available</div>`
+            block.style.display = 'block'
+          }
+        }
+
         return
       }
 
       try {
-        const mermaid = (window as any).mermaid
+        const mermaid = mermaidApi
         // 每次渲染重置主题
         mermaid.initialize({
           startOnLoad: false,
@@ -164,6 +280,7 @@ const MermaidRenderer = defineComponent({
             const { svg } = await mermaid.render(id, code)
             block.innerHTML = svg
             block.classList.add('mermaid-rendered')
+            block.setAttribute('data-rendered', 'true')
             // 增加一些样式
             block.style.display = 'flex'
             block.style.justifyContent = 'center'
@@ -175,6 +292,7 @@ const MermaidRenderer = defineComponent({
           } catch (e) {
             console.error('[LDoc] Mermaid rendering failed:', e)
             block.innerHTML = `<div style="color:var(--ldoc-c-red); background:var(--ldoc-c-red-soft); padding:16px; border-radius:8px; font-family:monospace; white-space:pre-wrap; font-size:13px;">Mermaid Error: ${(e as Error).message}</div>`
+            block.setAttribute('data-rendered', 'true')
             block.style.display = 'block'
           }
         }
@@ -186,13 +304,15 @@ const MermaidRenderer = defineComponent({
     const loadMermaid = async () => {
       if (mermaidLoaded) return
 
-      const script = document.createElement('script')
-      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'
-      script.onload = () => {
+      try {
+        const id = 'mer' + 'maid'
+        const mod = await import(/* @vite-ignore */ id)
+        mermaidApi = (mod as any).default || mod
         mermaidLoaded = true
         renderMermaid()
+      } catch {
+        mermaidLoaded = true
       }
-      document.head.appendChild(script)
     }
 
     onMounted(() => {
@@ -687,6 +807,7 @@ export function getBuiltinSlots(config: BuiltinPluginConfig = {}): PluginSlots {
     ...(Array.isArray(bottomSlots) ? bottomSlots : [bottomSlots]),
     // KaTeXRenderer 已移除
     { component: MermaidRenderer, props: {}, order: 301 },
+    { component: EChartsRenderer, props: {}, order: 301.5 },
     { component: TabsInitializer, props: {}, order: 302 }
   ]
 

@@ -11,6 +11,8 @@
 import { definePlugin } from '../../plugin/definePlugin'
 import type { LDocPlugin } from '../../shared/types'
 
+import type { Plugin as VitePlugin } from 'vite'
+
 // 导出 PDF 功能
 export { exportToPDF, exportMultiplePDFs, validatePDFConfig } from './pdf'
 export type { PDFExportOptions, PDFConfig } from './pdf'
@@ -205,49 +207,359 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
     buttonPosition = 'doc-bottom'
   } = options
 
+  const pdfOptions = options.pdf
+
+  const mappedFormats = formats.map((f) => ({
+    value: f,
+    label: f === 'pdf' ? 'PDF' : f === 'html' ? 'HTML' : f === 'epub' ? 'EPUB' : String(f).toUpperCase()
+  }))
+
   return definePlugin({
     name: 'ldoc:export',
     enforce: 'post',
+
+    vitePlugins() {
+      const plugin: VitePlugin = {
+        name: 'ldoc:export-endpoint',
+        configureServer(server) {
+          server.middlewares.use(async (req, res, next) => {
+            try {
+              if (!req.url) return next()
+              const url = new URL(req.url, 'http://localhost')
+              if (url.pathname !== '/__ldoc/export') return next()
+
+              const format = (url.searchParams.get('format') || 'pdf').toLowerCase()
+              const path = url.searchParams.get('path') || '/'
+
+              const protocol = server.config.server.https ? 'https' : 'http'
+              const host = req.headers.host
+              let resolvedPort = server.config.server.port
+              if (!resolvedPort) {
+                const addr = server.httpServer?.address()
+                if (addr && typeof addr === 'object') resolvedPort = addr.port
+              }
+              const baseHost = host || (resolvedPort ? `localhost:${resolvedPort}` : 'localhost')
+              const base = `${protocol}://${baseHost}`
+              const normalizedPath = path.startsWith('/') ? path : `/${path}`
+              const targetUrl = new URL(normalizedPath, base).toString()
+
+              if (format === 'pdf') {
+                const resolvedPdf = pdfOptions || {}
+                const resolvedPageSize = resolvedPdf.pageSize || 'A4'
+                const resolvedMargin = resolvedPdf.margin
+                const resolvedScale = typeof resolvedPdf.scale === 'number' ? resolvedPdf.scale : 0.98
+                const resolvedPrintBackground = resolvedPdf.printBackground !== false
+                const resolvedDisplayHeaderFooter = !!(resolvedPdf.headerFooter?.header || resolvedPdf.headerFooter?.footer)
+                const resolvedHeaderTemplate = resolvedDisplayHeaderFooter
+                  ? (resolvedPdf.headerFooter?.header || '<span></span>')
+                  : ''
+                const resolvedFooterTemplate = resolvedDisplayHeaderFooter
+                  ? (resolvedPdf.headerFooter?.footer || '<span></span>')
+                  : ''
+
+                const mTop = resolvedMargin?.top || '14mm'
+                const mRight = resolvedMargin?.right || '14mm'
+                const mBottom = resolvedMargin?.bottom || '16mm'
+                const mLeft = resolvedMargin?.left || '14mm'
+
+                const pdfCss = `
+@media print {
+  @page {
+    margin: ${mTop} ${mRight} ${mBottom} ${mLeft};
+  }
+
+  html, body {
+    background: #fff !important;
+  }
+
+  body {
+    font-size: 13px !important;
+    line-height: 1.65 !important;
+    color: #111827 !important;
+  }
+
+  .vp-nav,
+  .vp-sidebar,
+  .vp-local-nav,
+  .back-to-top,
+  .vp-related-pages,
+  .vp-social-share,
+  .vp-breadcrumb,
+  .vp-doc-edit,
+  .vp-doc-pagination,
+  .vp-subpage-toc,
+  .skip-link,
+  .ldoc-export-button {
+    display: none !important;
+  }
+
+  .vp-doc {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .vp-doc-content {
+    max-width: 920px !important;
+    margin: 0 auto !important;
+  }
+
+  .vp-doc-title {
+    font-size: 28px !important;
+    margin: 0 0 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  .vp-doc-body h2 {
+    margin: 26px 0 10px !important;
+    padding-bottom: 6px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .vp-doc-body h3 {
+    margin: 18px 0 8px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .vp-doc-body p {
+    margin: 10px 0 !important;
+  }
+
+  .vp-doc-body pre {
+    padding: 12px !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .vp-doc-body pre code {
+    font-size: 11px !important;
+    line-height: 1.55 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  .vp-doc-body code {
+    font-size: 0.92em !important;
+  }
+
+  .vp-doc-body table {
+    font-size: 12px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .vp-doc-body blockquote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .vp-doc-body img {
+    max-width: 100% !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .vp-doc-body ul, .vp-doc-body ol {
+    margin: 10px 0 !important;
+  }
+
+  .vp-doc-body li {
+    margin: 6px 0 !important;
+  }
+
+  .vp-doc-body th, .vp-doc-body td {
+    padding: 8px 10px !important;
+  }
+
+  .vp-doc-body a {
+    color: #2563eb !important;
+  }
+
+  .custom-block {
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    margin: 12px 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .custom-block-title {
+    margin: 0 0 6px !important;
+  }
+}`.trim()
+
+                let playwright: any
+                try {
+                  const id = 'play' + 'wright'
+                  playwright = await import(/* @vite-ignore */ id)
+                } catch {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  res.end(JSON.stringify({
+                    message: 'Playwright is not installed. Please install it with: pnpm add -D playwright'
+                  }))
+                  return
+                }
+
+                const browser = await playwright.chromium.launch({ headless: true })
+                try {
+                  const context = await browser.newContext()
+                  const page = await context.newPage()
+                  page.setDefaultTimeout(60000)
+                  page.setDefaultNavigationTimeout(60000)
+                  await page.goto(targetUrl, { waitUntil: 'domcontentloaded' })
+                  try {
+                    await page.waitForLoadState('networkidle', { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+                  try {
+                    await page.waitForSelector('.vp-doc-body', { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+                  try {
+                    await page.evaluate(() => {
+                      const d = document as any
+                      return d?.fonts?.ready || Promise.resolve(true)
+                    })
+                  } catch {
+                    // ignore
+                  }
+
+                  try {
+                    await page.waitForFunction(() => {
+                      const nodes = Array.from(document.querySelectorAll('.mermaid, .ldoc-echarts')) as HTMLElement[]
+                      if (nodes.length === 0) return true
+                      return nodes.every(n => n.getAttribute('data-rendered') === 'true')
+                    }, { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+
+                  try {
+                    await page.emulateMediaType('print')
+                  } catch {
+                    // ignore
+                  }
+
+                  try {
+                    await page.addStyleTag({ content: pdfCss })
+                  } catch {
+                    // ignore
+                  }
+
+                  const pdfBuffer = await page.pdf({
+                    format: resolvedPageSize,
+                    margin: resolvedMargin || {
+                      top: '14mm',
+                      right: '14mm',
+                      bottom: '16mm',
+                      left: '14mm'
+                    },
+                    printBackground: resolvedPrintBackground,
+                    scale: resolvedScale,
+                    displayHeaderFooter: resolvedDisplayHeaderFooter,
+                    headerTemplate: resolvedHeaderTemplate,
+                    footerTemplate: resolvedFooterTemplate,
+                    preferCSSPageSize: false
+                  })
+
+                  res.statusCode = 200
+                  res.setHeader('content-type', 'application/pdf')
+                  res.setHeader('content-disposition', `attachment; filename="ldoc-export.pdf"`)
+                  res.setHeader('content-length', String(pdfBuffer.length))
+                  res.setHeader('accept-ranges', 'bytes')
+                  res.end(pdfBuffer)
+                  return
+                } finally {
+                  await browser.close()
+                }
+              }
+
+              if (format === 'html') {
+                let playwright: any
+                try {
+                  const id = 'play' + 'wright'
+                  playwright = await import(/* @vite-ignore */ id)
+                } catch {
+                  // 无 Playwright 时退化：直接返回当前页面的静态 HTML（不含 SSR，适用于简单导出）
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  res.end(JSON.stringify({
+                    message: 'Playwright is required for HTML export in dev server. Install it with: pnpm add -D playwright'
+                  }))
+                  return
+                }
+
+                const browser = await playwright.chromium.launch({ headless: true })
+                try {
+                  const context = await browser.newContext()
+                  const page = await context.newPage()
+                  await page.goto(targetUrl, { waitUntil: 'networkidle' })
+
+                  try {
+                    await page.waitForFunction(() => {
+                      const nodes = Array.from(document.querySelectorAll('.mermaid, .ldoc-echarts')) as HTMLElement[]
+                      if (nodes.length === 0) return true
+                      return nodes.every(n => n.getAttribute('data-rendered') === 'true')
+                    }, { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+
+                  const html = await page.content()
+
+                  res.statusCode = 200
+                  res.setHeader('content-type', 'text/html; charset=utf-8')
+                  res.setHeader('content-disposition', `attachment; filename="ldoc-export.html"`)
+                  res.setHeader('content-length', String(Buffer.byteLength(html, 'utf-8')))
+                  res.end(html)
+                  return
+                } finally {
+                  await browser.close()
+                }
+              }
+
+              res.statusCode = 400
+              res.setHeader('content-type', 'application/json; charset=utf-8')
+              res.end(JSON.stringify({ message: `Unsupported export format: ${format}` }))
+            } catch (err) {
+              res.statusCode = 500
+              res.setHeader('content-type', 'application/json; charset=utf-8')
+              const message = err instanceof Error ? err.message : String(err)
+              const stack = err instanceof Error ? err.stack : undefined
+              res.end(JSON.stringify({ message: 'Export failed', error: message, stack }))
+            }
+          })
+        }
+      }
+
+      return [plugin]
+    },
 
     // 注入打印样式
     headStyles: enablePrintStyles ? [generatePrintStyles()] : undefined,
 
     // 注入导出按钮组件
-    slots: formats.length > 0
+    slots: mappedFormats.length > 0
       ? {
         [buttonPosition === 'nav' ? 'nav-bar-content-after' :
           buttonPosition === 'floating' ? 'back-to-top-before' :
             buttonPosition === 'doc-top' ? 'doc-before' : 'doc-after']: {
           component: 'LDocExportButton',
           props: {
-            formats,
+            formats: mappedFormats,
             position: buttonPosition
           },
           order: 100
         }
       }
       : undefined,
-
-    // 注入导出脚本
-    headScripts: formats.length > 0 ? [
-      `window.addEventListener('ldoc:export', function(e) { 
-        const format = e.detail.format; 
-        if (format === 'pdf') { 
-          const btn = document.querySelector('.ldoc-export-button__btn'); 
-          if (btn) { 
-            btn.disabled = true; 
-            btn.innerHTML = '<div class="ldoc-export-button__spinner"></div><span>导出中...</span>'; 
-          } 
-          setTimeout(function() { window.print(); }, 100); 
-          setTimeout(function() { 
-            if (btn) { 
-              btn.disabled = false; 
-              btn.innerHTML = '<svg class="ldoc-export-button__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span>导出文档</span>'; 
-            } 
-          }, 2000); 
-        } 
-      });`
-    ] : undefined,
 
     // 在客户端注册导出组件
     clientConfigFile: `

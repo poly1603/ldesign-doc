@@ -153,6 +153,15 @@ export default defineConfig({
     lastUpdatedPlugin({ useGitTime: false, position: 'doc-top', exclude: [] }),
     backToTopPlugin({}),
     outlinePlugin({ title: '本页目录', minLevel: 2, maxLevel: 3, position: 'right' }),
+    enhancedSearchPlugin({
+      hotkeys: ['/', 'Ctrl+K', 'Meta+K'],
+      maxResults: 20,
+      fuzzy: { enabled: true, threshold: 0.65, distance: 2 },
+      cjk: { enabled: true, segmenter: 'jieba' },
+      suggestions: { enabled: true, maxSuggestions: 8 },
+      history: { enabled: true, maxItems: 12, storageKey: 'playground-search-history' },
+      showButton: false
+    }),
     socialSharePlugin({ showAtBottom: false }),
     announcementPlugin({
       content: '这是公告栏插件示例（Playground 默认开启）。',
@@ -180,7 +189,7 @@ export default defineConfig({
       position: 'doc-footer',
       contributors: { enabled: false }
     }),
-    exportPlugin({ formats: ['pdf'], enablePrintStyles: true, buttonPosition: 'floating' }),
+    exportPlugin({ formats: ['pdf', 'html'], enablePrintStyles: true, buttonPosition: 'floating' }),
     apiDocPlugin({ include: [], exclude: [], outDir: 'api', template: 'minimal', typeLinks: false, watch: false }),
     versionPlugin({
       versions: [{ version: '1.0.0', path: '/', label: 'v1.0.0' }],
@@ -188,8 +197,8 @@ export default defineConfig({
       aliases: { latest: '1.0.0', stable: '1.0.0' },
       selectorPosition: 'nav'
     }),
-    tagsPlugin({ enabled: false }),
-    sitemapPlugin({ enabled: false }),
+    tagsPlugin({ enabled: true }),
+    sitemapPlugin({ enabled: true }),
     ...(process.env.NODE_ENV === 'production'
       ? [
         commentPlugin({

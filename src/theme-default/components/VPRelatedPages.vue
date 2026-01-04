@@ -1,14 +1,14 @@
 <template>
-  <div v-if="relatedPages.length > 0" class="vp-related-pages" :class="{ 'compact': compact }">
+  <div v-if="relatedPages.length > 0" class="vp-related-pages" :class="{ 'compact': props.compact }">
     <h2 class="vp-related-pages-title">{{ title }}</h2>
     <div class="vp-related-pages-list">
       <router-link v-for="page in relatedPages" :key="page.link" :to="page.link" class="vp-related-page-item">
         <div class="vp-related-page-content">
           <h3 class="vp-related-page-title">{{ page.title }}</h3>
-          <p v-if="page.description && !compact" class="vp-related-page-description">
+          <p v-if="page.description && !props.compact" class="vp-related-page-description">
             {{ page.description }}
           </p>
-          <div v-if="page.tags && page.tags.length > 0 && !compact" class="vp-related-page-tags">
+          <div v-if="page.tags && page.tags.length > 0 && !props.compact" class="vp-related-page-tags">
             <span v-for="tag in page.tags" :key="tag" class="vp-related-page-tag">
               {{ tag }}
             </span>

@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ldoc dev",
-    "build": "ldoc build",
-    "preview": "ldoc preview"
+    "dev": "pnpm exec ldoc dev",
+    "build": "pnpm exec ldoc build",
+    "preview": "pnpm exec ldoc preview"
   },
   "devDependencies": {
     "@ldesign/doc": "workspace:*"

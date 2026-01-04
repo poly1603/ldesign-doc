@@ -31,6 +31,19 @@ interface SearchIndex {
 // 全局搜索索引（构建时生成）
 const searchIndex: SearchIndex[] = []
 
+function normalizeContent(raw: string): string {
+  if (!raw) return ''
+  return raw
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/[*_~>#-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /**
  * 搜索插件
  */
@@ -66,7 +79,7 @@ export function searchPlugin(options: SearchPluginOptions = {}): LDocPlugin {
         searchIndex.push({
           path: pageData.relativePath,
           title: pageData.title,
-          content: '', // 内容在渲染时填充
+          content: normalizeContent(pageData.content || ''),
           headers: pageData.headers.map(h => h.title)
         })
       }
@@ -88,6 +101,7 @@ export function searchPlugin(options: SearchPluginOptions = {}): LDocPlugin {
 
     // 注入搜索脚本
     headScripts: [
+      `window.__LDOC_SEARCH_INDEX__ = ${JSON.stringify(searchIndex)};`,
       `
       // 搜索快捷键监听
       document.addEventListener('keydown', (e) => {

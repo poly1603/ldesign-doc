@@ -7,7 +7,7 @@
  * - 构建警告和建议
  */
 
-import { existsSync, statSync, readdirSync, readFileSync } from 'fs'
+import { existsSync, statSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import { join, relative, extname } from 'path'
 import pc from 'picocolors'
 import type { PageData, SiteConfig } from '../shared/types'
@@ -364,9 +364,8 @@ function formatDuration(ms: number): string {
  */
 export function saveBuildReport(report: BuildReport, outDir: string): void {
   const reportPath = join(outDir, 'build-report.json')
-  const fs = require('fs')
 
-  fs.writeFileSync(
+  writeFileSync(
     reportPath,
     JSON.stringify(report, null, 2),
     'utf-8'

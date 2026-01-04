@@ -254,6 +254,8 @@ export function apiDocPlugin(options: ApiDocOptions): LDocPlugin {
   const configStr = serializeConfig(options)
   let siteConfig: SiteConfig
 
+  const shouldInjectSidebarNav = Array.isArray(options.include) && options.include.length > 0
+
   return definePlugin({
     name: 'ldoc:api-doc',
     enforce: 'pre',
@@ -305,21 +307,24 @@ export function apiDocPlugin(options: ApiDocOptions): LDocPlugin {
     },
 
     // 注入 API 文档导航组件
-    slots: {
-      'sidebar-nav-after': {
-        component: 'LDocApiDocNav',
-        props: { __apiDocConfig: configStr },
-        order: 100
+    slots: shouldInjectSidebarNav
+      ? {
+        'sidebar-nav-after': {
+          component: 'LDocApiDocNav',
+          props: { __apiDocConfig: configStr },
+          order: 100
+        }
       }
-    },
+      : undefined,
 
     // 在客户端注册 API 文档组件
-    clientConfigFile: `
+    clientConfigFile: shouldInjectSidebarNav ? `
 import { globalComponents } from '@ldesign/doc/plugins/api-doc/client'
 
 export { globalComponents }
 export default { globalComponents }
 `
+      : undefined,
   })
 }
 

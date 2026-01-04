@@ -61,6 +61,7 @@ export const zhSidebar = defineSidebar({
       collapsed: false,
       items: [
         { text: '功能演示', link: '/examples/' },
+        { text: '功能展示', link: '/examples/showcase' },
         { text: '组件 Playground', link: '/examples/playground' }
       ]
     },
@@ -213,6 +214,7 @@ export const enSidebar = defineSidebar({
       collapsed: false,
       items: [
         { text: 'Feature Examples', link: '/en/examples/' },
+        { text: 'Feature Showcase', link: '/en/examples/showcase' },
         { text: 'Component Playground', link: '/en/examples/playground' }
       ]
     },

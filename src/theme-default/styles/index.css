@@ -885,6 +885,45 @@ code {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.ldoc-content img.no-preview {
+  cursor: default;
+}
+
+.ldoc-figure {
+  margin: 16px 0;
+}
+
+.ldoc-figure > img,
+.ldoc-figure > picture,
+.ldoc-figure > a {
+  display: block;
+}
+
+.ldoc-figure-caption {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ldoc-c-text-3);
+  text-align: center;
+}
+
+.ldoc-echarts {
+  margin: 16px 0;
+  border-radius: var(--ldoc-radius-md);
+  background: var(--ldoc-c-bg-soft);
+  border: 1px solid var(--ldoc-c-divider);
+}
+
+.ldoc-echarts-error {
+  padding: 12px 14px;
+  border-radius: var(--ldoc-radius-md);
+  background: var(--ldoc-c-red-soft);
+  color: var(--ldoc-c-red);
+  font-family: var(--ldoc-font-family-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
 .ldoc-content img:hover {
   box-shadow: var(--ldoc-shadow-3);
 }

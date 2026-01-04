@@ -1,7 +1,7 @@
 <template>
   <div class="ldoc-export-button" :data-position="position">
     <button class="ldoc-export-button__btn" :class="{ 'ldoc-export-button__btn--loading': loading }" :disabled="loading"
-      @click="handleExport">
+      @click="handleClick">
       <svg v-if="!loading" class="ldoc-export-button__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -12,13 +12,20 @@
       <span>{{ loading ? '导出中...' : buttonText }}</span>
     </button>
 
-    <div v-if="formats.length > 1" class="ldoc-export-button__dropdown">
-      <select v-model="selectedFormat" class="ldoc-export-button__select" :disabled="loading">
-        <option v-for="format in formats" :key="format.value" :value="format.value">
-          {{ format.label }}
-        </option>
-      </select>
-    </div>
+    <Teleport to="body">
+      <div v-if="pickerOpen" class="ldoc-export-picker-mask" @click.self="closePicker">
+        <div class="ldoc-export-picker" role="dialog" aria-modal="true">
+          <div class="ldoc-export-picker__title">选择导出格式</div>
+          <div class="ldoc-export-picker__options">
+            <button v-for="format in formats" :key="format.value" type="button" class="ldoc-export-picker__option"
+              @click="selectAndExport(format.value)">
+              {{ format.label }}
+            </button>
+          </div>
+          <button type="button" class="ldoc-export-picker__cancel" @click="closePicker">取消</button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -36,19 +43,32 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false
 })
 
-const emit = defineEmits<{
-  export: [format: string]
-}>()
+const pickerOpen = ref(false)
 
-const selectedFormat = ref(props.formats[0]?.value || 'pdf')
+const openPicker = () => {
+  pickerOpen.value = true
+}
 
-const handleExport = () => {
-  if (!props.loading) {
-    // 触发全局导出事件
-    window.dispatchEvent(new CustomEvent('ldoc:export', {
-      detail: { format: selectedFormat.value }
-    }))
+const closePicker = () => {
+  pickerOpen.value = false
+}
+
+const selectAndExport = (format: string) => {
+  closePicker()
+  if (props.loading) return
+  window.dispatchEvent(new CustomEvent('ldoc:export', {
+    detail: { format }
+  }))
+}
+
+const handleClick = () => {
+  if (props.loading) return
+  if (props.formats && props.formats.length > 1) {
+    openPicker()
+    return
   }
+  const format = props.formats?.[0]?.value || 'pdf'
+  selectAndExport(format)
 }
 </script>
 
@@ -118,32 +138,12 @@ const handleExport = () => {
   }
 }
 
-.ldoc-export-button__dropdown {
-  display: flex;
-  align-items: center;
-}
-
-.ldoc-export-button__select {
-  padding: 8px 12px;
-  border: 1px solid var(--ldoc-c-border);
-  border-radius: 6px;
-  background-color: var(--ldoc-c-bg);
-  color: var(--ldoc-c-text-1);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.ldoc-export-button__select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* When in floating position (back-to-top-before), style as floating button */
 .ldoc-export-button[data-position="floating"] {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
-  z-index: 100;
+  bottom: 84px;
+  right: 24px;
+  z-index: 101;
 }
 
 .ldoc-export-button[data-position="floating"] .ldoc-export-button__btn {
@@ -196,5 +196,63 @@ const handleExport = () => {
 .ldoc-export-button[data-position="doc-bottom"] .ldoc-export-button__spinner {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
+}
+
+.ldoc-export-picker-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ldoc-export-picker {
+  width: min(360px, calc(100vw - 32px));
+  background: var(--ldoc-c-bg);
+  border: 1px solid var(--ldoc-c-divider);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: 14px;
+}
+
+.ldoc-export-picker__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ldoc-c-text-1);
+  margin-bottom: 10px;
+}
+
+.ldoc-export-picker__options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ldoc-export-picker__option {
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--ldoc-c-divider);
+  background: var(--ldoc-c-bg-soft);
+  color: var(--ldoc-c-text-1);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ldoc-export-picker__option:hover {
+  border-color: var(--ldoc-c-brand);
+}
+
+.ldoc-export-picker__cancel {
+  width: 100%;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ldoc-c-text-2);
+  cursor: pointer;
 }
 </style>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDoc 演示站点</title>
+  <meta name="description" content="现代化文档系统 - 支持 Vue/React 组件、主题定制、插件扩展">
+  
+  <script type="module" crossorigin src="/assets/index.CT9lQcMo.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index.B2si-y2p.css">
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
