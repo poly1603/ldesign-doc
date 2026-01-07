@@ -160,7 +160,7 @@ export const globalComponents = [
 // Add export functionality
 if (typeof window !== 'undefined') {
   window.addEventListener('ldoc:export', function (e: any) {
-    const { format } = e.detail;
+    const { format, scope = 'current' } = e.detail;
 
     const ui = usePluginUI()
 
@@ -190,7 +190,7 @@ if (typeof window !== 'undefined') {
 
     const exportUrl = () => {
       const path = window.location.pathname + window.location.search + window.location.hash;
-      const url = `/__ldoc/export?format=${encodeURIComponent(format)}&path=${encodeURIComponent(path)}`;
+      const url = `/__ldoc/export?format=${encodeURIComponent(format)}&path=${encodeURIComponent(path)}&scope=${encodeURIComponent(scope)}`;
       return url;
     };
 

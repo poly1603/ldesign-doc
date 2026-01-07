@@ -131,3 +131,17 @@ export type {
   CustomAuthHandler,
   AuthContext
 } from './auth'
+
+// ============== Data Loader 类型 ==============
+export type {
+  ContentData,
+  ContentLoaderOptions,
+  ContentLoader
+} from './dataLoader'
+
+// ============== Team Page 类型 ==============
+export type {
+  TeamMember,
+  TeamMembersProps,
+  TeamPageProps
+} from './team'

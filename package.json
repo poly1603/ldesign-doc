@@ -139,6 +139,7 @@
     "@types/node": "^20.0.0",
     "@types/prompts": "^2.4.9",
     "@vue/test-utils": "^2.4.6",
+    "epub-gen-memory": "^1.1.2",
     "fast-check": "^4.5.2",
     "jsdom": "^27.4.0",
     "playwright": "^1.57.0",

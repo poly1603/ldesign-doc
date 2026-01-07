@@ -17,21 +17,9 @@ import type { Plugin as VitePlugin } from 'vite'
 export { exportToPDF, exportMultiplePDFs, validatePDFConfig } from './pdf'
 export type { PDFExportOptions, PDFConfig } from './pdf'
 
-// 导出 EPUB 功能 (实验性 - 需要 epub-gen-memory 依赖)
-// export { exportToEPUB, exportURLsToEPUB, validateEPUBConfig } from './epub'
-// export type { EPUBExportOptions, EPUBPage } from './epub'
-
-// EPUB 功能临时禁用，直到添加依赖
-export const exportToEPUB = () => {
-  throw new Error('EPUB export is experimental and requires epub-gen-memory package. Install it with: npm install epub-gen-memory')
-}
-export const exportURLsToEPUB = () => {
-  throw new Error('EPUB export is experimental and requires epub-gen-memory package. Install it with: npm install epub-gen-memory')
-}
-export const validateEPUBConfig = () => false
-
-export type EPUBExportOptions = any
-export type EPUBPage = any
+// 导出 EPUB 功能
+export { exportToEPUB, exportURLsToEPUB, validateEPUBConfig } from './epub'
+export type { EPUBExportOptions, EPUBPage } from './epub'
 
 // 导出单页 HTML 功能
 export { exportToSinglePage, exportURLsToSinglePage } from './singlePage'
@@ -222,7 +210,7 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
       const plugin: VitePlugin = {
         name: 'ldoc:export-endpoint',
         configureServer(server) {
-          server.middlewares.use(async (req, res, next) => {
+        server.middlewares.use(async (req, res, next) => {
             try {
               if (!req.url) return next()
               const url = new URL(req.url, 'http://localhost')
@@ -230,6 +218,7 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
 
               const format = (url.searchParams.get('format') || 'pdf').toLowerCase()
               const path = url.searchParams.get('path') || '/'
+              const scope = url.searchParams.get('scope') || 'current' // 'current' | 'all'
 
               const protocol = server.config.server.https ? 'https' : 'http'
               const host = req.headers.host
@@ -242,6 +231,16 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
               const base = `${protocol}://${baseHost}`
               const normalizedPath = path.startsWith('/') ? path : `/${path}`
               const targetUrl = new URL(normalizedPath, base).toString()
+
+              // 如果是导出所有文档，返回提示信息（暂不支持全量导出）
+              if (scope === 'all') {
+                res.statusCode = 501
+                res.setHeader('content-type', 'application/json; charset=utf-8')
+                res.end(JSON.stringify({
+                  message: '全量导出功能暂时不可用，请使用单页导出。\n\n提示：如需导出所有文档，可在构建完成后使用 CLI 命令：\npnpm ldoc export --format=' + format + ' --all'
+                }))
+                return
+              }
 
               if (format === 'pdf') {
                 const resolvedPdf = pdfOptions || {}
@@ -400,12 +399,31 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
                   res.statusCode = 500
                   res.setHeader('content-type', 'application/json; charset=utf-8')
                   res.end(JSON.stringify({
-                    message: 'Playwright is not installed. Please install it with: pnpm add -D playwright'
+                    message: 'Playwright 未安装。\n\n请执行以下命令安装：\n1. pnpm add -D playwright\n2. pnpm exec playwright install chromium'
                   }))
                   return
                 }
 
-                const browser = await playwright.chromium.launch({ headless: true })
+                // 检查浏览器是否已安装
+                let browser: any
+                try {
+                  browser = await playwright.chromium.launch({ headless: true })
+                } catch (launchError: any) {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  const errMsg = launchError?.message || String(launchError)
+                  if (errMsg.includes('Executable doesn\'t exist') || errMsg.includes('browserType.launch')) {
+                    res.end(JSON.stringify({
+                      message: 'Playwright 浏览器未安装。\n\n请执行以下命令安装 Chromium：\npnpm exec playwright install chromium'
+                    }))
+                  } else {
+                    res.end(JSON.stringify({
+                      message: '启动浏览器失败: ' + errMsg
+                    }))
+                  }
+                  return
+                }
+
                 try {
                   const context = await browser.newContext()
                   const page = await context.newPage()
@@ -487,16 +505,32 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
                   const id = 'play' + 'wright'
                   playwright = await import(/* @vite-ignore */ id)
                 } catch {
-                  // 无 Playwright 时退化：直接返回当前页面的静态 HTML（不含 SSR，适用于简单导出）
                   res.statusCode = 500
                   res.setHeader('content-type', 'application/json; charset=utf-8')
                   res.end(JSON.stringify({
-                    message: 'Playwright is required for HTML export in dev server. Install it with: pnpm add -D playwright'
+                    message: 'Playwright 未安装。\n\n请执行以下命令安装：\n1. pnpm add -D playwright\n2. pnpm exec playwright install chromium'
                   }))
                   return
                 }
 
-                const browser = await playwright.chromium.launch({ headless: true })
+                let browser: any
+                try {
+                  browser = await playwright.chromium.launch({ headless: true })
+                } catch (launchError: any) {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  const errMsg = launchError?.message || String(launchError)
+                  if (errMsg.includes('Executable doesn\'t exist') || errMsg.includes('browserType.launch')) {
+                    res.end(JSON.stringify({
+                      message: 'Playwright 浏览器未安装。\n\n请执行以下命令安装 Chromium：\npnpm exec playwright install chromium'
+                    }))
+                  } else {
+                    res.end(JSON.stringify({
+                      message: '启动浏览器失败: ' + errMsg
+                    }))
+                  }
+                  return
+                }
                 try {
                   const context = await browser.newContext()
                   const page = await context.newPage()
@@ -525,9 +559,180 @@ export function exportPlugin(options: ExportOptions = {}): LDocPlugin {
                 }
               }
 
+              if (format === 'epub') {
+                let playwright: any
+                try {
+                  const id = 'play' + 'wright'
+                  playwright = await import(/* @vite-ignore */ id)
+                } catch {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  res.end(JSON.stringify({
+                    message: 'Playwright 未安装。\n\n请执行以下命令安装：\n1. pnpm add -D playwright\n2. pnpm exec playwright install chromium'
+                  }))
+                  return
+                }
+
+                let epubGen: any
+                try {
+                  const epubId = 'epub-gen-memory'
+                  epubGen = await import(/* @vite-ignore */ epubId)
+                } catch {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  res.end(JSON.stringify({
+                    message: 'epub-gen-memory 未安装。\n\n请执行以下命令安装：\npnpm add -D epub-gen-memory'
+                  }))
+                  return
+                }
+
+                let browser: any
+                try {
+                  browser = await playwright.chromium.launch({ headless: true })
+                } catch (launchError: any) {
+                  res.statusCode = 500
+                  res.setHeader('content-type', 'application/json; charset=utf-8')
+                  const errMsg = launchError?.message || String(launchError)
+                  if (errMsg.includes('Executable doesn\'t exist') || errMsg.includes('browserType.launch')) {
+                    res.end(JSON.stringify({
+                      message: 'Playwright 浏览器未安装。\n\n请执行以下命令安装 Chromium：\npnpm exec playwright install chromium'
+                    }))
+                  } else {
+                    res.end(JSON.stringify({
+                      message: '启动浏览器失败: ' + errMsg
+                    }))
+                  }
+                  return
+                }
+
+                try {
+                  const context = await browser.newContext()
+                  const page = await context.newPage()
+                  page.setDefaultTimeout(60000)
+                  page.setDefaultNavigationTimeout(60000)
+                  await page.goto(targetUrl, { waitUntil: 'domcontentloaded' })
+
+                  try {
+                    await page.waitForLoadState('networkidle', { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+
+                  try {
+                    await page.waitForSelector('.vp-doc-body', { timeout: 30000 })
+                  } catch {
+                    // ignore
+                  }
+
+                  // 提取页面内容
+                  const pageData = await page.evaluate(() => {
+                    const titleEl = document.querySelector('.vp-doc-title') || document.querySelector('h1') || document.querySelector('title')
+                    const title = titleEl?.textContent?.trim() || 'Untitled'
+
+                    // 获取主要内容区域
+                    const contentEl = document.querySelector('.vp-doc-body') || document.querySelector('.vp-doc') || document.querySelector('main')
+                    let content = contentEl?.innerHTML || document.body.innerHTML
+
+                    // 移除不需要的元素
+                    const tempDiv = document.createElement('div')
+                    tempDiv.innerHTML = content
+
+                    // 移除脚本、导航等
+                    const selectorsToRemove = [
+                      'script', 'style', '.vp-nav', '.vp-sidebar', '.vp-local-nav',
+                      '.back-to-top', '.vp-doc-footer-nav', '.ldoc-export-button',
+                      '.vp-breadcrumb', '.vp-doc-edit', '.vp-doc-pagination'
+                    ]
+                    selectorsToRemove.forEach(selector => {
+                      tempDiv.querySelectorAll(selector).forEach(el => el.remove())
+                    })
+
+                    content = tempDiv.innerHTML
+
+                    return { title, content }
+                  })
+
+                  // 生成 EPUB
+                  const EPub = epubGen.default || epubGen
+
+                  const epubCss = `
+body {
+  font-family: Georgia, serif;
+  font-size: 1em;
+  line-height: 1.6;
+  margin: 1em;
+  color: #000;
+  background: #fff;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+h1 { font-size: 2em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.3em; }
+code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+}
+pre {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  background: #f5f5f5;
+  padding: 1em;
+  overflow-x: auto;
+}
+pre code { background: none; padding: 0; }
+blockquote {
+  margin: 1em 2em;
+  padding: 0.5em 1em;
+  border-left: 4px solid #ddd;
+  font-style: italic;
+}
+table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+th, td { border: 1px solid #ddd; padding: 0.5em; text-align: left; }
+th { background: #f5f5f5; }
+img { max-width: 100%; height: auto; }
+a { color: #0066cc; text-decoration: none; }
+`.trim()
+
+                  const epubOptions = {
+                    title: pageData.title,
+                    author: 'LDoc',
+                    language: 'zh-CN',
+                    description: `${pageData.title} - Generated by @ldesign/doc`,
+                    publisher: '@ldesign/doc',
+                    content: [{
+                      title: pageData.title,
+                      data: pageData.content
+                    }],
+                    css: epubCss,
+                    tocTitle: '目录',
+                    appendChapterTitles: false,
+                    verbose: false
+                  }
+
+                  // 生成 EPUB Buffer
+                  const epubBuffer = await EPub(epubOptions)
+
+                  res.statusCode = 200
+                  res.setHeader('content-type', 'application/epub+zip')
+                  res.setHeader('content-disposition', `attachment; filename="ldoc-export.epub"`)
+                  res.setHeader('content-length', String(epubBuffer.length))
+                  res.end(epubBuffer)
+                  return
+                } finally {
+                  await browser.close()
+                }
+              }
+
               res.statusCode = 400
               res.setHeader('content-type', 'application/json; charset=utf-8')
-              res.end(JSON.stringify({ message: `Unsupported export format: ${format}` }))
+              res.end(JSON.stringify({ message: `不支持的导出格式: ${format}` }))
             } catch (err) {
               res.statusCode = 500
               res.setHeader('content-type', 'application/json; charset=utf-8')

@@ -58,3 +58,13 @@ export type {
   BuildWarning,
   BuildSuggestion
 } from './buildReport'
+
+// Data Loader
+export { createContentLoader } from './dataLoader'
+export type { ContentData, ContentLoaderOptions, ContentLoader } from '../types/dataLoader'
+
+// 侧边栏自动生成
+export { generateSidebar, resolveSidebarAuto } from './sidebarGenerator'
+
+// 社交 Meta
+export { generateSocialMeta } from './socialMeta'

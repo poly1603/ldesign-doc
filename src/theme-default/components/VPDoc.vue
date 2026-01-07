@@ -353,6 +353,7 @@ interface NavLink {
   text: string
   link: string
   description?: string
+  docFooterText?: string  // 自定义在页脚显示的文本
 }
 
 // 上一页/下一页：根据配置的阅读顺序或侧边栏顺序计算
@@ -365,9 +366,9 @@ function normalizePath(p: string) {
 
 function getOrderedLinks(): NavLink[] {
   const themeCfg = localeTheme.value as unknown as {
-    sidebar?: Record<string, Array<{ text?: string; items?: Array<{ text: string; link: string; description?: string }> }>>
+    sidebar?: Record<string, Array<{ text?: string; items?: Array<{ text: string; link: string; description?: string; docFooterText?: string }> }>>
     docFooter?: {
-      readingOrder?: Array<{ link: string; text: string; description?: string }>
+      readingOrder?: Array<{ link: string; text: string; description?: string; docFooterText?: string }>
     }
   }
 
@@ -382,9 +383,10 @@ function getOrderedLinks(): NavLink[] {
       seen.add(normalized)
       return true
     }).map(item => ({
-      text: item.text,
+      text: item.docFooterText || item.text,  // 优先使用 docFooterText
       link: item.link,
-      description: item.description
+      description: item.description,
+      docFooterText: item.docFooterText
     }))
   }
 
@@ -402,7 +404,7 @@ function getOrderedLinks(): NavLink[] {
   const seen = new Set<string>()
 
   for (const g of groups) {
-    const items = g.items || []
+    const items = (g.items || []) as Array<{ text: string; link: string; description?: string; docFooterText?: string }>
     for (const it of items) {
       // Filter out items without links, external links, and duplicates
       if (it.link && !/^https?:/i.test(it.link)) {
@@ -410,9 +412,10 @@ function getOrderedLinks(): NavLink[] {
         if (!seen.has(normalized)) {
           seen.add(normalized)
           list.push({
-            text: it.text,
+            text: it.docFooterText || it.text,  // 优先使用 docFooterText
             link: it.link,
-            description: it.description
+            description: it.description,
+            docFooterText: it.docFooterText
           })
         }
       }
@@ -422,6 +425,16 @@ function getOrderedLinks(): NavLink[] {
 }
 
 const prevPage = computed<NavLink | null>(() => {
+  // 检查 frontmatter 中的 prev 配置
+  const fmPrev = frontmatter.value.prev as false | string | { text: string; link: string } | undefined
+  if (fmPrev === false) return null
+  if (typeof fmPrev === 'string') {
+    return { text: fmPrev, link: fmPrev }
+  }
+  if (fmPrev && typeof fmPrev === 'object') {
+    return { text: fmPrev.text, link: fmPrev.link }
+  }
+
   const themeCfg = localeTheme.value as unknown as {
     docFooter?: { prev?: string | false }
   }
@@ -436,6 +449,16 @@ const prevPage = computed<NavLink | null>(() => {
 })
 
 const nextPage = computed<NavLink | null>(() => {
+  // 检查 frontmatter 中的 next 配置
+  const fmNext = frontmatter.value.next as false | string | { text: string; link: string } | undefined
+  if (fmNext === false) return null
+  if (typeof fmNext === 'string') {
+    return { text: fmNext, link: fmNext }
+  }
+  if (fmNext && typeof fmNext === 'object') {
+    return { text: fmNext.text, link: fmNext.link }
+  }
+
   const themeCfg = localeTheme.value as unknown as {
     docFooter?: { next?: string | false }
   }

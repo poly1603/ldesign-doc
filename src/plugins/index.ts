@@ -192,3 +192,8 @@ export type { PerformanceOptions } from './performance'
 
 export { i18nPlugin } from './i18n'
 export type { I18nPluginOptions } from './i18n'
+
+// ============== Carbon Ads 广告插件 ==============
+
+export { carbonAdsPlugin } from './carbon-ads'
+export type { CarbonAdsOptions } from './carbon-ads'

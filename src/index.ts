@@ -159,6 +159,16 @@ export {
   generateSitemapXmlFromData,
   generateRobotsTxt
 } from './node/sitemap'
+
+// 导出 Data Loader API
+export { createContentLoader } from './node/dataLoader'
+export type { ContentData, ContentLoaderOptions, ContentLoader } from './types/dataLoader'
+
+// 导出侧边栏生成 API
+export { generateSidebar, resolveSidebarAuto } from './node/sidebarGenerator'
+
+// 导出社交 Meta 生成 API
+export { generateSocialMeta } from './node/socialMeta'
 export type {
   SitemapPage,
   SitemapCategory,

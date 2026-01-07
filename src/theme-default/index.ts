@@ -41,6 +41,13 @@ export { default as VPBanner } from './components/VPBanner.vue'
 export { default as VPBreadcrumb } from './components/VPBreadcrumb.vue'
 export { default as Demo } from './components/Demo.vue'
 export { default as CodeGroup } from './components/CodeGroup.vue'
+export { default as VPBadge } from './components/VPBadge.vue'
+
+// Team 组件
+export { default as VPTeamMembers } from './components/VPTeamMembers.vue'
+export { default as VPTeamPage } from './components/VPTeamPage.vue'
+export { default as VPTeamPageTitle } from './components/VPTeamPageTitle.vue'
+export { default as VPTeamPageSection } from './components/VPTeamPageSection.vue'
 
 // 导出组合式函数
 export * from './composables'

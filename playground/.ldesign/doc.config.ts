@@ -189,7 +189,7 @@ export default defineConfig({
       position: 'doc-footer',
       contributors: { enabled: false }
     }),
-    exportPlugin({ formats: ['pdf', 'html'], enablePrintStyles: true, buttonPosition: 'floating' }),
+exportPlugin({ formats: ['pdf', 'html', 'epub'], enablePrintStyles: true, buttonPosition: 'floating' }),
     apiDocPlugin({ include: [], exclude: [], outDir: 'api', template: 'minimal', typeLinks: false, watch: false }),
     versionPlugin({
       versions: [{ version: '1.0.0', path: '/', label: 'v1.0.0' }],

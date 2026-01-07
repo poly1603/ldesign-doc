@@ -642,6 +642,14 @@ export const routes = [
     }
   },
   {
+    path: '/examples/showcase',
+    component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/showcase.md'),
+    meta: { 
+      title: '功能展示',
+      frontmatter: {"title":"功能展示","description":"LDoc 文档系统支持的所有功能展示"}
+    }
+  },
+  {
     path: '/examples/vue/basic',
     component: () => import('D:/WorkBench/ldesign/libraries/doc/playground/.ldesign/docs/examples/vue/basic.md'),
     meta: { 

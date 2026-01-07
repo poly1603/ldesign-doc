@@ -1,6 +1,6 @@
 <template>
   <Transition name="outline-fade">
-    <aside v-if="tocHeaders.length && isReady" class="vp-outline">
+    <aside v-if="shouldShowOutline && tocHeaders.length && isReady" class="vp-outline">
       <div class="vp-outline-container">
         <!-- 右侧栏顶部插槽 -->
         <PluginSlot name="aside-top" />
@@ -44,8 +44,15 @@ interface Header {
   slug: string
 }
 
-const { site, theme } = useData()
+const { site, theme, frontmatter } = useData()
 const route = useRoute()
+
+// 检查是否应该显示大纲
+// 支持 frontmatter 中的 outline: false 隐藏大纲
+const shouldShowOutline = computed(() => {
+  const fm = frontmatter.value as { outline?: number | [number, number] | 'deep' | false }
+  return fm.outline !== false
+})
 
 // 获取当前语言环境
 const currentLocale = computed(() => {
@@ -106,9 +113,18 @@ const outlineTitle = computed(() => {
 })
 
 // 获取标题级别配置 - 默认获取所有标题(h1-h6)
+// 优先使用 frontmatter 中的配置，然后是主题配置
 const getLevelConfig = () => {
+  // 首先检查 frontmatter 中的 outline 配置
+  const fm = frontmatter.value as { outline?: number | [number, number] | 'deep' | false }
+  const fmOutline = fm.outline
+  
+  // 主题配置作为 fallback
   const config = localeTheme.value as { outline?: { level?: number | [number, number] | 'deep' } }
-  const levelConfig = config.outline?.level
+  const themeLevel = config.outline?.level
+  
+  // 优先使用 frontmatter 配置
+  const levelConfig = fmOutline !== undefined && fmOutline !== false ? fmOutline : themeLevel
 
   // 默认显示 h2-h6 所有标题
   let minLevel = 2
